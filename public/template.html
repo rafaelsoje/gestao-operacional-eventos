@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Senha</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f2f2f2;
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        max-width: 600px;
+        margin: 30px auto;
+        background: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        background: #0057b7;
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+      .content {
+        padding: 30px;
+        color: #333333;
+      }
+      .content p {
+        line-height: 1.6;
+      }
+      a.button {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 20px;
+        background-color: #0057b7;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+      .footer {
+        background: #eeeeee;
+        padding: 15px;
+        text-align: center;
+        font-size: 12px;
+        color: #666666;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Olá, {{nome_cliente}}!</h1>
+      </div>
+      <div class="content">
+        <p>
+          Estamos te enviando este email pois recebemos uma solicitação de redefinição de senha em <strong>{{nome_da_empresa}}</strong>.
+        </p>
+        <p>
+          Esta é apenas uma mensagem automática para confirmar que recebemos sua solicitação.
+          Se você não fez essa solicitação, basta desconsiderar esse email.</p>
+          <p>Copie e cole esse link no navegador</p>
+          <p>{{link_do_site}}</p>
+          <p>ou clique no botão abaixo para redefinir sua senha.</p>
+        </p>
+        <a href="{{link_do_site}}" class="button">Redefinir senha</a>
+      </div>
+      <div class="footer">
+        &copy; {{ano_atual}} {{nome_da_empresa}} – Todos os direitos reservados.
+      </div>
+    </div>
+  </body>
+</html>
