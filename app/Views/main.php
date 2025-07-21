@@ -25,15 +25,15 @@
     <!-- Bootstrap -->
      <link href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css');?>" rel="stylesheet">
 
+    <!-- Bootstrap Icons -->
+    <link href="<?=base_url('assets/vendor/bootstrap-icons/bootstrap-icons.css')?>" rel="stylesheet">  
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="<?=base_url('assets/vendor/font-awesome/css/all.min.css')?>">
 
     <!-- DataTables CSS E JS -->
     <link rel="stylesheet" href="<?= base_url('assets/vendor/datatables/css/jquery.dataTables.min.css')?>">
     <script src="<?= base_url('assets/vendor/datatables/js/jquery.dataTables.min.js')?>"></script>
-
-    <!-- Moment.js -->
-    <script src="<?= base_url('assets/vendor/moment/moment.min.js')?>"></script>
 
     <!-- jQuery Mask Plugin -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
@@ -42,26 +42,16 @@
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript" src="<?= base_url('assets/js/googleCharts.js')?>"></script>
 
-    <!-- Chart.js -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
-
     <!-- FullCalendar JS -->
+    <link href="<?=base_url('assets/vendor/fullcalendar/fullcalendar.min.css')?>" rel="stylesheet">
     <script src="<?= base_url('assets/vendor/fullcalendar/fullcalendar.min.js')?>"></script>
 
     <!-- Pré-conexões para otimizar carregamento de fontes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <!-- Fontes (minimize quantidade se possível) -->
+    <!-- Fontes -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
-    <!-- CSS Vendor -->
-    <!-- <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"> -->
-    <link href="<?=base_url('assets/vendor/bootstrap-icons/bootstrap-icons.css')?>" rel="stylesheet">
-    <link href="<?=base_url('assets/vendor/aos/aos.css')?>" rel="stylesheet">
-    <link href="<?=base_url('assets/vendor/glightbox/css/glightbox.min.css')?>" rel="stylesheet">
-    <link href="<?=base_url('assets/vendor/swiper/swiper-bundle.min.css')?>" rel="stylesheet">
-    <link href="<?=base_url('assets/vendor/fullcalendar/fullcalendar.min.css')?>" rel="stylesheet">
 
     <!-- CSS Principal -->
     <link href=<?= base_url('assets/css/main.css')?> rel="stylesheet">
@@ -157,16 +147,10 @@
 <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 <!-- Preloader -->
 <div id="preloader"></div>
+
 <!-- Vendor JS Files -->
 <script src="<?=base_url('assets/vendor/bootstrap/js/bootstrap.bundle.min.js')?>"></script>
-<script src="<?=base_url('assets/vendor/aos/aos.js')?>"></script>
-<script src="<?=base_url('assets/vendor/typed.js/typed.umd.js')?>"></script>
-<script src="<?=base_url('assets/vendor/purecounter/purecounter_vanilla.js')?>"></script>
-<script src="<?=base_url('assets/vendor/waypoints/noframework.waypoints.js')?>"></script>
-<script src="<?=base_url('assets/vendor/glightbox/js/glightbox.min.js')?>"></script>
 <script src="<?=base_url('assets/vendor/imagesloaded/imagesloaded.pkgd.min.js')?>"></script>
-<script src="<?=base_url('assets/vendor/isotope-layout/isotope.pkgd.min.js')?>"></script>
-<script src="<?=base_url('assets/vendor/swiper/swiper-bundle.min.js')?>"></script>
 <!-- Main JS File -->
 <script src="<?=base_url('assets/js/main.js')?>"></script>
 </body>
