@@ -1,75 +1,74 @@
 <?= $this->extend('main');?>
 <?php $this->section('content');?>
- <!-- Div onde o calendário será inserido -->
- <div class="row">
-    <div class="col-10" id='calendar'></div>
- </div>
 
-    <!-- Modal Bootstrap -->
-    <div class="modal" id="eventModal" tabindex="-1">
-  <div class="modal-dialog">
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Calendário de Propostas</h1>
+    <div id="calendar"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="eventoModal" tabindex="-1" aria-labelledby="eventoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modalTitle"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h1 class="modal-title fs-5" id="eventoModalLabel">Detalhes da Proposta</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
-        <p>Modal body text goes here.</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
+        <p><strong>Título:</strong> <span id="modal-title"></span></p>
+        <p><strong>Início:</strong> <span id="modal-start"></span></p>
+        <p><strong>Fim:</strong> <span id="modal-end"></span></p>
+        <p><strong>Tipo:</strong> <span id="modal-type"></span></p>
+        <p><strong>Status:</strong> <span id="modal-status"></span></p>
+        <p><strong>Descrição:</strong> <span id="modal-descricao"></span></p>
       </div>
     </div>
   </div>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const calendarEl = document.getElementById('calendar');
 
-  <script>
-document.addEventListener('DOMContentLoaded', () => {
+        const events = <?= $fcEvents ?? '[]'; ?>;
 
-  // ①  Captura os eventos vindos do PHP
-  const events = <?= $fcEvents ?? '[]'; ?>;   // se não houver, devolve array vazio
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'pt-br',
+            initialView: 'dayGridMonth',
+            height: 'auto',
+            // headerToolbar: {
+            //     left: 'prev,next today',
+            //     center: 'title',
+            //     right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            // },
+            events: events,
+            eventClick: function(info) {
+                const event = info.event;
+                const props = event.extendedProps;
 
-  const calendar = new FullCalendar.Calendar(
-      document.getElementById('calendar'),
-      {
-        initialView: 'dayGridMonth',
-        locale: 'pt-br',
+                document.getElementById('modal-title').textContent = event.title;
+                document.getElementById('modal-start').textContent = event.start.toLocaleString('pt-BR');
+                document.getElementById('modal-end').textContent = event.end ? event.end.toLocaleString('pt-BR') : '---';
+                document.getElementById('modal-status').textContent = formatarStatus(props.status);
+                document.getElementById('modal-type').textContent = props.type;
+                document.getElementById('modal-descricao').textContent = props.descricao || '---';
 
-        // ②  Usa o array diretamente
-        events: events,
+                const modal = new bootstrap.Modal(document.getElementById('eventoModal'));
+                modal.show();
+            }
+        });
 
-        // events: [
-        //             {
-        //                 title: 'Evento teste',
-        //                 start: '2025-05-14'
-        //             },
-        //             {
-        //                 title: 'Evento 2',
-        //                 start: '2025-05-09T12:00:00',
-        //                 end: '2025-05-11T15:00:00'
-        //             }
-        //         ],
-                eventClick: function(event) {
-                  /* (a) Se estiver a usar **Bootstrap 5/‑6***/
-                  document.getElementById('modalTitle').textContent = events[0].title;
-                  const modalEl  = document.getElementById('eventModal');
-                  const bsModal  = bootstrap.Modal.getOrCreateInstance(modalEl);
-                  bsModal.show();
-                },
+        calendar.render();
 
-
-        // headerToolbar: {
-          // left: 'prev,next today',
-          // center: 'title',
-          // right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-        // }
-      }
-  );
-
-  calendar.render();
-});
+        function formatarStatus(status) {
+            switch (status) {
+                case '1': return 'Proposta Aceita';
+                case '2': return 'Proposta em análise';
+                case '3': return 'Proposta Rejeitada';
+                default: return 'Desconhecido';
+            }
+        }
+    });
 </script>
 
 <?php $this->endSection('content');?>

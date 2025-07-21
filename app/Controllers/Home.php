@@ -1276,85 +1276,42 @@ class Home extends BaseController
         return redirect()->route('usuarios')->with('error', 'Parametro incorreto.');
     }
 
-    public function calendario(): string
+    public function calendario()
     {
-        $anoAtual = date('Y');
-        $anoSeguinte = $anoAtual +1;
-
-        $mes = date('m')+2;
-
         $model = new Propostas();
-        $events = $model->where('MONTH(start_date)', date('m'))->where('status', 1)->findAll();
+        
+        $eventos = $model->findAll();
 
-        $eventNext = $model->where('MONTH(start_date)', date('m')+1)->where('status', 1)->findAll();
+         // FullCalendar espera esse formato JSON
+        $data = array_map(function ($evento) {
+            // Define a cor com base no status
+            switch ($evento->status) {
+                case '1':
+                    $cor = '#28a745'; // verde #28a745
+                    break;
+                case '2':
+                    $cor = '#ffc107'; // amarelo #ffc107
+                    break;
+                case '3':
+                    $cor = '#dc3545'; // vermelho #dc3545
+                    break;
+                default:
+                    $cor = '#3788d8'; // azul padrão  #3788d8
+            }
 
-        if((date('m')+2) <= '12'){
-            $eventNext2 = $model->where('MONTH(start_date)', date('m')+2)->where('status', 1)->findAll();
-            $teste = "+2"    ;
-        }elseif((date('m')+2) == '13'){
-            $eventNext2 = $model->where('YEAR(start_date)', $anoSeguinte)->where('MONTH(start_date)', '01')->where('status', 1)->findAll();
-            $teste = "01";
-        }else{
-            $eventNext2 = $model->where('YEAR(start_date)', $anoSeguinte)->where('MONTH(start_date)', '02')->where('status', 1)->findAll();
-        }
-
-
-        // Mapeie os eventos para o formato necessário
-        $eventData = [];
-        foreach ($events as $event) {
-            $eventData[] = [
-                'title' => $event->event_name,
-                'start' => $event->start_date,
-                'end'   => $event->end_date
+            return [
+                'id'    => $evento->id,
+                'title' => $evento->event_name,
+                'start' => $evento->start_date,
+                'end'   => $evento->end_date,
+                'status' => $evento->status,
+                'type' => $evento->type,
+                'descricao' => $evento->description,
+                'color' => $cor ?? '#3788d8'
             ];
-        }
+        }, $eventos);
 
-        // Mapeie os eventos para o formato necessário
-        $eventDataNext = [];
-        foreach ($eventNext as $event) {
-            $eventDataNext[] = [
-                'title' => $event->event_name,
-                'start' => $event->start_date,
-                'end'   => $event->end_date
-            ];
-        }
-
-        // Mapeie os eventos para o formato necessário
-        $eventDataNext2 = [];
-        foreach ($eventNext2 as $event) {
-            $eventDataNext2[] = [
-                'title' => $event->event_name,
-                'start' => $event->start_date,
-                'end'   => $event->end_date
-            ];
-        }
-
-        $eventJson = json_encode($eventData);
-        $eventNextJson = json_encode($eventDataNext);
-        $eventNext2Json = json_encode($eventDataNext2);
-
-        $fcEvents[0] =[
-            'id' => 12,
-            'title' => "Reunião do time",
-            'start' => "2025-05-10 14:00:00",
-            'end' => "2025-05-11 15:30:00",
-            'allDay' => false,
-            'color' => "#0062ff"
-        ];
-        $fcEvents[1] =[
-            'id' => 13,
-            'title' => "Reunião do jogo",
-            'start' => "2025-06-15T14:00:00",
-            'end' => "2025-06-18T15:30:00",
-            'allDay' => false,
-            'color' => "#0062ff"
-        ];
-
-
-        return view('calendario',
-        [
-            'fcEvents' => json_encode($fcEvents)
-        ]);
+        return view('calendario', ['fcEvents' => json_encode($data)]);
     }
 
     public function mes($num)

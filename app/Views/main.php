@@ -42,9 +42,8 @@
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript" src="<?= base_url('assets/js/googleCharts.js')?>"></script>
 
-    <!-- FullCalendar JS -->
-    <link href="<?=base_url('assets/vendor/fullcalendar/fullcalendar.min.css')?>" rel="stylesheet">
-    <script src="<?= base_url('assets/vendor/fullcalendar/fullcalendar.min.js')?>"></script>
+    <!-- FullCalendar JS -->    
+    <script src="<?= base_url('assets/vendor/fullcalendar/dist/index.global.min.js')?>"></script>
 
     <!-- Pré-conexões para otimizar carregamento de fontes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -91,8 +90,7 @@
         <!-- <li><a href="<?= base_url()?>" class="<?=(isset($projacao)? "active" : "");?>"><i class="bi bi-graph-up-arrow navicon"></i>Planejamento futuro</a></li> -->
         <li><a href="<?=base_url('cadastro/operacional')?>" class="<?=(isset($cadastroOp)? "active" : "");?>"><i class="bi bi-check-square navicon"></i>Cadastro operacional</a></li>
         <!-- <li><a href="<?=base_url('operacional/planejamento/cadastro')?>" class="<?=(isset($cadastroProj)? "active" : "");?>"><i class="bi bi-check-square navicon"></i>Cadastro Planejamento</a></li> -->
-        <li><a href="<?=base_url('operacional/lista')?>" class="<?=(isset($listaOp)? "active" : "");?>"><i class="bi bi-list-ol navicon"></i>Lista de eventos</a></li>
-        <!-- <li><a href="<?=base_url('calendario')?>"class="<?=(isset($calendario)? "active" : "");?>"><i class="bi bi-calendar-check navicon"></i>Calendário</a></li> -->
+        <li><a href="<?=base_url('operacional/lista')?>" class="<?=(isset($listaOp)? "active" : "");?>"><i class="bi bi-list-ol navicon"></i>Lista de eventos</a></li>        
         <li class="dropdown"><a href="<?= base_url('?id=0');?>" class="<?= (isset($planejado) ? "active" : "");?>"><i class="bi bi-graph-up-arrow navicon "></i> <span>Planejamento futuro</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
           <ul>
             <li><a href="<?= base_url('operacional/planejamento/cadastro')?>">Cadastro de custo</a></li>
@@ -113,6 +111,7 @@
         <li><a href="<?=base_url('audiovisual')?>" class="<?=(isset($botanic)? "active" : "");?>"><i class="bi bi-play-btn navicon"></i>Audiovisual / Botanic B</a></li>
         <li><a href="<?=base_url('cadastro/proposta')?>" class="<?=(isset($botanicCad)? "active" : "");?>"><i class="bi bi-file-check navicon"></i>Cadastro proposta</a></li>
         <li><a href="<?=base_url('proposta')?>" class="<?=(isset($botanicProp)? "active" : "");?>"><i class="bi bi-person-lines-fill navicon"></i>Lista de propostas</a></li>
+        <li><a href="<?=base_url('calendario')?>"class="<?=(isset($calendario)? "active" : "");?>"><i class="bi bi-calendar-check navicon"></i>Calendário</a></li>
         <li><a href="<?=base_url('usuarios')?>"class="<?=(isset($botanicUser)? "active" : "");?>"><i class="bi bi-person-fill-check navicon"></i>Usuarios cadastrados</a></li>
         <?php if($logged->email == 'rafaelsoje@gmail.com'):?>
             <li><a href="<?=base_url('logs')?>"><i class="bi bi-envelope navicon"></i>Log</a></li>
