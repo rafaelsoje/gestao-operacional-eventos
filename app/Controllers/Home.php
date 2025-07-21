@@ -1290,7 +1290,7 @@ class Home extends BaseController
                     $cor = '#28a745'; // verde #28a745
                     break;
                 case '2':
-                    $cor = '#ffc107'; // amarelo #ffc107
+                    $cor = '#e0a800'; // amarelo #ffc107
                     break;
                 case '3':
                     $cor = '#dc3545'; // vermelho #dc3545
