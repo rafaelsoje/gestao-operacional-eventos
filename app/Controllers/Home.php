@@ -1305,10 +1305,11 @@ class Home extends BaseController
                 'descricao' => $e->description ?? '',
             ];
         }, $eventos);
-
+       
         return view('calendario', [
             'ano'      => $ano,
             'fcEvents' => json_encode($data), // string JSON
+            'calendario' => true,
         ]);
     }
 
