@@ -23,18 +23,22 @@
   max-width:200px;
   margin: 1rem auto;
 }
+
+button{
+  height: 50%;  
+}
 </style>
 
 <div class="container py-4">
   <h2 class="text-center mb-3">Calendário de Propostas - <?= esc($ano) ?></h2>
 
   <!-- (Opcional) seletor de ano -->
-  <!-- <div class="d-flex justify-content-center mb-4">
-    <form method="get" action="" class="d-flex gap-2" id="formAno">
+  <div class="d-flex justify-content-center mb-4">
+    <form method="get" action="" class="d-flex justify-content-center align-items-center gap-2" id="formAno">
       <input type="number" class="form-control" id="calendar-year-select" name="ano" value="<?= esc($ano) ?>" min="1970" max="2100">
-      <button class="btn btn-primary">Ir</button>
+      <button type="submit" class="btn btn-success">Pesquisar</button>
     </form>
-  </div> -->
+  </div>
 
   <div class="calendar-grid">
     <?php

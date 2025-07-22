@@ -17,7 +17,7 @@ $routes->group('', ['filter' => 'auth'], function($routes){
     
     $routes->get('/audiovisual', 'Home::index', ['as' => 'audiovisual']);    
     $routes->get('/usuarios', 'Home::usuarios',['as' => 'usuarios']);
-    $routes->get('/calendario', 'Home::calendario');
+    $routes->get('/calendario', 'Home::calendario');    
     $routes->get('/proposta', 'Home::proposta', ['as' => 'proposta']);
     $routes->get('/rider', 'Home::rider', ['as' => 'rider']);
     $routes->get('/logs', 'Home::logs', ['as' => 'logs']);

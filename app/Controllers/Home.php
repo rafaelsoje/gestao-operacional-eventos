@@ -1280,7 +1280,9 @@ class Home extends BaseController
     {
         $model = new Propostas();
 
-        $eventos = $model->where('YEAR(start_date)', date('Y'))->findAll();
+        $ano = $this->request->getGet('ano') ?? date('Y');        
+
+        $eventos = $model->where('YEAR(start_date)', $ano)->findAll();
 
         $data = array_map(function ($e) {
             // cor por status
@@ -1305,7 +1307,7 @@ class Home extends BaseController
         }, $eventos);
 
         return view('calendario', [
-            'ano'      => date('Y'),
+            'ano'      => $ano,
             'fcEvents' => json_encode($data), // string JSON
         ]);
     }

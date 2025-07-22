@@ -21,6 +21,8 @@
 
     <!-- jQuery-->
     <script src="<?= base_url('assets/vendor/jquery/jquery.min.js')?>"></script>
+    <!-- jQuery Mask Plugin -->
+    <script src="<?= base_url('assets/vendor/jquery-mask/jquery.mask.min.js')?>"></script>
 
     <!-- Bootstrap -->
      <link href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css');?>" rel="stylesheet">
@@ -34,10 +36,7 @@
     <!-- DataTables CSS E JS -->
     <link rel="stylesheet" href="<?= base_url('assets/vendor/datatables/css/jquery.dataTables.min.css')?>">
     <script src="<?= base_url('assets/vendor/datatables/js/jquery.dataTables.min.js')?>"></script>
-
-    <!-- jQuery Mask Plugin -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-
+    
     <!-- Google charts -->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript" src="<?= base_url('assets/js/googleCharts.js')?>"></script>
@@ -75,13 +74,6 @@
       <h1 class="sitename"><?=$logged['0'];?></h1>
     </a>
 
-    <!-- <div class="social-links text-center">
-      <a href="https://x.com/Rafaelsoje" class="twitter" target="_blank"><i class="bi bi-twitter-x"></i></a>
-      <a href="https://www.facebook.com/rafaelsoje/" class="facebook" target="_blank"><i class="bi bi-facebook"></i></a>
-      <a href="https://www.instagram.com/rafaelsoje/" class="instagram" target="_blank"><i class="bi bi-instagram"></i></a>
-      <a href="https://github.com/rafaelsoje" class="google-plus" target="_blank"><i class="bi bi-github"></i></a>
-      <a href="https://www.linkedin.com/in/rafaelsoje/" class="linkedin" target="_blank"><i class="bi bi-linkedin"></i></a>
-    </div> -->
     <?php $logged = session()->get('user');?>
     <!-- <p class="text-secondary">Seu ip: <?= " " . $logged->ip ;?></p> -->
     <nav id="navmenu" class="navmenu">
