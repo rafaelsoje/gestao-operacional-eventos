@@ -1279,40 +1279,37 @@ class Home extends BaseController
     public function calendario()
     {
         $model = new Propostas();
-        
-        $eventos = $model->findAll();
 
-         // FullCalendar espera esse formato JSON
-        $data = array_map(function ($evento) {
-            // Define a cor com base no status
-            switch ($evento->status) {
-                case '1':
-                    $cor = '#28a745'; // verde #28a745
-                    break;
-                case '2':
-                    $cor = '#e0a800'; // amarelo #ffc107
-                    break;
-                case '3':
-                    $cor = '#dc3545'; // vermelho #dc3545
-                    break;
-                default:
-                    $cor = '#3788d8'; // azul padrão  #3788d8
+        $eventos = $model->where('YEAR(start_date)', date('Y'))->findAll();
+
+        $data = array_map(function ($e) {
+            // cor por status
+            switch ($e->status) {
+                case '1': $cor = '#28a745'; break; // aceita
+                case '2': $cor = '#e0a800'; break; // em análise (melhor que #ffc107)
+                case '3': $cor = '#dc3545'; break; // rejeitada
+                default:  $cor = '#3788d8';
             }
 
             return [
-                'id'    => $evento->id,
-                'title' => $evento->event_name,
-                'start' => $evento->start_date,
-                'end'   => $evento->end_date,
-                'status' => $evento->status,
-                'type' => $evento->type,
-                'descricao' => $evento->description,
-                'color' => $cor ?? '#3788d8'
+                'id'    => $e->id,
+                'title' => $e->event_name,
+                'start' => $e->start_date,
+                'end'   => $e->end_date,
+                'color' => $cor,
+                // extendedProps:
+                'status'    => $e->status,
+                'type'      => $e->type ?? '',
+                'descricao' => $e->description ?? '',
             ];
         }, $eventos);
 
-        return view('calendario', ['fcEvents' => json_encode($data)]);
+        return view('calendario', [
+            'ano'      => date('Y'),
+            'fcEvents' => json_encode($data), // string JSON
+        ]);
     }
+
 
     public function mes($num)
     {
