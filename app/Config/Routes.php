@@ -49,6 +49,7 @@ $routes->group('', ['filter' => 'auth'], function($routes){
 
     $routes->post('/search/operacional', 'Home::operacional', ['as' => 'search.operacional']);
 
+
     
 
 });

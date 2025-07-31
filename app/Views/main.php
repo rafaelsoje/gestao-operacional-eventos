@@ -112,28 +112,28 @@
         <!-- <li><a href="http://blog.rafaelsoje.com" target="_blank"><i class="bi bi-bookmarks navicon"></i> Blog</a></li> -->
         </ul>
     </nav>
-    <div class="container">
-        <div class="copyright text-center ">
-            <!-- <a href="https://rafaelsoje.com" target="_blank">
-            <p><strong class="px-1 sitename">Rafael Soje</strong> - feito com ❤️ e ☕</p>
-            </a> -->
-            </div>
-        <!-- <div class="credits navicon">Com ❤️ e ☕, Rafael Soje</div> -->
-  </div>
+    <!-- <div class="container ">        
+        <div class="credits navicon">Com ❤️ e ☕, Rafael Soje</div>
+    </div> -->
+    <!-- <div style="position: fixed; bottom: 0; left: 0; width: 270px; background: #333; color: white; text-align: center; padding: 10px;">
+    Com ❤️ e ☕, Rafael Soje
+  </div> -->
+
   </header>
   <main class="main">
     <!-- Content page -->
     <?= $this->renderSection('content');?>
   </main>
-<!-- <footer id="footer" class="footer position-relative dark-background"> -->
-  <!-- <div class="container">
+<!-- <footer id="footer" class="footer position-absolute dark-background">
+  <div class="container">
     <div class="copyright text-center "><a href="https://rafaelsoje.com" target="_blank">
       <p>© <span><?= date('Y');?></span> <strong class="px-1 sitename">Rafael Soje</strong> - feito com ❤️ e ☕</p>
       </a>
     </div>
     <div class="credits">Feito com ❤️ e ☕</div>
-  </div> -->
-<!-- </footer> -->
+  </div>
+</footer> -->
+
 <!-- Scroll Top -->
 <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 <!-- Preloader -->
