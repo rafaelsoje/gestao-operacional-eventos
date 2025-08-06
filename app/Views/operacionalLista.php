@@ -279,7 +279,7 @@
     "searching": true,    // Ativar/desativar o campo de busca
     "ordering": true,     // Ativar/desativar a ordenação das colunas
     "info": true,         // Exibir informações (por exemplo, 'Mostrando 1 a 10 de 50 registros')
-    "pageLength": 10,     // Número de linhas por página    
+    "pageLength": 25,     // Número de linhas por página    
     "language": {
         // "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/Portuguese-Brasil.json" // Tradução para PT-BR
         "sEmptyTable": "Nenhum dado disponível na tabela",
