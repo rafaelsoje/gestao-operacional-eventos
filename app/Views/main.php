@@ -83,6 +83,7 @@
         <li><a href="<?=base_url('cadastro/operacional')?>" class="<?=(isset($cadastroOp)? "active" : "");?>"><i class="bi bi-check-square navicon"></i>Cadastro operacional</a></li>
         <!-- <li><a href="<?=base_url('operacional/planejamento/cadastro')?>" class="<?=(isset($cadastroProj)? "active" : "");?>"><i class="bi bi-check-square navicon"></i>Cadastro Planejamento</a></li> -->
         <li><a href="<?=base_url('operacional/lista')?>" class="<?=(isset($listaOp)? "active" : "");?>"><i class="bi bi-list-ol navicon"></i>Lista de eventos</a></li>        
+        <li><a href="<?=base_url('operacional/calendario')?>" class="<?=(isset($calendarioOp)? "active" : "");?>"><i class="bi bi-calendar-date navicon"></i>Calendário Operacional</a></li> 
         <li class="dropdown"><a href="<?= base_url('?id=0');?>" class="<?= (isset($planejado) ? "active" : "");?>"><i class="bi bi-graph-up-arrow navicon "></i> <span>Planejamento futuro</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
           <ul>
             <li><a href="<?= base_url('operacional/planejamento/cadastro')?>">Cadastro de custo</a></li>

@@ -1368,6 +1368,89 @@ class Home extends BaseController
         }
     }
 
+    public function calendarioOperacional()
+    {
+        
+        $model = new Operacional(); // ajuste o nome do Model correto
+
+        $ano = $this->request->getGet('ano') ?? date('Y');        
+
+        // busca pelo ano na coluna 'data'
+        $eventos = $model->where('YEAR(data)', $ano)->findAll();
+
+        $data = array_map(function ($e) {
+            // cor pode variar pelo tipo ou flag, ajuste como preferir
+            switch ($e->tipo) {
+                case 'show':      $cor = '#28a745'; break;
+                case 'evento':    $cor = '#e0a800'; break;
+                case 'serviço':   $cor = '#dc3545'; break;
+                default:          $cor = '#3788d8';
+            }
+
+            // monta start/end combinando data + hora
+            $start = $e->data . ' ' . ($e->hora_inicio ?? '00:00:00');
+            $end   = $e->data . ' ' . ($e->hora_fim ?? '23:59:59');
+
+            return [
+                'id'    => $e->id,
+                'title' => $e->nome,
+                'start' => $start,
+                'end'   => $end,
+                'allDay' => true,
+                'color' => $cor,
+                // extendedProps
+                'tipo'          => $e->tipo,
+                'descricao'     => $e->descricao ?? '',
+                'hora_extra'    => $e->hora_extra,
+                'qtd_fornecedor'=> $e->qtd_fornecedor,
+                'flag'          => $e->flag,
+                'consumos'      => [
+                    'diesel' => [
+                        'inicio'   => $e->diesel_inicio,
+                        'fim'      => $e->diesel_fim,
+                        'litros'   => $e->diesel_litros,
+                        'total'    => $e->diesel_total,
+                        'valor'    => $e->valor_diesel,
+                    ],
+                    'cedae' => [
+                        'inicio'   => $e->cedae_inicio,
+                        'fim'      => $e->cedae_fim,
+                        'consumo'  => $e->cedae_consumo,
+                        'total'    => $e->cedae_total,
+                        'valor'    => $e->cedae_valor,
+                    ],
+                    'light' => [
+                        'inicio'   => $e->light_inicio,
+                        'fim'      => $e->light_fim,
+                        'consumo'  => $e->light_consumo,
+                        'total'    => $e->light_total,
+                        'valor'    => $e->light_valor,
+                    ],
+                ],
+                'custos' => [
+                    'premontagem'      => $e->valor_premontagem,
+                    'operacional'      => $e->valor_operacional,
+                    'total_operacional'=> $e->total_operacional,
+                    'seguranca'        => $e->seguranca,
+                    'bombeiro'         => $e->bombeiro,
+                    'limpeza'          => $e->limpeza,
+                ],
+                'publico' => [
+                    'final'   => $e->publico_final,
+                    'tribuna' => $e->publico_tribuna,
+                    'saida'   => $e->publico_saida,
+                ],
+            ];
+        }, $eventos);
+
+        return view('calendarioOperacional', [
+            'ano'        => $ano,
+            'fcEvents'   => json_encode($data),
+            'calendarioOp' => true,
+        ]);
+
+    }
+
     public function logs()
     {
         $data = (new Logs())->select()->orderBy('id', 'desc')->limit(50)->findAll();

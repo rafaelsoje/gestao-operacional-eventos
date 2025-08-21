@@ -29,6 +29,7 @@ $routes->group('', ['filter' => 'auth'], function($routes){
     
     $routes->get('/', 'Home::operacional', ['as' => 'home']);
     $routes->get('/operacional/lista', 'Home::operacionalLista', ['as' => 'operacional.lista']);
+     $routes->get('/operacional/calendario', 'Home::calendarioOperacional', ['as' => 'calendario.operacional']);
     $routes->get('/operacional/planejamento/cadastro', 'Home::cadastroPlanejamento');
     $routes->post('/operaqconal/planejamento/cadastro', 'Home::cadastroPLanejamentoStore', ['as' => 'cadastro.planejamento.store']);
     $routes->get('/operacional/planejamento/lista', 'Home::planejamentoLista', ['as' => 'planejamento.lista']);
