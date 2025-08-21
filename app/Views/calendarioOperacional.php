@@ -134,6 +134,31 @@ document.addEventListener('DOMContentLoaded', function () {
     const el = document.getElementById('cal-m'+mes);
     if (!el) continue;
 
+  // --- (cal.render() dos 12 meses) ---
+  (function scrollToCurrentMonth() {
+    const now = new Date();
+    const currentYear  = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // 1-12
+
+    // só auto-rola se o ano exibido for o ano atual
+    if (ano !== currentYear) {
+      // opcional: rolar para o topo ao abrir um ano diferente
+      // window.scrollTo({ top: 0, behavior: 'auto' });
+      return;
+    }
+
+    const target = document.getElementById('cal-m' + currentMonth);
+    if (!target) return;
+
+    // Se você tiver um header fixo, ajuste o offset aqui:
+    const HEADER_OFFSET = 80; // px (ajuste conforme seu layout)
+    // aguarda um tick para garantir layout/render concluidos
+    requestAnimationFrame(() => {
+      const y = target.getBoundingClientRect().top + window.pageYOffset - HEADER_OFFSET;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    });
+  })();
+
     const evMes = filtrarEventosPorMes(events, ano, mes);
     const cal = new FullCalendar.Calendar(el, {
       locale: 'pt-br',

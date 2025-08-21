@@ -89,6 +89,27 @@ document.addEventListener('DOMContentLoaded', function () {
     const el = document.getElementById('cal-m'+mes);
     if (!el) continue;
 
+    // --- rolar automaticamente até o mês corrente ---
+  (function scrollToCurrentMonth() {
+    const now = new Date();
+    const currentYear  = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // 1..12
+
+    // só auto-rola se o ano exibido for o ano atual
+    if (ano !== currentYear) return;
+
+    const target = document.getElementById('cal-m' + currentMonth);
+    if (!target) return;
+
+    // se tiver header fixo, ajuste este offset
+    const HEADER_OFFSET = 80; // px (ajuste se necessário)
+
+    requestAnimationFrame(() => {
+      const y = target.getBoundingClientRect().top + window.pageYOffset - HEADER_OFFSET;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    });
+  })();
+
     // filtra eventos para este mês/ano (melhora legibilidade/performance)
     const evMes = filtrarEventosPorMes(events, ano, mes);
 
