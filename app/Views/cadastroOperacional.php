@@ -156,7 +156,13 @@
             <label class="form-label">Total</label>
             <input type="text" class="form-control money" name="total_operacional" <?= isset($item) ? 'value="' . $item->total_operacional . '"' : ''; ?>>            
         </div> 
-        
+
+        <div class="p-1 fs-5">Taxa de Cozinha</div> 
+        <div class="col-md-4">
+            <label class="form-label">Total</label>
+            <input type="text" class="form-control money" name="taxa_cozinha" <?= isset($item) ? 'value="' . $item->taxa_cozinha . '"' : ''; ?>>            
+        </div>   
+
         <div class="p-1 fs-5">Consumo</div>        
         <div class="col-md-3">
             <label class="form-label">Valor Diesel</label>

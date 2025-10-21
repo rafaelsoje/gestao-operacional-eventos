@@ -159,6 +159,8 @@
                   <div><strong>Evento: </strong><?= $proposta->event_name;?></div>
                   <div><strong>Data: </strong><?= $data;?></div>
                   <div><strong>Descrição / Observação: </strong><br/><?= $proposta->description;?></div>
+                  <div><strong>Proposta: </strong><br/><a  href="<?= base_url('/uploads' . "/" . $proposta->start_date . "/" . $proposta->file );?>" target="_blank"><?= (!empty($proposta->file)? $proposta->file : '');?></a></div>
+                  
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

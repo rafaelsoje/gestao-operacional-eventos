@@ -14,7 +14,7 @@ class Login extends BaseController
 {
     protected $session;    
 
-    public function index()
+    public function index(): String|ResponseInterface
     {
 
         if($this->request->getGet('recovery'))
@@ -35,7 +35,7 @@ class Login extends BaseController
         return view('login');
     }
 
-    public function store()
+    public function store(): ResponseInterface
     {      
         $this->session = session();  
         
@@ -82,7 +82,8 @@ class Login extends BaseController
         }
    
         // Função para verificar se um IP pertence a um intervalo CIDR
-        function ip_in_range($ip, $range) {
+        function ip_in_range($ip, $range) 
+        {
             list($subnet, $bits) = explode('/', $range);
             $ip_dec = ip2long($ip);
             $subnet_dec = ip2long($subnet);
@@ -200,19 +201,19 @@ class Login extends BaseController
         }  
     }
 
-    public function logOut()
+    public function logOut(): ResponseInterface
     {
         session()->destroy();
 
         return redirect()->route('login');
     }
 
-    public function recovery()
+    public function recovery(): String
     {
         return view('recovery');
     }
 
-    public function recoverySend()
+    public function recoverySend(): ResponseInterface
     {
         $email = $this->request->getPost();
 
@@ -268,7 +269,7 @@ class Login extends BaseController
 
     }
 
-    public function telegran($texto)
+    public function telegran($texto): void
     {
         // Telegram
         // Monta a mensagem para o Telegram

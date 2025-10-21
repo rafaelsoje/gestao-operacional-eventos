@@ -545,6 +545,7 @@ class Home extends BaseController
 
         $get = '';
 
+        # caso receba ?id=0 no GET direciona para lançamentos futuros
         if($this->request->getGet()){
             $get = $this->request->getGet('id');            
         }
@@ -615,6 +616,7 @@ class Home extends BaseController
                         ->selectSum('diesel_total')
                         ->selectSum('tempo_g1')
                         ->selectSum('tempo_g2')
+                        ->selectSum('taxa_cozinha')
                         ->selectsum('valor_premontagem')
                         ->selectSum('diesel_litros')
                         ->selectSum('cedae_consumo')
@@ -773,6 +775,7 @@ class Home extends BaseController
                 ->selectSum('diesel_total')
                 ->selectSum('tempo_g1')
                 ->selectSum('tempo_g2')
+                ->selectSum('taxa_cozinha')
                 ->selectsum('valor_premontagem')
                 ->selectSum('diesel_litros')
                 ->selectSum('cedae_consumo')
@@ -894,13 +897,38 @@ class Home extends BaseController
             ['Dezembro', (float)$lineMes[11]->total_consumo],
         ];
 
+         for($x=0; $x<=12; $x++){
+            $meses = $x+1;
+            $cozinhaMes[] = (new Operacional())
+                ->where("MONTH(data)", $meses)
+                ->where("YEAR(data)", date('Y'))
+                ->where('flag', 1)
+                ->selectSum('taxa_cozinha')
+            ->first();
+        }
+
+        $cozinha = [
+            ['Janeiro', (float)$cozinhaMes[0]->taxa_cozinha],
+            ['Fevereiro', (float)$cozinhaMes[1]->taxa_cozinha],
+            ['Março', (float)$cozinhaMes[2]->taxa_cozinha],
+            ['Abril', (float)$cozinhaMes[3]->taxa_cozinha],
+            ['Maio', (float)$cozinhaMes[4]->taxa_cozinha],
+            ['Junho', (float)$cozinhaMes[5]->taxa_cozinha],
+            ['Julho', (float)$cozinhaMes[6]->taxa_cozinha],
+            ['Agosto', (float)$cozinhaMes[7]->taxa_cozinha],
+            ['Setembro', (float)$cozinhaMes[8]->taxa_cozinha],
+            ['Outubro', (float)$cozinhaMes[9]->taxa_cozinha],
+            ['Novembro', (float)$cozinhaMes[10]->taxa_cozinha],
+            ['Dezembro', (float)$cozinhaMes[11]->taxa_cozinha],
+        ];
+
         if(isset($post)){
-            return view('operacional', ['operacional' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line),'search' => $post, 'tipo' => $array]);
+            return view('operacional', ['operacional' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'cozinha' => json_encode($cozinha), 'search' => $post, 'tipo' => $array]);
         }else{
             if($get == 0){
-                return view('operacional', ['planejado' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'get' => $get, 'mes' => $this->mes(date('m')+1)]);    
+                return view('operacional', ['planejado' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'cozinha' => json_encode($cozinha), 'get' => $get, 'mes' => $this->mes(date('m')+1)]);    
             }            
-            return view('operacional', ['operacional' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'mes' => $this->mes($mesSearch)]);
+            return view('operacional', ['operacional' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'cozinha' => json_encode($cozinha), 'mes' => $this->mes($mesSearch)]);
         }
     }
 
@@ -955,6 +983,11 @@ class Home extends BaseController
         $total_operacional = str_replace(',', '.', $total_operacional);
         $total_operacional = number_format((float)$total_operacional, 2, '.', '');
 
+        $taxa_cozinha = str_replace('.', '', $post['taxa_cozinha']);
+        $taxa_cozinha = str_replace(',', '.', $taxa_cozinha);
+        $taxa_cozinha = number_format((float)$taxa_cozinha, 2, '.', '');
+
+   
         $data = [
             'nome' => $post['nome'],
             'data' => $post['data'],
@@ -982,6 +1015,7 @@ class Home extends BaseController
             'seguranca' => intval(isset($post['seguranca']) ? $post['seguranca'] : null),
             'bombeiro' => intval(isset($post['bombeiro']) ? $post['bombeiro'] : null),
             'limpeza' => intval(isset($post['limpeza']) ? $post['limpeza'] : null),
+            'taxa_cozinha' => $taxa_cozinha,
             'publico_final' => intval(isset($post['publico_final']) ? $post['publico_final'] : null),
             'publico_tribuna' => intval(isset($post['publico_tribuna'])? $post['publico_tribuna'] : null),
             'publico_saida' => intval(isset($post['publico_saida']) ? $post['publico_saida'] : null),

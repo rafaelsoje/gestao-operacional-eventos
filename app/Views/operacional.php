@@ -68,7 +68,7 @@ use Composer\Installers\PhpBBInstaller;
 
 <div class="px-1 text-center p-2">
     <div class="row">
-        <div class="col ms-1 me-1 bg-white text-primary rounded shadow-lg">
+        <div class="col ms-1 me-1 bg-white text-success rounded shadow-lg">
             <div class="pt-3">Gerador </br><?= $sum->diesel_litros . " litros em " . ($sum->tempo_g1 + $sum->tempo_g2). " horas"?></div>
             <div class="fw-bold pt-3 pb-3 fs-4 money"><?= $sum->diesel_total;?></div>
         </div>
@@ -88,7 +88,11 @@ use Composer\Installers\PhpBBInstaller;
             <div class="pt-3">Operacional </br> evento</div>
             <div class="fw-bold pt-3 pb-3 fs-4 money"><?= $sum->super_op;?></div>
         </div>
-        <div class="col ms-1 me-1 bg-white bg-gradient rounded text-secondary shadow-lg">
+        <div class="col ms-1 me-1 bg-white bg-gradient rounded text-primary shadow-lg">
+            <div class="pt-3">Taxa de cozinha</div>
+            <div class="fw-bold pt-3 pb-3 fs-4 money"><?= ($sum->taxa_cozinha) ?? '0';?></div>
+        </div>
+        <div class="col ms-1 me-1 bg-white bg-gradient rounded text-danger shadow-lg">
             <div class="pt-3">Custo total no período</div>
             <div class="fw-bold pt-3 pb-3 fs-4 money"><?= $sum->total_consumo;?></div>
         </div>
@@ -102,8 +106,14 @@ use Composer\Installers\PhpBBInstaller;
 
 <div class="chart row mt-2 mb-2">
     <div class="col-6 shadow" id="column_chart2" ></div>
+    <div class="col-6 shadow" id="line_chart1"></div>
     <!-- <div class="col-6 shadow" id="curve_chart" ></div> -->
-     <div class="col-6 shadow" id="line_chart"></div>
+     <!-- <div class="col-6 shadow" id="line_chart"></div> -->
+</div>
+<div class="chart row mt-2 mb-2">
+    <!-- <div class="col-6 shadow" id="column_chart2" ></div> -->
+    <!-- <div class="col-6 shadow" id="curve_chart" ></div> -->
+     <div class="col-12 shadow" id="line_chart"></div>
 </div>
 <?php if(!isset($search)):?>
     <div class="chart row mt-2 mb-2">
@@ -265,6 +275,7 @@ function validarDatas() {
      drawColumnChart();
      drawColumnChart2();
      drawLineChart();
+     drawLineChart2();
      drawChart();     
      drawPieChart();
      drawScatterChart();
@@ -332,6 +343,30 @@ var bar = <?= $bar;?>
      chart.draw(data, options);
  }
 
+
+
+ var cozinha = <?= $cozinha;?>
+//  GRAFICO LINHA
+ function drawLineChart2() {
+     var data = new google.visualization.DataTable();
+     data.addColumn('string', 'Ano');
+     data.addColumn('number', 'Valor Mensal');
+    
+     data.addRows(cozinha);
+
+     var options = {
+        title: 'Taxa de cozinha',
+        //  hAxis: { title: ''   },
+        vAxis: { title: 'Custo' },
+        legend: { position: 'bottom' },
+        colors: ['#00f']         
+     };
+
+     var chart = new google.visualization.LineChart(document.getElementById('line_chart1'));
+     chart.draw(data, options);
+ }
+
+
  var line = <?= $line;?>
 //  GRAFICO LINHA
  function drawLineChart() {
@@ -354,7 +389,8 @@ var bar = <?= $bar;?>
          title: 'Custo Anual',
         //  hAxis: { title: ''   },
          vAxis: { title: 'Custo' },
-         legend: { position: 'bottom' }
+         legend: { position: 'bottom' },
+         colors: ['#f00']
      };
 
      var chart = new google.visualization.LineChart(document.getElementById('line_chart'));
@@ -396,12 +432,14 @@ var barChart = <?= $barChart;?>;
     var data = google.visualization.arrayToDataTable(barChart);
       
      var options = {
+         colors: ['#090'],
          title: 'Comparação por tipo de evento',
          hAxis: { title: '' },
          vAxis: { title: 'Total'},
          //backgroundColor: '#cccccc', // Cor de fundo
          legend: { position: 'bottom' },
          seriesType: 'bars'
+         
      };
 
      var chart = new google.visualization.ComboChart(document.getElementById('column_chart2'));

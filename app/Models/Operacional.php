@@ -40,6 +40,7 @@ class Operacional extends Model
         'seguranca',
         'bombeiro',
         'limpeza',
+        'taxa_cozinha',
         'publico_final',
         'publico_tribuna',
         'publico_saida',
