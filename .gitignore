@@ -128,4 +128,5 @@ _modules/*
 
 #codeigniter
 /app/Config/App.php
-/public/uploads
+public/uploads/
+/public/uploads/
