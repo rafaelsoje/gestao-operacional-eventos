@@ -89,11 +89,11 @@ use Composer\Installers\PhpBBInstaller;
             <div class="fw-bold pt-3 pb-3 fs-4 money"><?= $sum->super_op;?></div>
         </div>
         <div class="col ms-1 me-1 bg-white bg-gradient rounded text-primary shadow-lg">
-            <div class="pt-3">Taxa de cozinha</div>
+            <div class="pt-3">Taxa de <br>cozinha</div>
             <div class="fw-bold pt-3 pb-3 fs-4 money"><?= ($sum->taxa_cozinha) ?? '0,00';?></div>
         </div>
         <div class="col ms-1 me-1 bg-white bg-gradient rounded text-danger shadow-lg">
-            <div class="pt-3">Custo total no período</div>
+            <div class="pt-3">Custo total <br>no período</div>
             <div class="fw-bold pt-3 pb-3 fs-4 money"><?= $sum->total_consumo;?></div>
         </div>
     </div>
