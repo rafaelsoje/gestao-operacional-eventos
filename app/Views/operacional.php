@@ -432,7 +432,7 @@ var barChart = <?= $barChart;?>;
     var data = google.visualization.arrayToDataTable(barChart);
       
      var options = {
-         colors: ['#090'],
+         //colors: ['#00f'],
          title: 'Comparação por tipo de evento',
          hAxis: { title: '' },
          vAxis: { title: 'Total'},
