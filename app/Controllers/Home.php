@@ -757,14 +757,17 @@ class Home extends BaseController
 
         }else{
 
-            $data = (new operacional)->orderBy('data', 'desc')->where('flag', 1)->limit(4)->findAll();
-
+            # obtem o mês atual;
             $mesSearch = date('m');
-
+           
+            # obtém os lançamentos do mes atual;
+            # Caso não tenha lançamentos no mês atual, pesquisa o último mês com lançamentos para exibir na dashboard
             while(!((new Operacional())->where('MONTH(data)', $mesSearch)->findAll()))
             {
                 $mesSearch = $mesSearch -1;               
             }
+
+            $data = (new operacional)->orderBy('data', 'desc')->where('MONTH(data)', $mesSearch)->where('flag', 1)->findAll();
 
             $query = new Operacional();
             $sum = $query
