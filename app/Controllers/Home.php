@@ -761,9 +761,9 @@ class Home extends BaseController
 
             $mesSearch = date('m');             
 
-            if(!(new Operacional())->where('MONTH(data)', $mesSearch)->findAll())
+            while(!(new Operacional()->where('MONTH(data)', $mesSearch)->findAll()))
             {
-                $mesSearch = (date('m') - 1);                  
+                $mesSearch = $mesSearch -1;
             }
 
             $query = new Operacional();

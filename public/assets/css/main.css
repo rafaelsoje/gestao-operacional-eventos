@@ -208,14 +208,15 @@ h6 {
 }
 
 @media (min-width: 1200px) {
-
+/* @media (min-width: 1367px) { */
   .header~main,
   .header~#footer {
     margin-left: 300px;
   }
 }
 
-@media (max-width: 1199px) {
+@media (max-width: 1199px){
+/* @media (max-width: 1366px) { */
   .header {
     left: -100%;
   }

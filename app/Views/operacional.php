@@ -69,7 +69,7 @@ use Composer\Installers\PhpBBInstaller;
 <div class="px-1 text-center p-2">
     <div class="row">
         <div class="col ms-1 me-1 bg-white text-success rounded shadow-lg">
-            <div class="pt-3">Gerador </br><?= $sum->diesel_litros . " litros em " . ($sum->tempo_g1 + $sum->tempo_g2). " horas"?></div>
+            <div class="pt-3">Gerador </br><?= $sum->diesel_litros . " litros" # em " . ($sum->tempo_g1 + $sum->tempo_g2). " horas"?></div>
             <div class="fw-bold pt-3 pb-3 fs-4 money"><?= $sum->diesel_total;?></div>
         </div>
         <div class="col ms-1 me-1 text-success bg-white bg-gradient rounded shadow-lg">
