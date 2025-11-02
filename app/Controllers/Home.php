@@ -547,7 +547,7 @@ class Home extends BaseController
 
         # caso receba ?id=0 no GET direciona para lançamentos futuros
         if($this->request->getGet()){
-            $get = $this->request->getGet('id');            
+            $get = $this->request->getGet('id');
         }
 
         if($this->request->getPost()){
@@ -688,7 +688,7 @@ class Home extends BaseController
                 return redirect()->back()->with('error', 'Data da pesquisa incorreta');
             }
         }else if($get == 0){
-           
+
             $data = (new operacional)->orderBy('data', 'desc')->where('MONTH(data)', (date('m')+1))->where('flag', 0)->limit(4)->findAll();
 
             $query = new Operacional();
@@ -759,12 +759,12 @@ class Home extends BaseController
 
             $data = (new operacional)->orderBy('data', 'desc')->where('flag', 1)->limit(4)->findAll();
 
-            $mesSearch = date('m');             
+            $mesSearch = date('m');
 
-            // while(!(new Operacional()->where('MONTH(data)', $mesSearch)->findAll()))
-            // {
-            //     $mesSearch = $mesSearch -1;
-            // }
+            while(!(new Operacional()->where('MONTH(data)', $mesSearch)->findAll()))
+            {
+                $mesSearch = $mesSearch -1;               
+            }
 
             $query = new Operacional();
             $sum = $query
@@ -926,15 +926,15 @@ class Home extends BaseController
             return view('operacional', ['operacional' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'cozinha' => json_encode($cozinha), 'search' => $post, 'tipo' => $array]);
         }else{
             if($get == 0){
-                return view('operacional', ['planejado' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'cozinha' => json_encode($cozinha), 'get' => $get, 'mes' => $this->mes(date('m')+1)]);    
-            }            
+                return view('operacional', ['planejado' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'cozinha' => json_encode($cozinha), 'get' => $get, 'mes' => $this->mes(date('m')+1)]);
+            }
             return view('operacional', ['operacional' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'cozinha' => json_encode($cozinha), 'mes' => $this->mes($mesSearch)]);
         }
     }
 
     public function cadastroOperacional(){
         return view('cadastroOperacional',['cadastroOp' => true]);
-    }    
+    }
 
     public function operacionalLista(){
         $data = (new Operacional())->where('YEAR(data)', date('Y'))->where('flag', 1)->findAll();
@@ -942,7 +942,7 @@ class Home extends BaseController
         return view('operacionalLista', ['data'=> $data, 'listaOp' => true]);
     }
 
-    public function cadastroOperacionalStore(){        
+    public function cadastroOperacionalStore(){
 
         $post = $this->request->getPost();
 
@@ -987,7 +987,7 @@ class Home extends BaseController
         $taxa_cozinha = str_replace(',', '.', $taxa_cozinha);
         $taxa_cozinha = number_format((float)$taxa_cozinha, 2, '.', '');
 
-   
+
         $data = [
             'nome' => $post['nome'],
             'data' => $post['data'],
@@ -1060,7 +1060,7 @@ class Home extends BaseController
             }
 
         }else{
-            
+
             if($result = (new Operacional())->insert($data)){
 
                 $log = [
@@ -1089,7 +1089,7 @@ class Home extends BaseController
             $item = $temp->select()->where('id', $id)->first();
 
             if($item->flag == 0){
-                return view('cadastroPlanejamento', ['item' => $item]);   
+                return view('cadastroPlanejamento', ['item' => $item]);
             }
 
             return view('cadastroOperacional', ['item' => $item]);
@@ -1314,7 +1314,7 @@ class Home extends BaseController
     {
         $model = new Propostas();
 
-        $ano = $this->request->getGet('ano') ?? date('Y');        
+        $ano = $this->request->getGet('ano') ?? date('Y');
 
         $eventos = $model->where('YEAR(start_date)', $ano)->findAll();
 
@@ -1339,7 +1339,7 @@ class Home extends BaseController
                 'descricao' => $e->description ?? '',
             ];
         }, $eventos);
-       
+
         return view('calendario', [
             'ano'      => $ano,
             'fcEvents' => json_encode($data), // string JSON
@@ -1372,7 +1372,7 @@ class Home extends BaseController
                 return "Maio";
                 break;
             case '06':
-            case '6':    
+            case '6':
                 return "Junho";
                 break;
             case '07':
@@ -1387,7 +1387,7 @@ class Home extends BaseController
             case '9':
                 return "Setembro";
                 break;
-            case '10':                
+            case '10':
                 return "Outubro";
                 break;
             case '11':
@@ -1404,10 +1404,10 @@ class Home extends BaseController
 
     public function calendarioOperacional()
     {
-        
+
         $model = new Operacional(); // ajuste o nome do Model correto
 
-        $ano = $this->request->getGet('ano') ?? date('Y');        
+        $ano = $this->request->getGet('ano') ?? date('Y');
 
         // busca pelo ano na coluna 'data'
         $eventos = $model->where('YEAR(data)', $ano)->findAll();
@@ -1503,7 +1503,7 @@ class Home extends BaseController
         // $texto .= "💬 Mensagem: " . htmlspecialchars($mensagem);
 
         // Dados do bot
-        $bot_token = env('TELEGRAM_BOT_TOKEN'); 
+        $bot_token = env('TELEGRAM_BOT_TOKEN');
         $chat_id = env('TELEGRAM_CHAT_ID');
 
         // Prepara a chamada cURL
