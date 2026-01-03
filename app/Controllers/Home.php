@@ -542,7 +542,7 @@ class Home extends BaseController
     ###############################################
 
     public function operacional(){
-
+       
         $get = '';
 
         # caso receba ?id=0 no GET direciona para lançamentos futuros
@@ -551,6 +551,8 @@ class Home extends BaseController
         }
 
         if($this->request->getPost()){
+
+            dd('post');
 
             $post = $this->request->getPost();
 
@@ -689,6 +691,8 @@ class Home extends BaseController
             }
         }else if($get == 0){
 
+           
+
             $data = (new operacional)->orderBy('data', 'desc')->where('MONTH(data)', (date('m')+1))->where('flag', 0)->limit(4)->findAll();
 
             $query = new Operacional();
@@ -757,14 +761,19 @@ class Home extends BaseController
 
         }else{
 
+          
+
             # obtem o mês atual;
             $mesSearch = date('m');
-           
+                       
             # obtém os lançamentos do mes atual;
             # Caso não tenha lançamentos no mês atual, pesquisa o último mês com lançamentos para exibir na dashboard
-            while(!((new Operacional())->where('MONTH(data)', $mesSearch)->findAll()))
+            while(!((new Operacional())->where('YEAR(data)', date('Y'))->where('MONTH(data)', $mesSearch)->findAll()))
             {
-                $mesSearch = $mesSearch -1;               
+                $mesSearch = $mesSearch -1;
+                if($mesSearch == 0){
+                    break;
+                }           
             }
 
             $data = (new operacional)->orderBy('data', 'desc')->where('MONTH(data)', $mesSearch)->where('flag', 1)->findAll();
@@ -836,7 +845,7 @@ class Home extends BaseController
 
 
         }
-
+        
         $donutChart = [
             ['Categorria', 'valor'],
             ['Equipe Operacional', (float)$chart->total_operacional],
@@ -924,6 +933,8 @@ class Home extends BaseController
             ['Novembro', (float)$cozinhaMes[10]->taxa_cozinha],
             ['Dezembro', (float)$cozinhaMes[11]->taxa_cozinha],
         ];
+
+        
 
         if(isset($post)){
             return view('operacional', ['operacional' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'cozinha' => json_encode($cozinha), 'search' => $post, 'tipo' => $array]);

@@ -174,6 +174,7 @@ class Login extends BaseController
             $log = (new Logs())->insert($data);
 
             $this->telegran($user->name . " entrou no sistema!");
+           
             return redirect()->route('home')->with('success', 'Login efetuado com sucesso.'); 
 
         }else{
