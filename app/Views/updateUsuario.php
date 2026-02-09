@@ -29,10 +29,10 @@
         </div>
         <div class="col-12 col-md-6">
         <label class="form-label">Nível de acesso</label>
-            <select class="form-select" name="admin">                
-                <option>Selecione...</option>
-                <option <?php if($user->admin == 1){echo "selected";}?> value="1">Administrador</option>
-                <option <?php if($user->admin == 0){echo "selected";}?> value="0">Convidado</option>                
+            <?php $currentRole = $user->role ?? (($user->admin ?? 0) == 1 ? 'admin' : 'user'); ?>
+            <select class="form-select" name="role" required>
+                <option value="user" <?= $currentRole === 'user' ? 'selected' : ''; ?>>Usuário comum</option>
+                <option value="admin" <?= $currentRole === 'admin' ? 'selected' : ''; ?>>Administrador</option>
             </select>
         </div> 
         <div class="col-12 col-md-6">

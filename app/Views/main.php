@@ -105,8 +105,12 @@
         <!-- <li><a href="<?=base_url('cadastro/proposta')?>" class="<?=(isset($botanicCad)? "active" : "");?>"><i class="bi bi-file-check navicon"></i>Cadastro proposta</a></li> -->
         <!-- <li><a href="<?=base_url('proposta')?>" class="<?=(isset($botanicProp)? "active" : "");?>"><i class="bi bi-person-lines-fill navicon"></i>Lista de propostas</a></li> -->
         <!-- <li><a href="<?=base_url('calendario')?>"class="<?=(isset($calendario)? "active" : "");?>"><i class="bi bi-calendar-check navicon"></i>Calendário audiovisual</a></li> -->
-        <!-- <li><a href="<?=base_url('usuarios')?>"class="<?=(isset($botanicUser)? "active" : "");?>"><i class="bi bi-person-fill-check navicon"></i>Usuarios cadastrados</a></li> -->
-        <?php if($logged->email == 'rafaelsoje@gmail.com'):?>
+        <?php $navRole = $logged->role ?? (($logged->admin ?? 0) == 1 ? 'admin' : 'user'); ?>
+        <?php if($navRole === 'admin' || $navRole === 'superuser'):?>
+            <li><a href="<?=base_url('usuarios')?>"class="<?=(isset($botanicUser)? "active" : "");?>"><i class="bi bi-person-fill-check navicon"></i>Usuarios cadastrados</a></li>
+        <?php endif;?>
+        <?php if($logged->email == env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'))):?>            
+            <li><a href="<?=base_url('admin/notifications')?>"><i class="bi bi-bell navicon"></i>Notificações</a></li>
             <li><a href="<?=base_url('logs')?>"><i class="bi bi-envelope navicon"></i>Log</a></li>
         <?php endif;?>
         <li><a href="<?=base_url('logout')?>"><i class="bi bi-box-arrow-left navicon"></i>Sair</a></li>

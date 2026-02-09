@@ -67,3 +67,13 @@
 #--------------------------------------------------------------------
 
 # logger.threshold = 4
+
+#--------------------------------------------------------------------
+# TELEGRAM / SUPERUSER
+#--------------------------------------------------------------------
+
+# TELEGRAM_BOT_TOKEN =
+# TELEGRAM_CHAT_ID =
+# TELEGRAM_ENABLED = true
+# TELEGRAM_ADMIN_EMAIL =
+# SUPERUSER_EMAIL =

@@ -16,16 +16,16 @@ $routes->post('recovery/store', 'Login::recoveryStore', ['as' => 'recovery.store
 $routes->group('', ['filter' => 'auth'], function($routes){
     
     $routes->get('/audiovisual', 'Home::index', ['as' => 'audiovisual']);    
-    $routes->get('/usuarios', 'Home::usuarios',['as' => 'usuarios']);
+    $routes->get('/usuarios', 'Home::usuarios',['as' => 'usuarios', 'filter' => 'role:admin']);
     $routes->get('/calendario', 'Home::calendario');    
     $routes->get('/proposta', 'Home::proposta', ['as' => 'proposta']);
     $routes->get('/rider', 'Home::rider', ['as' => 'rider']);
-    $routes->get('/logs', 'Home::logs', ['as' => 'logs']);
+    $routes->get('/logs', 'Home::logs', ['as' => 'logs', 'filter' => 'role:superuser']);
     
     $routes->get('/cadastro/proposta', 'Home::cadastroProposta', ['as' => 'cadastro.proposta']);
     $routes->post('/cadastro/proposta', 'Home::cadastroPropostaStore', ['as' => 'cadastro.proposta.store', 'filter' => 'csrf']);
-    $routes->get('/cadastro/usuario', 'Home::cadastroUsuario', ['as' => 'usuario']);
-    $routes->post('/cadastro/usuario', 'Home::usuarioStore', ['as' => 'usuario.store', 'filter' => 'csrf']);
+    $routes->get('/cadastro/usuario', 'Home::cadastroUsuario', ['as' => 'usuario', 'filter' => 'role:admin']);
+    $routes->post('/cadastro/usuario', 'Home::usuarioStore', ['as' => 'usuario.store', 'filter' => ['csrf', 'role:admin']]);
     
     $routes->get('/', 'Home::operacional', ['as' => 'home']);
     $routes->get('/operacional/lista', 'Home::operacionalLista', ['as' => 'operacional.lista']);
@@ -39,16 +39,18 @@ $routes->group('', ['filter' => 'auth'], function($routes){
     $routes->get('/update/operacional/(:num)', 'Home::updateOperacional/$1');
     $routes->post('/delete/operacional', 'Home::deleteOperacional', ['filter' => 'csrf']);
 
-    $routes->get('/update/usuario/(:num)', 'Home::updateUsuario/$1');
+    $routes->get('/update/usuario/(:num)', 'Home::updateUsuario/$1', ['filter' => 'role:admin']);
     $routes->get('/update/proposta/(:num)', 'Home::updateProposta/$1');    
     $routes->post('/update/proposta', 'Home::updatePropostaStore', ['as' => 'update.proposta.store', 'filter' => 'csrf']);
-    $routes->post('/update/usuario', 'Home::updateUsuarioStore', ['as' => 'update.usuario.store', 'filter' => 'csrf']);
+    $routes->post('/update/usuario', 'Home::updateUsuarioStore', ['as' => 'update.usuario.store', 'filter' => ['csrf', 'role:admin']]);
     
-    $routes->post('/delete/usuario', 'Home::removeUsuario', ['filter' => 'csrf']);
+    $routes->post('/delete/usuario', 'Home::removeUsuario', ['filter' => ['csrf', 'role:admin']]);
     $routes->post('/delete/proposta', 'Home::removeProposta', ['filter' => 'csrf']);
 
     $routes->post('/search/operacional', 'Home::operacional', ['as' => 'search.operacional', 'filter' => 'csrf']);
     $routes->get('/uploads/(:segment)/(:segment)', 'Home::downloadUpload/$1/$2', ['as' => 'uploads.download']);
+    $routes->get('/admin/notifications', 'Home::notifications', ['as' => 'admin.notifications', 'filter' => 'role:superuser']);
+    $routes->post('/admin/notifications', 'Home::notificationsUpdate', ['as' => 'admin.notifications.update', 'filter' => ['csrf', 'role:superuser']]);
 
 
     

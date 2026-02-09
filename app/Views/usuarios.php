@@ -37,6 +37,7 @@
         <div class="flash text-center alert alert-success text-success"><?php echo session()->get('success') ?? ''; ?></div>
     <?php endif; ?>
   <?php if(isset($users) && !empty($users)): ?>
+    <?php $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com')); ?>
     <div class="table-responsive">
     <table id="example" class="display table table-striped dt-stack" style="width:100%">
       <thead>
@@ -52,11 +53,14 @@
           <tr>
             <td><?= $user->name;?></td>
             <td><?=$user->email;?></td>                
-              <?php if($user->admin == 1){
-                $nivel = "Administrador";
-              }else{
-                $nivel = "Operacional";
-              }?>
+              <?php
+                $role = $user->role ?? (($user->admin ?? 0) == 1 ? 'admin' : 'user');
+                if ($role === 'admin') {
+                  $nivel = "Administrador";
+                } else {
+                  $nivel = "Usuário comum";
+                }
+              ?>
             <td><?=$nivel;?></td>
             <td class="d-flex justify-content-center" >
               
@@ -113,7 +117,7 @@
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">                      
-                      <?php if($user->email != "rafaelsoje@gmail.com"):?>                        
+                      <?php if($user->email != $superEmail):?>                        
                       <p>Tem certeza de que deseja excluir  <strong><?=$user->name;?></strong>?</p>
                       <?php else:?>
                         <p>Você não tem permissão para excluir  <strong><?=$user->name;?></strong>?</p>
@@ -121,7 +125,7 @@
                     </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                      <?php if($user->email != "rafaelsoje@gmail.com"):?>
+                      <?php if($user->email != $superEmail):?>
                         <form method="post" action="<?= base_url('/delete/usuario');?>" class="d-inline">
                           <?= csrf_field(); ?>
                           <input type="hidden" name="id" value="<?= $user->id; ?>">

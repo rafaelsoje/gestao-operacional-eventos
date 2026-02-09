@@ -30,10 +30,9 @@
         </div>
         <div class="col-12 col-md-6">
         <label class="form-label">Nível de acesso</label>
-            <select class="form-select" name="admin">
-                <option selected>Selecione...</option>
-                <option value="1">Administrador</option>
-                <option value="0">Convidado</option>                
+            <select class="form-select" name="role" required>
+                <option value="user">Usuário comum</option>
+                <option value="admin">Administrador</option>
             </select>
         </div> 
         <div class="col-12 col-md-6">

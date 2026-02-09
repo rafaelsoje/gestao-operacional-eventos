@@ -18,6 +18,7 @@ class Users extends Model
         'email',
         'password',
         'admin',
+        'role',
         'avatar',
         'lastLogin',
         'loginAttempts',

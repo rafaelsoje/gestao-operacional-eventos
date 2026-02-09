@@ -7,6 +7,7 @@ use App\Models\Logs;
 use App\Models\Operacional;
 use App\Models\PasswordResets;
 use App\Models\Users;
+use App\Services\TelegramService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\I18n\Time;
 use Config\Services;
@@ -160,11 +161,12 @@ class Login extends BaseController
             $userInfo->admin = $user->admin;
             $userInfo->avatar = $user->avatar;
             $userInfo->ip = $user->ip;
+            $userInfo->role = $this->resolveUserRole($user);
 
             session()->set('auth', true);
             session()->set('user', $userInfo);            
 
-            if ($userInfo->admin == '1') {
+            if ($userInfo->role === 'admin' || $userInfo->role === 'superuser') {
                 session()->set('admin', true);
             }
 
@@ -183,7 +185,7 @@ class Login extends BaseController
 
             $log = (new Logs())->insert($data);
 
-            #$this->telegran($user->name . " entrou no sistema!");
+            (new TelegramService())->send($user->name . " entrou no sistema");
            
             return redirect()->route('home')->with('success', 'Login efetuado com sucesso.'); 
 
@@ -270,6 +272,18 @@ class Login extends BaseController
 
         return redirect('login')->with('success', 'Se o e-mail existir, enviaremos um link de redefinição.');
         
+    }
+
+    private function resolveUserRole($user): string
+    {
+        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+        if (!empty($user->email) && $user->email === $superEmail) {
+            return 'superuser';
+        }
+        if (!empty($user->role)) {
+            return (string)$user->role;
+        }
+        return ($user->admin == '1') ? 'admin' : 'user';
     }
 
     private function allowRecoveryAttempt(?string $email, string $ip): bool

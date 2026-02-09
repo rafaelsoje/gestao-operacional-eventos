@@ -8,6 +8,7 @@ use App\Models\Propostas;
 use App\Models\Users;
 use App\Services\DashboardService;
 use App\Services\OperacionalService;
+use App\Services\TelegramService;
 use App\Services\UploadService;
 use CodeIgniter\Database\Query;
 use PhpParser\Node\Scalar\Float_;
@@ -55,6 +56,11 @@ class Home extends BaseController
         }
 
         $data = $this->request->getPost();
+        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+        $target = (new Users())->select('id,email')->where('id', $data['id'])->first();
+        if ($target && $target->email === $superEmail) {
+            return redirect()->route('usuarios')->with('error', 'Superusuário não pode ser editado.');
+        }
 
         $uploadService = new UploadService();
         $path = WRITEPATH . 'uploads/';
@@ -126,7 +132,7 @@ class Home extends BaseController
             ];
 
             $log = (new Logs())->insert($data);
-            #$this->telegran($user->name . " cadastrou \n" . $items['event_name']);
+            $this->notifyTelegram($user->name . " cadastrou " . $items['event_name']);
             return redirect()->route('proposta')->with('success', "Proposta cadastrada com sucesso!");
         }
 
@@ -286,7 +292,7 @@ class Home extends BaseController
             ];
 
             $log = (new Logs())->insert($data);
-            #$this->telegran($user->name . " atualizou a proposta \n" . $items["event_name"]);
+            $this->notifyTelegram($user->name . " atualizou a proposta " . $items["event_name"]);
             return redirect()->route('proposta')->with('success', "Proposta atualizada com sucesso!");
         }
 
@@ -314,7 +320,7 @@ class Home extends BaseController
                 ];
 
                 $log = (new Logs())->insert($data);
-                #$this->telegran($user->name . " removeu \n" . $prop->event_name);
+                $this->notifyTelegram($user->name . " removeu " . $prop->event_name);
             }
 
             if($user = (new Propostas())->delete($id)){
@@ -643,7 +649,7 @@ class Home extends BaseController
                 ];
 
                 (new Logs())->insert($log);
-                #$this->telegran($user->name . " atualizou um cadastro \n" . $data['nome']);
+                $this->notifyTelegram($user->name . " atualizou um cadastro operacional " . $data['nome']);
                 if($post['flag'] == 0){
                     return redirect()->route('planejamento.lista')->with('success', "Atualização realizada com sucesso!");
                 }
@@ -661,7 +667,7 @@ class Home extends BaseController
                 ];
 
                 (new Logs())->insert($log);
-                #$this->telegran($user->name . " novo cadastro operacional \n" . $data['nome']);
+                $this->notifyTelegram($user->name . " novo cadastro operacional " . $data['nome']);
                 if($post['flag'] == 0){
                     return redirect()->route('planejamento.lista')->with('success', "Cadastro realizado com sucesso!");
                 }
@@ -706,7 +712,7 @@ class Home extends BaseController
 
             $info = new Logs();
             $info->insert($log);
-            #$this->telegran($user->name . " apagou \n" . $data['nome']);
+            $this->notifyTelegram($user->name . " apagou " . $data['nome']);
 
 
             return redirect()->route('operacional.lista')->with('success', "Informação deletada com sucesso.");
@@ -735,7 +741,8 @@ class Home extends BaseController
     public function usuarios(): string
     {
         $list = new Users();
-        $users = $list->select()->findAll();
+        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+        $users = $list->select()->where('email !=', $superEmail)->findAll();
 
         return view('usuarios', ['users' => $users, 'botanicUser' => true]);
     }
@@ -761,6 +768,12 @@ class Home extends BaseController
         $data = $this->request->getPost();
         $pass = password_hash($this->request->getPost('password'), PASSWORD_DEFAULT);
         $data['avatar'] = "avatar.svg";
+        $role = $data['role'] ?? 'user';
+        if (!in_array($role, ['admin', 'user'], true)) {
+            $role = 'user';
+        }
+        $data['role'] = $role;
+        $data['admin'] = ($role === 'admin') ? 1 : 0;
         $data['password'] = $pass;
 
         $add = new Users();
@@ -768,7 +781,7 @@ class Home extends BaseController
 
         if($result){
             $user = session()->get('user');
-            #$this->telegran($user->name . " cadastrou um usuario \n" . $data['name']);
+            $this->notifyTelegram($user->name . " cadastrou um usuário " . $data['name']);
             return redirect()->route('usuarios');
         }
 
@@ -784,6 +797,10 @@ class Home extends BaseController
             $user = $temp->select()->where('id', $id)->first();
             unset($user->password);
 
+            $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+            if ($user && $user->email === $superEmail) {
+                return redirect()->route('usuarios')->with('error', 'Superusuário não pode ser editado.');
+            }
 
             return view('updateUsuario', ['user' => $user]);
         }
@@ -798,7 +815,7 @@ class Home extends BaseController
         $validate = $this->validate([
             'id' => 'required',
             'name' => 'required',
-            'admin' => 'required',
+            'role' => 'required',
         ]);
 
         $data = $this->request->getPost();
@@ -844,9 +861,14 @@ class Home extends BaseController
             $result = $pass->update($data['id'], $item);
         }
 
+        $role = $data['role'] ?? 'user';
+        if (!in_array($role, ['admin', 'user'], true)) {
+            $role = 'user';
+        }
         $items = [
             'name' => $data['name'],
-            'admin' => $data['admin'],
+            'role' => $role,
+            'admin' => ($role === 'admin') ? 1 : 0,
         ];
 
         $temp = new Users();
@@ -865,8 +887,14 @@ class Home extends BaseController
         $userInfo->email = $user->email;
         $userInfo->admin = $user->admin;
         $userInfo->avatar = $user->avatar;
+        $userInfo->role = $user->role ?? (($user->admin == '1') ? 'admin' : 'user');
 
         session()->set('user', $userInfo);
+        if ($userInfo->role === 'admin' || $userInfo->role === 'superuser') {
+            session()->set('admin', true);
+        } else {
+            session()->remove('admin');
+        }
 
         $user = session()->get('user');
         $data = [
@@ -884,6 +912,11 @@ class Home extends BaseController
         $id = $id ?? $this->request->getPost('id');
 
         if(is_int(intval($id))){
+            $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+            $target = (new Users())->select('id,email')->where('id', $id)->first();
+            if ($target && $target->email === $superEmail) {
+                return redirect('usuarios')->with('error', 'Superusuário não pode ser removido.');
+            }
             if((new Users())->delete($id)){
                 $user = session()->get('user');
                 #$this->telegran($user->name . " removeu usuario");
@@ -894,6 +927,37 @@ class Home extends BaseController
         }
 
         return redirect()->route('usuarios')->with('error', 'Parametro incorreto.');
+    }
+
+    public function notifications()
+    {
+        $user = session()->get('user');
+        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+        if (!$user || $user->email !== $superEmail) {
+            return redirect()->route('home')->with('error', 'Acesso negado.');
+        }
+
+        $enabled = (new TelegramService())->isEnabled();
+        return view('notifications', ['enabled' => $enabled]);
+    }
+
+    public function notificationsUpdate()
+    {
+        $user = session()->get('user');
+        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+        if (!$user || $user->email !== $superEmail) {
+            return redirect()->route('home')->with('error', 'Acesso negado.');
+        }
+
+        $enabled = $this->request->getPost('telegram_enabled') === '1' ? 'true' : 'false';
+        (new \App\Models\Settings())->setValue('telegram_enabled', $enabled);
+
+        return redirect()->route('admin.notifications')->with('success', 'Configuração atualizada.');
+    }
+
+    private function notifyTelegram(string $message): void
+    {
+        (new TelegramService())->send($message);
     }
 
     public function calendario()
