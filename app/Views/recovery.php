@@ -133,7 +133,7 @@
         <?= csrf_field(); ?> 
           
         <?php if (session()->has('error')) : ?>
-          <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
+          <div class="flash text-center alert alert-danger text-danger" role="alert" aria-live="assertive"><?php echo session()->get('error') ?? ''; ?></div>
         <?php endif; ?>
 
         <label for="email" class="form-label">E-mail</label>

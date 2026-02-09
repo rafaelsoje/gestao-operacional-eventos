@@ -28,7 +28,7 @@
             <label for="inputPassword4" class="form-label">email</label>
             <input type="email" class="form-control" name="email" required>
         </div>
-        <div class="col-6">
+        <div class="col-12 col-md-6">
         <label class="form-label">Nível de acesso</label>
             <select class="form-select" name="admin">
                 <option selected>Selecione...</option>
@@ -36,7 +36,7 @@
                 <option value="0">Convidado</option>                
             </select>
         </div> 
-        <div class="col-6">
+        <div class="col-12 col-md-6">
         <label class="form-label">Senha</label>
         <input type="password" class="form-control" name="password" required>
         </div> 

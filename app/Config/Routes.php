@@ -23,32 +23,32 @@ $routes->group('', ['filter' => 'auth'], function($routes){
     $routes->get('/logs', 'Home::logs', ['as' => 'logs']);
     
     $routes->get('/cadastro/proposta', 'Home::cadastroProposta', ['as' => 'cadastro.proposta']);
-    $routes->post('/cadastro/proposta', 'Home::cadastroPropostaStore', ['as' => 'cadastro.proposta.store']);
+    $routes->post('/cadastro/proposta', 'Home::cadastroPropostaStore', ['as' => 'cadastro.proposta.store', 'filter' => 'csrf']);
     $routes->get('/cadastro/usuario', 'Home::cadastroUsuario', ['as' => 'usuario']);
     $routes->post('/cadastro/usuario', 'Home::usuarioStore', ['as' => 'usuario.store', 'filter' => 'csrf']);
     
     $routes->get('/', 'Home::operacional', ['as' => 'home']);
     $routes->get('/operacional/lista', 'Home::operacionalLista', ['as' => 'operacional.lista']);
-     $routes->get('/operacional/calendario', 'Home::calendarioOperacional', ['as' => 'calendario.operacional']);
+    $routes->get('/operacional/calendario', 'Home::calendarioOperacional', ['as' => 'calendario.operacional']);
     $routes->get('/operacional/planejamento/cadastro', 'Home::cadastroPlanejamento');
-    $routes->post('/operaqconal/planejamento/cadastro', 'Home::cadastroPLanejamentoStore', ['as' => 'cadastro.planejamento.store']);
+    $routes->post('/operacional/planejamento/cadastro', 'Home::cadastroPlanejamentoStore', ['as' => 'cadastro.planejamento.store', 'filter' => 'csrf']);
     $routes->get('/operacional/planejamento/lista', 'Home::planejamentoLista', ['as' => 'planejamento.lista']);
     $routes->get('/cadastro/operacional', 'Home::cadastroOperacional', ['as' => 'cadastro.operacional']);
-    $routes->post('/cadastro/operacional', 'Home::cadastroOperacionalStore', ['as' => 'cadastro.operacional.store']);
-    $routes->post('/update/operacional', 'Home::updateOperacionalStore', ['as' => 'update.operacional.store']);
-    $routes->post('/cadastro/evento', 'Home::cadastroEventoStore', ['as' => 'cadastro.evento.store']);
+    $routes->post('/cadastro/operacional', 'Home::cadastroOperacionalStore', ['as' => 'cadastro.operacional.store', 'filter' => 'csrf']);
+    $routes->post('/update/operacional', 'Home::updateOperacionalStore', ['as' => 'update.operacional.store', 'filter' => 'csrf']);
     $routes->get('/update/operacional/(:num)', 'Home::updateOperacional/$1');
-    $routes->post('/delete/operacional', 'Home::deleteOperacional');
+    $routes->post('/delete/operacional', 'Home::deleteOperacional', ['filter' => 'csrf']);
 
     $routes->get('/update/usuario/(:num)', 'Home::updateUsuario/$1');
     $routes->get('/update/proposta/(:num)', 'Home::updateProposta/$1');    
-    $routes->post('/update/proposta', 'Home::updatePropostaStore', ['as' => 'update.proposta.store']);
-    $routes->post('/update/usuario', 'Home::updateUsuarioStore', ['as' => 'update.usuario.store']);
+    $routes->post('/update/proposta', 'Home::updatePropostaStore', ['as' => 'update.proposta.store', 'filter' => 'csrf']);
+    $routes->post('/update/usuario', 'Home::updateUsuarioStore', ['as' => 'update.usuario.store', 'filter' => 'csrf']);
     
-    $routes->get('/delete/usuario/(:num)', 'Home::removeUsuario/$1');
-    $routes->post('/delete/proposta', 'Home::removeProposta');
+    $routes->post('/delete/usuario', 'Home::removeUsuario', ['filter' => 'csrf']);
+    $routes->post('/delete/proposta', 'Home::removeProposta', ['filter' => 'csrf']);
 
-    $routes->post('/search/operacional', 'Home::operacional', ['as' => 'search.operacional']);
+    $routes->post('/search/operacional', 'Home::operacional', ['as' => 'search.operacional', 'filter' => 'csrf']);
+    $routes->get('/uploads/(:segment)/(:segment)', 'Home::downloadUpload/$1/$2', ['as' => 'uploads.download']);
 
 
     

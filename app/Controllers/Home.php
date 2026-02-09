@@ -6,6 +6,9 @@ use App\Models\Logs;
 use App\Models\Operacional;
 use App\Models\Propostas;
 use App\Models\Users;
+use App\Services\DashboardService;
+use App\Services\OperacionalService;
+use App\Services\UploadService;
 use CodeIgniter\Database\Query;
 use PhpParser\Node\Scalar\Float_;
 use stdClass;
@@ -14,118 +17,10 @@ class Home extends BaseController
 {
     public function index()
     {
-        $anoAtual = date('Y');
-        $anoPassado = date('Y')-1;
+        $service = new DashboardService();
+        $payload = $service->getDashboardData();
 
-
-        $items = new Propostas();
-
-        $data = $items->select("YEAR(start_date) AS ano, QUARTER(start_date) AS trimestre, SUM(value) AS valor")
-                ->where("YEAR(start_date) = $anoAtual OR YEAR(start_date) = $anoPassado")
-                ->groupBy("ano, trimestre")
-                ->orderBy("ano, trimestre")->findAll();
-
-        $data = $items->select("YEAR(start_date) AS ano, QUARTER(start_date) AS trimestre, COUNT(*) AS total")
-            ->where("YEAR(start_date) = $anoAtual OR YEAR(start_date) = $anoPassado")
-            ->groupBy("ano, trimestre")
-            ->orderBy("ano, trimestre")->findAll();
-
-        // Inicializando os arrays para armazenar os totais
-        $totaisPassado = [0, 0, 0, 0]; // Total de propostas por trimestre do ano passado
-        $totaisAtual = [0, 0, 0, 0];   // Total de propostas por trimestre do ano atual
-
-        // Processando os dados retornados da consulta
-        foreach ($data as $row) {
-            $ano = $row->ano;
-            $trimestre = $row->trimestre - 1; // Ajustando o índice para 0 (para corresponder ao array de 0 a 3)
-            $total = $row->total;
-
-            // Verificando em qual ano e trimestre os dados devem ser armazenados
-            if ($ano == $anoPassado) {
-                $totaisPassado[$trimestre] = intval($total);
-            } elseif ($ano == $anoAtual) {
-                $totaisAtual[$trimestre] = intval($total);
-            }
-        }
-
-        $recent = $items->select()->where('YEAR(start_date) >=', date('Y'))->orderBy('created_at', 'desc')->limit(6)->findAll();
-
-        // Dados do gráfico
-        $columnChart = [
-            ['Trimestre', "$anoPassado", "$anoAtual"],
-            ['1º Trimestre', $totaisPassado[0], $totaisAtual[0]],
-            ['2º Trimestre', $totaisPassado[1], $totaisAtual[1]],
-            ['3º Trimestre', $totaisPassado[2], $totaisAtual[2]],
-            ['4º Trimestre', $totaisPassado[3], $totaisAtual[3]]
-        ];
-
-        // Obtendo as somas das categorias
-        $data = (new Propostas())
-        ->where('status', '1')
-        ->where('YEAR(start_date)', date('Y'))
-        ->selectSum('value')
-        ->selectSum('charge')
-        ->selectSum('rent')
-        ->selectSum('third')
-        ->first();
-
-        // 2. Calculando o total
-        $total = $data->value + $data->charge + $data->rent + $data->third;
-
-        // 3. Calculando a porcentagem de cada categoria
-        // $percentages = [
-        //     'total' => ($data->value / $total) * 100,
-        //     'equipe' => ($data->charge / $total) * 100,
-        //     'locação' => ($data->rent / $total) * 100,
-        //     'terceiros' => ($data->third / $total) * 100,
-        // ];
-
-        $saldo = $data->value - $data->charge - $data->rent - $data->third;
-
-        $pieChart = [
-            ['Categoria', 'Valor'],
-            ['Equipe', intval($data->charge)],
-            ['Locação', intval($data->rent)],
-            ['Terceiros', intval($data->third)],
-            ['Saldo', intval($saldo)],
-        ];
-
-         // Obtendo todas as somas em uma única consulta
-         $data = (new Propostas())->where('status', '1')->where('YEAR(start_date)', date('Y'))
-         ->selectSum('value')
-         ->selectSum('charge')
-         ->selectSum('rent')
-         ->selectSum('third')
-         ->first();  // Retorna um único registro com as somas
-
-        // Verificando se os valores foram retornados corretamente
-        $aceita = [
-            'value' => $data->value ?? 0,   // Caso o valor seja NULL, substituímos por 0
-            'charge' => $data->charge ?? 0,
-            'rent' => $data->rent ?? 0,
-            'third' => $data->third ?? 0
-        ];
-
-         // Obtendo todas as somas em uma única consulta
-         $data = (new Propostas())->where('status', '2')->where('YEAR(start_date) >=', date('Y'))->where('start_date >=', date('Y-m-d'))
-         ->selectSum('value')
-         ->first();  // Retorna um único registro com as somas
-
-        // Verificando se os valores foram retornados corretamente
-        $analise = [
-            'value' => $data->value ?? 0,   // Caso o valor seja NULL, substituímos por 0
-        ];
-
-        // Passando os totais para a view
-        return view('dashboard', [
-            'aceita' => $aceita,
-            'analise' =>$analise,
-            'saldo' => $saldo,
-            'columnChart' => json_encode($columnChart),
-            'pieChart' => json_encode($pieChart),
-            'recent' => $recent,
-            'botanic' => true
-        ]);
+        return view('dashboard', $payload + ['botanic' => true]);
 
     }
 
@@ -144,6 +39,7 @@ class Home extends BaseController
 
     public function cadastroPropostaStore()
     {
+        helper('money');
 
         $validate = $this->validate([
             'excolab_id' => 'required',
@@ -155,38 +51,23 @@ class Home extends BaseController
         ]);
 
         if (!$validate) {
-            return redirect()->route('cadastro.proposta')->with('error', 'Preencha o fornulario corretamente!');
+            return redirect()->route('cadastro.proposta')->with('error', 'Preencha o formulário corretamente!');
         }
 
         $data = $this->request->getPost();
 
-        $path = FCPATH . 'uploads/';
+        $uploadService = new UploadService();
+        $path = WRITEPATH . 'uploads/';
 
-        $directoryName = $data['start_date']; // ex: "2024-11-06"
-
+        $directoryName = $uploadService->sanitizeDir($data['start_date']); // ex: "2024-11-06"
         $fullPath = $path . $directoryName;
 
-        if (!is_dir($fullPath)) {
-            mkdir($fullPath, 0755, true);
-        }
-        // Verifique se o arquivo foi enviado
         $file = $this->request->getFile('file');
-
-        $newName = null;
-
-        if ($file->isValid() && !$file->hasMoved()) {
-            // Define o diretório de destino
-            // $newName = $file->getRandomName(); // Gera um nome aleatório para o arquivo
-            $newName = $file->getClientName();
-
-            // Remove espaços e substitui por underscore
-            $newName = preg_replace('/\s+/', '_', $newName);
-
-            // Remove caracteres especiais, mantendo apenas letras, números e underscores
-            $newName = preg_replace('/[^\w\-\.]/', '', $newName);
-
-            $file->move($fullPath, $newName);
+        $fileResult = $uploadService->handle($file, $fullPath);
+        if ($fileResult['error']) {
+            return redirect()->back()->with('error', $fileResult['error']);
         }
+        $newName = $fileResult['name'];
 
         // $temp = explode('.', $data['value']);
         // $value = implode('',$temp);
@@ -194,31 +75,11 @@ class Home extends BaseController
         // $temp = explode(',', $value);
         // $value = implode('.',$temp);
 
-        $value = str_replace(['.', ','], '', $data['value']);
-        $value = substr($value, 0, -2) . '.' . substr($value, -2);
-
-        if (!empty($data['charge'])) {
-            $charge = str_replace(['.', ','], '', $data['charge']);
-            $charge = substr($charge, 0, -2) . '.' . substr($charge, -2);
-        }
-
-        if (!empty($data['rent'])) {
-            $rent = str_replace(['.', ','], '', $data['rent']);
-            $rent = substr($rent, 0, -2) . '.' . substr($rent, -2);
-        }
-
-        if (!empty($data['third'])) {
-            $third = str_replace(['.', ','], '', $data['third']);
-            $third = substr($third, 0, -2) . '.' . substr($third, -2);
-        }
-
-        if (!empty($data['saldo'])) {
-            // $saldo = trim($data['saldo']);
-            $saldo = str_replace(['R$', ' '], '', $data['saldo']);
-            $saldo = str_replace(['.', ','], '', $saldo);
-            $saldo = substr($saldo, 0, -2) . '.' . substr($saldo, -2);
-            $saldo = mb_substr($saldo, 1);
-        }
+        $value = money_to_decimal($data['value']);
+        $charge = money_to_decimal($data['charge'] ?? null);
+        $rent = money_to_decimal($data['rent'] ?? null);
+        $third = money_to_decimal($data['third'] ?? null);
+        $saldo = money_to_decimal($data['saldo'] ?? null);
 
 
         $items = [
@@ -231,10 +92,10 @@ class Home extends BaseController
             'email' => $data['email'],
             'phone' => $data['phone'],
             'value' => $value,
-            'charge' => $charge ?? 0,
-            'rent' => $rent ?? 0,
-            'third'=> $third ?? 0,
-            'saldo'=> $saldo ?? 0,
+            'charge' => $charge,
+            'rent' => $rent,
+            'third'=> $third,
+            'saldo'=> $saldo,
             'status' => $data['status'],
             'description' => $data['description'],
             'file' => $newName
@@ -244,29 +105,15 @@ class Home extends BaseController
         $result = $prop->insert($items);
 
         $rider = $this->request->getFile('rider');
-
-        $newName = null;
-
-        if($rider){
-            if ($rider->isValid() && !$rider->hasMoved()) {
-                // Define o diretório de destino
-                // $newName = $file->getRandomName(); // Gera um nome aleatório para o arquivo
-                $newName = $rider->getClientName();
-
-                // Remove espaços e substitui por underscore
-                $newName = preg_replace('/\s+/', '_', $newName);
-
-                // Remove caracteres especiais, mantendo apenas letras, números e underscores
-                $newName = preg_replace('/[^\w\-\.]/', '', $newName);
-
-                $rider->move($fullPath, $newName);
-
-                $item = [
-                    'rider' => $newName
-                ];
-
-                $prop->update($result, $item);
-            }
+        $riderResult = $uploadService->handle($rider, $fullPath);
+        if ($riderResult['error']) {
+            return redirect()->back()->with('error', $riderResult['error']);
+        }
+        if ($riderResult['name']) {
+            $item = [
+                'rider' => $riderResult['name']
+            ];
+            $prop->update($result, $item);
         }
 
 
@@ -275,11 +122,11 @@ class Home extends BaseController
             $user = session()->get('user');
             $data = [
                 'title' => 'CADASTROU PROPOSTA',
-                'description' => "O usuário " . $user->name  . " cadastrou " . $data['event_name'] . " " .date('d-m-Y H:i:s')
+                'description' => "O usuário " . $user->name  . " cadastrou " . $data['event_name'] . " " .date('Y-m-d H:i:s')
             ];
 
             $log = (new Logs())->insert($data);
-            $this->telegran($user->name . " cadastrou \n" . $items['event_name']);
+            #$this->telegran($user->name . " cadastrou \n" . $items['event_name']);
             return redirect()->route('proposta')->with('success', "Proposta cadastrada com sucesso!");
         }
 
@@ -298,12 +145,13 @@ class Home extends BaseController
             return redirect('proposta')->with('error', 'Proposta não encontrada.');
         }
 
-        return redirect('proposta')->with('error', 'Id da proposta invãlido.');
+        return redirect('proposta')->with('error', 'ID da proposta inválido.');
 
     }
 
     public function UpdatePropostaStore()
     {
+        helper('money');
 
         $validate = $this->validate([
             'id' => 'required',
@@ -316,105 +164,70 @@ class Home extends BaseController
         ]);
 
         if (!$validate) {
-            return redirect()->route('proposta')->with('error', 'Preencha o fornulario corretamente!');
+            return redirect()->route('proposta')->with('error', 'Preencha o formulário corretamente!');
         }
 
         $data = $this->request->getPost();
 
-        $path = FCPATH . 'uploads/';
+        $uploadService = new UploadService();
+        $path = WRITEPATH . 'uploads/';
 
-        $directoryName = $data['start_date']; // ex: "2024-11-06"
-
+        $directoryName = $uploadService->sanitizeDir($data['start_date']); // ex: "2024-11-06"
         $fullPath = $path . $directoryName;
 
         $file = $this->request->getFile('file');
         $rider = $this->request->getFile('rider');
 
 
-        $fileOld = $path . $data['start_date_old'] . "/" . $data['file_old'];
-        $fileNew = $fullPath . "/" . $data['file_old'];
+        $safeOldDate = $uploadService->sanitizeDir($data['start_date_old']);
+        $safeOldFile = basename($data['file_old']);
+        $fileOld = $path . $safeOldDate . "/" . $safeOldFile;
+        $fileNew = $fullPath . "/" . $safeOldFile;
 
         if($file){
-
-            if (!is_dir($fullPath)) {
-                mkdir($fullPath, 0755, true);
+            $fileResult = $uploadService->handle($file, $fullPath);
+            if ($fileResult['error']) {
+                return redirect()->back()->with('error', $fileResult['error']);
             }
-            // Verifique se o arquivo foi enviado
 
-            $newName = null;
-
-            if ($file->isValid() && !$file->hasMoved()) {
-                // Define o diretório de destino
-                // $newName = $file->getRandomName(); // Gera um nome aleatório para o arquivo
-                $newName = $file->getClientName();
-
-                // Remove espaços e substitui por underscore
-                $newName = preg_replace('/\s+/', '_', $newName);
-
-                // Remove caracteres especiais, mantendo apenas letras, números e underscores
-                $newName = preg_replace('/[^\w\-\.]/', '', $newName);
-
-                $file->move($fullPath, $newName);
-
+            if ($fileResult['name']) {
                 $item = [
-                    'file' => $newName
+                    'file' => $fileResult['name']
                 ];
 
                 $prop = new Propostas();
-                $temp = $prop->update($data['id'], $item);
+                $prop->update($data['id'], $item);
 
-                unlink($fileOld);
-
-            }else{
-
+                if (is_file($fileOld)) {
+                    unlink($fileOld);
+                }
+            } else {
                 if($data['start_date'] != $data['start_date_old']){
-                    rename($fileOld, $fileNew);
+                    if (!is_dir($fullPath)) {
+                        mkdir($fullPath, 0755, true);
+                    }
+                    if (is_file($fileOld)) {
+                        rename($fileOld, $fileNew);
+                    }
                 }
             }
-
-
         }
 
 
         if($rider){
-
-            if (!is_dir($fullPath)) {
-                mkdir($fullPath, 0755, true);
+            $riderResult = $uploadService->handle($rider, $fullPath);
+            if ($riderResult['error']) {
+                return redirect()->back()->with('error', $riderResult['error']);
             }
-            // Verifique se o arquivo foi enviado
 
-            $newName = null;
-
-            if ($rider->isValid() && !$rider->hasMoved()) {
-                // Define o diretório de destino
-                // $newName = $file->getRandomName(); // Gera um nome aleatório para o arquivo
-                $newName = $rider->getClientName();
-
-                // Remove espaços e substitui por underscore
-                $newName = preg_replace('/\s+/', '_', $newName);
-
-                // Remove caracteres especiais, mantendo apenas letras, números e underscores
-                $newName = preg_replace('/[^\w\-\.]/', '', $newName);
-
-                $rider->move($fullPath, $newName);
-
+            if ($riderResult['name']) {
                 $item = [
-                    'rider' => $newName
+                    'rider' => $riderResult['name']
                 ];
 
                 $prop = new Propostas();
-                $temp = $prop->update($data['id'], $item);
-
-                // unlink($fileOld);
-
-            }else{
-
-                // if($data['start_date'] != $data['start_date_old']){
-                //     rename($fileOld, $fileNew);
-                // }
+                $prop->update($data['id'], $item);
             }
-
-
         }
 
         if(isset($data['removeRider']) && $data['removeRider'] == "on"){
@@ -434,31 +247,11 @@ class Home extends BaseController
         // $temp = explode(',', $value);
         // $value = implode('.',$temp);
 
-        $value = str_replace(['.', ','], '', $data['value']);
-        $value = substr($value, 0, -2) . '.' . substr($value, -2);
-
-        if (!empty($data['charge'])) {
-            $charge = str_replace(['.', ','], '', $data['charge']);
-            $charge = substr($charge, 0, -2) . '.' . substr($charge, -2);
-        }
-
-        if (!empty($data['rent'])) {
-            $rent = str_replace(['.', ','], '', $data['rent']);
-            $rent = substr($rent, 0, -2) . '.' . substr($rent, -2);
-        }
-
-        if (!empty($data['third'])) {
-            $third = str_replace(['.', ','], '', $data['third']);
-            $third = substr($third, 0, -2) . '.' . substr($third, -2);
-        }
-
-        if (!empty($data['saldo'])) {
-            // $saldo = trim($data['saldo']);
-            $saldo = str_replace(['R$', ' '], '', $data['saldo']);
-            $saldo = str_replace(['.', ','], '', $saldo);
-            $saldo = substr($saldo, 0, -2) . '.' . substr($saldo, -2);
-            $saldo = mb_substr($saldo, 1);
-        }
+        $value = money_to_decimal($data['value']);
+        $charge = money_to_decimal($data['charge'] ?? null);
+        $rent = money_to_decimal($data['rent'] ?? null);
+        $third = money_to_decimal($data['third'] ?? null);
+        $saldo = money_to_decimal($data['saldo'] ?? null);
 
         $items = [
             'excolab_id' => $data['excolab_id'],
@@ -470,10 +263,10 @@ class Home extends BaseController
             'email' => $data['email'],
             'phone' => $data['phone'],
             'value' => $value,
-            'charge' => $charge ?? 0,
-            'rent' => $rent ?? 0,
-            'third'=> $third ?? 0,
-            'saldo'=> $saldo ?? 0,
+            'charge' => $charge,
+            'rent' => $rent,
+            'third'=> $third,
+            'saldo'=> $saldo,
             'status' => $data['status'],
             'description' => $data['description'],
         ];
@@ -489,11 +282,11 @@ class Home extends BaseController
             $user = session()->get('user');
             $data = [
                 'title' => 'ATUALIZOU PROPOSTA',
-                'description' => "O usuário " . $user->name  . " atualizou proposta " . $data['event_name'] . " ". date('d-m-Y H:i:s')
+                'description' => "O usuário " . $user->name  . " atualizou proposta " . $data['event_name'] . " ". date('Y-m-d H:i:s')
             ];
 
             $log = (new Logs())->insert($data);
-            $this->telegran($user->name . " atualizou a proposta \n" . $items["event_name"]);
+            #$this->telegran($user->name . " atualizou a proposta \n" . $items["event_name"]);
             return redirect()->route('proposta')->with('success', "Proposta atualizada com sucesso!");
         }
 
@@ -507,7 +300,9 @@ class Home extends BaseController
         $file = $this->request->getPost('file');
         $date = $this->request->getPost('date');
 
-        $path = FCPATH . 'uploads/' . $date . "/" . $file;
+        $safeDate = preg_replace('/[^0-9\-]/', '', $date);
+        $safeFile = basename($file);
+        $path = WRITEPATH . 'uploads/' . $safeDate . "/" . $safeFile;
 
         if(is_int(intval($id))){
 
@@ -515,11 +310,11 @@ class Home extends BaseController
                 $user = session()->get('user');
                 $data = [
                     'title' => 'REMOVEU PROPOSTA',
-                    'description' => "O usuário " . $user->name  . " removeu " . $prop->event_name . " " . date('d-m-Y H:i:s')
+                    'description' => "O usuário " . $user->name  . " removeu " . $prop->event_name . " " . date('Y-m-d H:i:s')
                 ];
 
                 $log = (new Logs())->insert($data);
-                $this->telegran($user->name . " removeu \n" . $prop->event_name);
+                #$this->telegran($user->name . " removeu \n" . $prop->event_name);
             }
 
             if($user = (new Propostas())->delete($id)){
@@ -542,7 +337,9 @@ class Home extends BaseController
     ###############################################
 
     public function operacional(){
-       
+        $service = new OperacionalService();
+        $year = (int)date('Y');
+
         $get = '';
 
         # caso receba ?id=0 no GET direciona para lançamentos futuros
@@ -550,39 +347,23 @@ class Home extends BaseController
             $get = $this->request->getGet('id');
         }
 
+        $chart = (object)[
+            'total_operacional' => 0,
+            'diesel_total' => 0,
+            'cedae_total' => 0,
+            'light_total' => 0,
+            'total_consumo' => 0,
+        ];
+        $barEntretenimento = clone $chart;
+        $barSocial = clone $chart;
+        $barCorporativo = clone $chart;
+
         if($this->request->getPost()){
 
-            dd('post');
+           # dd('post');
 
             $post = $this->request->getPost();
-
-            $chart = new stdClass;
-            $chart->total_operacional = '';
-            $chart->diesel_total = '';
-            $chart->cedae_total = '';
-            $chart->light_total = '';
-            $chart->total_consumo = '';
-
-            $barEntretenimento = new stdClass;
-            $barEntretenimento->total_operacional = '';
-            $barEntretenimento->diesel_total = '';
-            $barEntretenimento->cedae_total = '';
-            $barEntretenimento->light_total = '';
-            $barEntretenimento->total_consumo = '';
-
-            $barSocial = new stdClass;
-            $barSocial->total_operacional = '';
-            $barSocial->diesel_total = '';
-            $barSocial->cedae_total = '';
-            $barSocial->light_total = '';
-            $barSocial->total_consumo = '';
-
-            $barCorporativo = new stdClass;
-            $barCorporativo->total_operacional = '';
-            $barCorporativo->diesel_total = '';
-            $barCorporativo->cedae_total = '';
-            $barCorporativo->light_total = '';
-            $barCorporativo->total_consumo = '';
+            $filters = [];
 
             if($post['data_inicial'] && $post['data_final'])
             {
@@ -600,89 +381,20 @@ class Home extends BaseController
                         $array['entretenimento'] = $post['entretenimento'];
                     }
 
-                    $data = (new operacional)
-                        ->where('data >=', $post['data_inicial'])
-                        ->where('data <=', $post['data_final'])
-                        ->where('flag', 1)
-                        ->whereIn('tipo', $array)
-                        ->orderBy('data', 'desc')
-                    ->findAll();
+                    $filters = [
+                        'date_from' => $post['data_inicial'],
+                        'date_to' => $post['data_final'],
+                        'flag' => 1,
+                        'tipos' => $array,
+                    ];
 
-                    $query = new Operacional();
-                    $sum = $query
-                        ->where('data >=', $post['data_inicial'])
-                        ->where('data <=', $post['data_final'])
-                        ->where('flag', 1)
-                        ->whereIn('tipo', $array)
-                        ->selectSum('super_op')
-                        ->selectSum('diesel_total')
-                        ->selectSum('tempo_g1')
-                        ->selectSum('tempo_g2')
-                        ->selectSum('taxa_cozinha')
-                        ->selectsum('valor_premontagem')
-                        ->selectSum('diesel_litros')
-                        ->selectSum('cedae_consumo')
-                        ->selectSum('cedae_total')
-                        ->selectSum('light_consumo')
-                        ->selectSum('light_total')
-                        ->selectSum('total_consumo')
-                    ->first();
-
-                    $chart = (new Operacional())
-                        ->where('data >=', $post['data_inicial'])
-                        ->where('data <=', $post['data_final'])
-                        ->where('flag', 1)
-                        ->whereIn('tipo', $array)
-                        ->selectSum('total_operacional')
-                        ->selectSum('diesel_total')
-                        ->selectSum('cedae_total')
-                        ->selectSum('light_total')
-                    ->first();
-
-                    if(isset($array['social']))
-                    {
-                        $barSocial = (new Operacional())
-                            ->where('data >=', $post['data_inicial'])
-                            ->where('data <=', $post['data_final'])
-                            ->where('tipo', 'Social')
-                            ->where('flag', 1)
-                            ->selectSum('total_operacional')
-                            ->selectSum('diesel_total')
-                            ->selectSum('cedae_total')
-                            ->selectSum('light_total')
-                            ->selectSum('total_consumo')
-                        ->first();
-                    }
-
-                    if(isset($array['corporativo']))
-                    {
-                        $barCorporativo = (new Operacional())
-                            ->where('data >=', $post['data_inicial'])
-                            ->where('data <=', $post['data_final'])
-                            ->where('tipo', 'Corporativo')
-                            ->where('flag', 1)
-                            ->selectSum('total_operacional')
-                            ->selectSum('diesel_total')
-                            ->selectSum('cedae_total')
-                            ->selectSum('light_total')
-                            ->selectSum('total_consumo')
-                        ->first();
-                    }
-
-                    if(isset($array['entretenimento']))
-                    {
-                        $barEntretenimento = (new Operacional())
-                           ->where('data >=', $post['data_inicial'])
-                            ->where('data <=', $post['data_final'])
-                            ->where('tipo', 'Entretenimento')
-                            ->where('flag', 1)
-                            ->selectSum('total_operacional')
-                            ->selectSum('diesel_total')
-                            ->selectSum('cedae_total')
-                            ->selectSum('light_total')
-                            ->selectSum('total_consumo')
-                        ->first();
-                    }
+                    $result = $service->buildAggregates($filters);
+                    $data = $result['data'];
+                    $sum = $result['sum'];
+                    $chart = $result['chart'];
+                    $barSocial = $result['bars']['social'];
+                    $barCorporativo = $result['bars']['corporativo'];
+                    $barEntretenimento = $result['bars']['entretenimento'];
                 }else{
                     return redirect()->back()->with('error', 'Nenhum tipo de evento selecionado!');
                 }
@@ -693,155 +405,41 @@ class Home extends BaseController
 
            
 
-            $data = (new operacional)->orderBy('data', 'desc')->where('MONTH(data)', (date('m')+1))->where('flag', 0)->limit(4)->findAll();
+            $month = (int)date('m') + 1;
+            $filters = [
+                'month' => $month,
+                'year' => $year,
+                'flag' => 0,
+            ];
 
-            $query = new Operacional();
-            $sum = $query
-                ->where("MONTH(data)", (date('m')+1))
-                ->where("YEAR(data)", date('Y'))
-                ->where('flag', 0)
-                ->selectSum('super_op')
-                ->selectSum('diesel_total')
-                ->selectSum('tempo_g1')
-                ->selectSum('tempo_g2')
-                ->selectsum('valor_premontagem')
-                ->selectSum('diesel_litros')
-                ->selectSum('cedae_consumo')
-                ->selectSum('cedae_total')
-                ->selectSum('light_consumo')
-                ->selectSum('light_total')
-                ->selectSum('total_consumo')
-            ->first();
-
-             $chart = (new Operacional())
-                ->where("MONTH(data)", (date('m')+1))
-                ->where("YEAR(data)", date('Y'))
-                ->where('flag', 0)
-                ->selectSum('total_operacional')
-                ->selectSum('diesel_total')
-                ->selectSum('cedae_total')
-                ->selectSum('light_total')
-            ->first();
-
-            $barSocial = (new Operacional())
-                ->where("MONTH(data)", (date('m')+1))
-                ->where("YEAR(data)", date('Y'))
-                ->where('flag', 0)
-                ->where('tipo', 'Social')
-                ->selectSum('total_operacional')
-                ->selectSum('diesel_total')
-                ->selectSum('cedae_total')
-                ->selectSum('light_total')
-                ->selectSum('total_consumo')
-            ->first();
-
-            $barCorporativo = (new Operacional())
-                ->where("MONTH(data)", (date('m')+1))
-                ->where("YEAR(data)", date('Y'))
-                ->where('flag', 0)
-                ->where('tipo', 'Corporativo')
-                ->selectSum('total_operacional')
-                ->selectSum('diesel_total')
-                ->selectSum('cedae_total')
-                ->selectSum('light_total')
-                ->selectSum('total_consumo')
-            ->first();
-
-            $barEntretenimento = (new Operacional())
-                ->where("MONTH(data)", (date('m')+1))
-                ->where("YEAR(data)", date('Y'))
-                ->where('flag', 0)
-                ->where('tipo', 'Entretenimento')
-                ->selectSum('total_operacional')
-                ->selectSum('diesel_total')
-                ->selectSum('cedae_total')
-                ->selectSum('light_total')
-                ->selectSum('total_consumo')
-            ->first();
+            $result = $service->buildAggregates($filters, 4);
+            $data = $result['data'];
+            $sum = $result['sum'];
+            $chart = $result['chart'];
+            $barSocial = $result['bars']['social'];
+            $barCorporativo = $result['bars']['corporativo'];
+            $barEntretenimento = $result['bars']['entretenimento'];
 
         }else{
 
           
 
             # obtem o mês atual;
-            $mesSearch = date('m');
-                       
-            # obtém os lançamentos do mes atual;
-            # Caso não tenha lançamentos no mês atual, pesquisa o último mês com lançamentos para exibir na dashboard
-            while(!((new Operacional())->where('YEAR(data)', date('Y'))->where('MONTH(data)', $mesSearch)->findAll()))
-            {
-                $mesSearch = $mesSearch -1;
-                if($mesSearch == 0){
-                    break;
-                }           
-            }
+            $mesSearch = $service->latestMonthWithFlag($year, 1);
 
-            $data = (new operacional)->orderBy('data', 'desc')->where('MONTH(data)', $mesSearch)->where('flag', 1)->findAll();
+            $filters = [
+                'month' => $mesSearch,
+                'year' => $year,
+                'flag' => 1,
+            ];
 
-            $query = new Operacional();
-            $sum = $query
-                ->where("MONTH(data)", $mesSearch)
-                ->where("YEAR(data)", date('Y'))
-                ->where('flag', 1)
-                ->selectSum('super_op')
-                ->selectSum('diesel_total')
-                ->selectSum('tempo_g1')
-                ->selectSum('tempo_g2')
-                ->selectSum('taxa_cozinha')
-                ->selectsum('valor_premontagem')
-                ->selectSum('diesel_litros')
-                ->selectSum('cedae_consumo')
-                ->selectSum('cedae_total')
-                ->selectSum('light_consumo')
-                ->selectSum('light_total')
-                ->selectSum('total_consumo')
-            ->first();
-
-             $chart = (new Operacional())
-                ->where("MONTH(data)", $mesSearch)
-                ->where("YEAR(data)", date('Y'))
-                ->where('flag', 1)
-                ->selectSum('total_operacional')
-                ->selectSum('diesel_total')
-                ->selectSum('cedae_total')
-                ->selectSum('light_total')
-            ->first();
-
-            $barSocial = (new Operacional())
-                ->where("MONTH(data)", $mesSearch)
-                ->where("YEAR(data)", date('Y'))
-                ->where('flag', 1)
-                ->where('tipo', 'Social')
-                ->selectSum('total_operacional')
-                ->selectSum('diesel_total')
-                ->selectSum('cedae_total')
-                ->selectSum('light_total')
-                ->selectSum('total_consumo')
-            ->first();
-
-            $barCorporativo = (new Operacional())
-                ->where("MONTH(data)", $mesSearch)
-                ->where("YEAR(data)", date('Y'))
-                ->where('flag', 1)
-                ->where('tipo', 'Corporativo')
-                ->selectSum('total_operacional')
-                ->selectSum('diesel_total')
-                ->selectSum('cedae_total')
-                ->selectSum('light_total')
-                ->selectSum('total_consumo')
-            ->first();
-
-            $barEntretenimento = (new Operacional())
-                ->where("MONTH(data)", $mesSearch)
-                ->where("YEAR(data)", date('Y'))
-                ->where('flag', 1)
-                ->where('tipo', 'Entretenimento')
-                ->selectSum('total_operacional')
-                ->selectSum('diesel_total')
-                ->selectSum('cedae_total')
-                ->selectSum('light_total')
-                ->selectSum('total_consumo')
-            ->first();
+            $result = $service->buildAggregates($filters);
+            $data = $result['data'];
+            $sum = $result['sum'];
+            $chart = $result['chart'];
+            $barSocial = $result['bars']['social'];
+            $barCorporativo = $result['bars']['corporativo'];
+            $barEntretenimento = $result['bars']['entretenimento'];
 
 
         }
@@ -884,66 +482,64 @@ class Home extends BaseController
         ];
 
 
-        for($i=0; $i<=12; $i++){
-            $mes = $i+1;
-            $lineMes[] = (new Operacional())
-                ->where("MONTH(data)", $mes)
-                ->where("YEAR(data)", date('Y'))
-                ->where('flag', 1)
-                ->selectSum('total_consumo')
-            ->first();
-        }
-
-        $line = [
-            ['Janeiro', (float)$lineMes[0]->total_consumo],
-            ['Fevereiro', (float)$lineMes[1]->total_consumo],
-            ['Março', (float)$lineMes[2]->total_consumo],
-            ['Abril', (float)$lineMes[3]->total_consumo],
-            ['Maio', (float)$lineMes[4]->total_consumo],
-            ['Junho', (float)$lineMes[5]->total_consumo],
-            ['Julho', (float)$lineMes[6]->total_consumo],
-            ['Agosto', (float)$lineMes[7]->total_consumo],
-            ['Setembro', (float)$lineMes[8]->total_consumo],
-            ['Outubro', (float)$lineMes[9]->total_consumo],
-            ['Novembro', (float)$lineMes[10]->total_consumo],
-            ['Dezembro', (float)$lineMes[11]->total_consumo],
-        ];
-
-         for($x=0; $x<=12; $x++){
-            $meses = $x+1;
-            $cozinhaMes[] = (new Operacional())
-                ->where("MONTH(data)", $meses)
-                ->where("YEAR(data)", date('Y'))
-                ->where('flag', 1)
-                ->selectSum('taxa_cozinha')
-            ->first();
-        }
-
-        $cozinha = [
-            ['Janeiro', (float)$cozinhaMes[0]->taxa_cozinha],
-            ['Fevereiro', (float)$cozinhaMes[1]->taxa_cozinha],
-            ['Março', (float)$cozinhaMes[2]->taxa_cozinha],
-            ['Abril', (float)$cozinhaMes[3]->taxa_cozinha],
-            ['Maio', (float)$cozinhaMes[4]->taxa_cozinha],
-            ['Junho', (float)$cozinhaMes[5]->taxa_cozinha],
-            ['Julho', (float)$cozinhaMes[6]->taxa_cozinha],
-            ['Agosto', (float)$cozinhaMes[7]->taxa_cozinha],
-            ['Setembro', (float)$cozinhaMes[8]->taxa_cozinha],
-            ['Outubro', (float)$cozinhaMes[9]->taxa_cozinha],
-            ['Novembro', (float)$cozinhaMes[10]->taxa_cozinha],
-            ['Dezembro', (float)$cozinhaMes[11]->taxa_cozinha],
-        ];
+        $line = $service->monthlyComparison($year);
 
         
 
+        $eventCount = (int)($sum->event_count ?? 0);
+        $avgEventCost = $eventCount > 0 ? ((float)$sum->total_consumo / $eventCount) : 0;
+
         if(isset($post)){
-            return view('operacional', ['operacional' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'cozinha' => json_encode($cozinha), 'search' => $post, 'tipo' => $array]);
+            $topEvents = $service->topEventsByCost($filters ?? []);
+            return view('operacional', ['operacional' => true, 'sum' => $sum, 'avg_event_cost' => $avgEventCost, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'topEvents' => json_encode($topEvents), 'search' => $post, 'tipo' => $array]);
         }else{
             if($get == 0){
-                return view('operacional', ['planejado' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'cozinha' => json_encode($cozinha), 'get' => $get, 'mes' => $this->mes(date('m')+1)]);
+                $filters = [
+                    'month' => (int)date('m') + 1,
+                    'year' => $year,
+                    'flag' => 0,
+                ];
+                $topEvents = $service->topEventsByCost($filters);
+                return view('operacional', ['planejado' => true, 'sum' => $sum, 'avg_event_cost' => $avgEventCost, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'topEvents' => json_encode($topEvents), 'get' => $get, 'mes' => $this->mes(date('m')+1)]);
             }
-            return view('operacional', ['operacional' => true, 'sum' => $sum, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'cozinha' => json_encode($cozinha), 'mes' => $this->mes($mesSearch)]);
+            $filters = [
+                'month' => $mesSearch,
+                'year' => $year,
+                'flag' => 1,
+            ];
+            $topEvents = $service->topEventsByCost($filters);
+            return view('operacional', ['operacional' => true, 'sum' => $sum, 'avg_event_cost' => $avgEventCost, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'topEvents' => json_encode($topEvents), 'mes' => $this->mes($mesSearch)]);
         }
+    }
+
+    public function downloadUpload(string $date, string $file)
+    {
+        if (!session()->get('auth')) {
+            return redirect()->route('login')->with('error', 'Sessão expirada. Faça login novamente.');
+        }
+
+        $safeDate = preg_replace('/[^0-9\-]/', '', $date);
+        $safeFile = basename($file);
+
+        if ($safeDate !== $date || $safeFile !== $file) {
+            return $this->response->setStatusCode(404);
+        }
+
+        $path = WRITEPATH . 'uploads/' . $safeDate . '/' . $safeFile;
+        $legacyPath = FCPATH . 'uploads/' . $safeDate . '/' . $safeFile;
+
+        if (!is_file($path) && is_file($legacyPath)) {
+            if (!is_dir(WRITEPATH . 'uploads/' . $safeDate)) {
+                mkdir(WRITEPATH . 'uploads/' . $safeDate, 0755, true);
+            }
+            @rename($legacyPath, $path);
+        }
+
+        if (!is_file($path)) {
+            return $this->response->setStatusCode(404);
+        }
+
+        return $this->response->download($path, null);
     }
 
     public function cadastroOperacional(){
@@ -960,46 +556,21 @@ class Home extends BaseController
 
         $post = $this->request->getPost();
 
-        $valor_diesel = str_replace(',', '.', $post['valor_diesel']);
+        helper('money');
 
-        $valor_cedae = str_replace(',', '.', $post['cedae_valor']);
+        $valor_diesel = parse_money_br($post['valor_diesel'] ?? null);
+        $valor_cedae = parse_money_br($post['cedae_valor'] ?? null);
+        $valor_light = parse_money_br($post['light_valor'] ?? null);
+        $cache_premontagem = parse_money_br($post['cache_premontagem'] ?? null);
+        $valor_operacional = parse_money_br($post['valor_operacional'] ?? null);
 
-        $valor_light = str_replace(',', '.', $post['light_valor']);
-
-        $cache_premontagem = str_replace(',', '.', $post['cache_premontagem']);
-        $valor_operacional = str_replace(',', '.', $post['valor_operacional']);
-
-        $cedae_total = str_replace('.','', $post['cedae_total']);
-        $cedae_total = str_replace(',','.', $cedae_total);
-        $cedae_total = number_format((Float)$cedae_total, 2, '.','');
-
-        $light_total = str_replace('.','', $post['light_total']);
-        $light_total = str_replace(',','.', $light_total);
-        $light_total = number_format((Float)$light_total, 2, '.','');
-
-        $diesel_total = str_replace('.','', $post['diesel_total']);
-        $diesel_total = str_replace(',','.', $diesel_total);
-        $diesel_total = number_format((Float)$diesel_total, 2, '.','');
-
-        $total_consumo = str_replace('.','', $post['total_consumo']);
-        $total_consumo = str_replace(',','.', $total_consumo);
-        $total_consumo = number_format((Float)$total_consumo, 2, '.','');
-
-        $valor_premontagem = str_replace('.', '', $post['valor_premontagem']);
-        $valor_premontagem = str_replace(',', '.', $valor_premontagem);
-        $valor_premontagem = number_format((float)$valor_premontagem, 2, '.', '');
-
-        $super_op = str_replace('.', '', $post['super_op']);
-        $super_op = str_replace(',', '.', $super_op);
-        $super_op = number_format((float)$super_op, 2, '.', '');
-
-        $total_operacional = str_replace('.', '', $post['total_operacional']);
-        $total_operacional = str_replace(',', '.', $total_operacional);
-        $total_operacional = number_format((float)$total_operacional, 2, '.', '');
-
-        $taxa_cozinha = str_replace('.', '', $post['taxa_cozinha']);
-        $taxa_cozinha = str_replace(',', '.', $taxa_cozinha);
-        $taxa_cozinha = number_format((float)$taxa_cozinha, 2, '.', '');
+        $cedae_total = money_to_decimal($post['cedae_total'] ?? null);
+        $light_total = money_to_decimal($post['light_total'] ?? null);
+        $diesel_total = money_to_decimal($post['diesel_total'] ?? null);
+        $total_consumo = money_to_decimal($post['total_consumo'] ?? null);
+        $valor_premontagem = money_to_decimal($post['valor_premontagem'] ?? null);
+        $super_op = money_to_decimal($post['super_op'] ?? null);
+        $total_operacional = money_to_decimal($post['total_operacional'] ?? null);
 
 
         $data = [
@@ -1016,9 +587,15 @@ class Home extends BaseController
             'liga_g1' => isset($post['liga_g1']) ? $post['liga_g1'] : null,
             'desliga_g1' => isset($post['desliga_g1']) ? $post['desliga_g1'] : null,
             'tempo_g1' => isset($post['tempo_g1']) ? $post['tempo_g1'] : null,
+            'leitura_g1' => isset($post['leitura_g1']) ? $post['leitura_g1'] : null,
+            'kwh_entrada_g1' => isset($post['kwh_entrada_g1']) ? $post['kwh_entrada_g1'] : null,
+            'kwh_saida_g1' => isset($post['kwh_saida_g1']) ? $post['kwh_saida_g1'] : null,
             'liga_g2' => isset($post['liga_g2']) ? $post['liga_g2'] : null,
             'desliga_g2' => isset($post['desliga_g2']) ? $post['desliga_g2'] : null,
             'tempo_g2' => isset($post['tempo_g2']) ? $post['tempo_g2'] : null,
+            'leitura_g2' => isset($post['leitura_g2']) ? $post['leitura_g2'] : null,
+            'kwh_entrada_g2' => isset($post['kwh_entrada_g2']) ? $post['kwh_entrada_g2'] : null,
+            'kwh_saida_g2' => isset($post['kwh_saida_g2']) ? $post['kwh_saida_g2'] : null,
             'premontagem' => intval($post['premontagem']),
             'cache_premontagem' => $cache_premontagem,
             'valor_premontagem' => $valor_premontagem,
@@ -1029,7 +606,8 @@ class Home extends BaseController
             'seguranca' => intval(isset($post['seguranca']) ? $post['seguranca'] : null),
             'bombeiro' => intval(isset($post['bombeiro']) ? $post['bombeiro'] : null),
             'limpeza' => intval(isset($post['limpeza']) ? $post['limpeza'] : null),
-            'taxa_cozinha' => $taxa_cozinha,
+            'equipe_manha' => isset($post['equipe_manha']) ? 1 : 0,
+            'equipe_noite' => isset($post['equipe_noite']) ? 1 : 0,
             'publico_final' => intval(isset($post['publico_final']) ? $post['publico_final'] : null),
             'publico_tribuna' => intval(isset($post['publico_tribuna'])? $post['publico_tribuna'] : null),
             'publico_saida' => intval(isset($post['publico_saida']) ? $post['publico_saida'] : null),
@@ -1061,16 +639,16 @@ class Home extends BaseController
 
                 $log = [
                     'title' => 'ATUALIZAÇÃO OPERACIONAL',
-                    'description' => "$user->name atualizou um cadastro oparacional. " . $data['nome'] . " em " . date('d-m-Y H:i:s'),
+                    'description' => "$user->name atualizou um cadastro operacional. " . $data['nome'] . " em " . date('Y-m-d H:i:s'),
                 ];
 
                 (new Logs())->insert($log);
-                $this->telegran($user->name . " atualizou um cadatro \n" . $data['nome']);
+                #$this->telegran($user->name . " atualizou um cadastro \n" . $data['nome']);
                 if($post['flag'] == 0){
-                    return redirect()->route('planejamento.lista')->with('success', "Atualzaçao realizada com sucesso! teste");
+                    return redirect()->route('planejamento.lista')->with('success', "Atualização realizada com sucesso!");
                 }
 
-                return redirect()->route('operacional.lista')->with('success', "Atualzaçao realizada com sucesso! teste");
+                return redirect()->route('operacional.lista')->with('success', "Atualização realizada com sucesso!");
             }
 
         }else{
@@ -1079,11 +657,11 @@ class Home extends BaseController
 
                 $log = [
                     'title' => 'CADASTRO OPERACIONAL',
-                    'description' => "$user->name realizou um novo cadastro oparacional. " . $data['nome'] . " em " . date('d-m-Y H:i:s'),
+                    'description' => "$user->name realizou um novo cadastro operacional. " . $data['nome'] . " em " . date('Y-m-d H:i:s'),
                 ];
 
                 (new Logs())->insert($log);
-                $this->telegran($user->name . " novo cadastro operaconal \n" . $data['nome']);
+                #$this->telegran($user->name . " novo cadastro operacional \n" . $data['nome']);
                 if($post['flag'] == 0){
                     return redirect()->route('planejamento.lista')->with('success', "Cadastro realizado com sucesso!");
                 }
@@ -1121,14 +699,14 @@ class Home extends BaseController
 
         $log=[
             'title' => "INFORMAÇÂO DELETADA",
-            'description' => "$user->name apagou um cadastro oparacional. " . $data['nome'] . " em " . date('d-m-Y H:i:s'),
+            'description' => "$user->name apagou um cadastro operacional. " . $data['nome'] . " em " . date('Y-m-d H:i:s'),
         ];
 
         if($temp = (new Operacional())->delete($data['id'])){
 
             $info = new Logs();
             $info->insert($log);
-            $this->telegran($user->name . " apagou \n" . $data['nome']);
+            #$this->telegran($user->name . " apagou \n" . $data['nome']);
 
 
             return redirect()->route('operacional.lista')->with('success', "Informação deletada com sucesso.");
@@ -1141,6 +719,11 @@ class Home extends BaseController
     public function cadastroPlanejamento()
     {
         return view('cadastroPlanejamento', ['planejado' => true]);
+    }
+
+    public function cadastroPlanejamentoStore()
+    {
+        return $this->cadastroOperacionalStore();
     }
 
     public function planejamentoLista()
@@ -1172,7 +755,7 @@ class Home extends BaseController
 
         if (!$validate) {
             // return redirect()->route('login')->with('errors', $this->validator->getErrors());
-            return redirect()->route('usuario')->with('error', 'Preencha o fornulario corretamente!');
+            return redirect()->route('usuario')->with('error', 'Preencha o formulário corretamente!');
         }
 
         $data = $this->request->getPost();
@@ -1185,7 +768,7 @@ class Home extends BaseController
 
         if($result){
             $user = session()->get('user');
-            $this->telegran($user->name . " cadastrou um usuario \n" . $data['name']);
+            #$this->telegran($user->name . " cadastrou um usuario \n" . $data['name']);
             return redirect()->route('usuarios');
         }
 
@@ -1220,25 +803,25 @@ class Home extends BaseController
 
         $data = $this->request->getPost();
 
-        // $avatar = $this->validate(['avatar' => 'uploaded[image]|is_image[image]|ext_in[image,jpg,png,jpeg]']);
-        $avatar = $this->validate([
-            'avatar' => [
-                'rules' => 'uploaded[avatar]|is_image[avatar]|ext_in[avatar,jpg,png,jpeg]',
-                'errors' => [
-                    'uploaded' => 'Você deve selecionar um arquivo para upload.',
-                    'is_image' => 'O arquivo enviado não é uma imagem válida.',
-                    'ext_in' => 'A imagem deve estar nos formatos: jpg, png, jpeg.',
+        $img = $this->request->getFile('avatar');
+        if ($img && $img->isValid() && !$img->hasMoved()) {
+            $avatarOk = $this->validate([
+                'avatar' => [
+                    'rules' => 'uploaded[avatar]|is_image[avatar]|ext_in[avatar,jpg,png,jpeg]',
+                    'errors' => [
+                        'uploaded' => 'Você deve selecionar um arquivo para upload.',
+                        'is_image' => 'O arquivo enviado não é uma imagem válida.',
+                        'ext_in' => 'A imagem deve estar nos formatos: jpg, png, jpeg.',
+                    ],
                 ],
-            ],
-        ]);
+            ]);
 
-        if ($avatar) {
+            if (!$avatarOk) {
+                $errors = $this->validator->getErrors('avatar');
+                return redirect()->route('usuarios')->with('error', $errors['avatar']);
+            }
 
-            $img = $this->request->getFile('avatar');
-
-            //$name = $img->getRandomName();
             $name = sha1(uniqid()) . '.webp';
-
             $data['avatar'] = $name;
 
             \Config\Services::image('gd')
@@ -1247,21 +830,8 @@ class Home extends BaseController
                 ->resize(200, 237, true, 'auto')
                 ->save(FCPATH . 'media/' . $name);
 
-            if (!$img->hasMoved()) {
-
-                $avatar = [
-                    'avatar' => $name
-                ];
-
-                $item = new Users();
-                $user = $item->update($data['id'], $avatar);
-
-            }
-
-        } else{
-
-            $errors = $this->validator->getErrors('avatar');
-            return redirect()->route('usuarios')->with('error', $errors['avatar']);
+            $item = new Users();
+            $item->update($data['id'], ['avatar' => $name]);
         }
 
         if($data['password']){
@@ -1301,7 +871,7 @@ class Home extends BaseController
         $user = session()->get('user');
         $data = [
             'title' => 'ATUALIZOU USUÁRIO',
-            'description' => "O usuário " . $user->name  . " atualizou seu perfil em " . date('d-m-Y H:i:s')
+            'description' => "O usuário " . $user->name  . " atualizou seu perfil em " . date('Y-m-d H:i:s')
         ];
 
         $log = (new Logs())->insert($data);
@@ -1309,12 +879,14 @@ class Home extends BaseController
         return redirect()->route('usuarios')->with('success', 'Dados atualizados com sucesso!');
     }
 
-    public function removeUsuario($id)
+    public function removeUsuario($id = null)
     {
+        $id = $id ?? $this->request->getPost('id');
+
         if(is_int(intval($id))){
-            if($user = (new Users())->delete($id)){
+            if((new Users())->delete($id)){
                 $user = session()->get('user');
-                $this->telegran($user->name . " removeu usuario");
+                #$this->telegran($user->name . " removeu usuario");
                 return redirect('usuarios')->with('success', 'Usuário removido com sucesso!');
             }
 
@@ -1459,6 +1031,12 @@ class Home extends BaseController
                         'litros'   => $e->diesel_litros,
                         'total'    => $e->diesel_total,
                         'valor'    => $e->valor_diesel,
+                    ],
+                    'gerador_kwh' => [
+                        'entrada_g1' => $e->kwh_entrada_g1,
+                        'saida_g1'   => $e->kwh_saida_g1,
+                        'entrada_g2' => $e->kwh_entrada_g2,
+                        'saida_g2'   => $e->kwh_saida_g2,
                     ],
                     'cedae' => [
                         'inicio'   => $e->cedae_inicio,

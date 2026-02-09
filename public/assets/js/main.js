@@ -219,4 +219,38 @@
   window.addEventListener('load', navmenuScrollspy);
   document.addEventListener('scroll', navmenuScrollspy);
 
+  /**
+   * Stack DataTables on mobile (use data-labels from headers)
+   */
+  function applyStackedTableLabels(table) {
+    if (!table) return;
+    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+    if (!headers.length) return;
+    table.querySelectorAll('tbody tr').forEach(tr => {
+      Array.from(tr.children).forEach((cell, idx) => {
+        if (cell.tagName !== 'TD' && cell.tagName !== 'TH') return;
+        const label = headers[idx] || '';
+        if (label) {
+          cell.setAttribute('data-label', label);
+        }
+      });
+    });
+  }
+
+  function initStackedTables(scope) {
+    const root = scope || document;
+    root.querySelectorAll('table.dt-stack').forEach(applyStackedTableLabels);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => initStackedTables());
+
+  if (window.jQuery) {
+    jQuery(document).on('draw.dt', function(e, settings) {
+      const table = settings && settings.nTable ? settings.nTable : null;
+      if (table && table.classList && table.classList.contains('dt-stack')) {
+        applyStackedTableLabels(table);
+      }
+    });
+  }
+
 })();

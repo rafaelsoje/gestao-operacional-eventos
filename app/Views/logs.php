@@ -13,7 +13,8 @@
         <div class="flash text-center alert alert-success text-success"><?php echo session()->get('success') ?? ''; ?></div>
     <?php endif; ?>
   <?php if(isset($logs) && !empty($logs)): ?>
-    <table id="example" class="display table table-striped" style="width:100%">
+    <div class="table-responsive">
+    <table id="example" class="display table table-striped dt-stack" style="width:100%">
       <thead>
         <tr>
         <th>ID</th>
@@ -30,6 +31,7 @@
           <?php endforeach ;?>
       </tbody>
     </table>
+    </div>
   <?php else:?>
 
   <?php endif;?>  
@@ -76,7 +78,7 @@
         "searching": true,    // Ativar/desativar o campo de busca
         "ordering": true,     // Ativar/desativar a ordenação das colunas
         "info": true,         // Exibir informações (por exemplo, 'Mostrando 1 a 10 de 50 registros')
-        "pageLength": 10,      // Número de linhas por página
+        "pageLength": 25,      // Número de linhas por página
         "language": {
             // "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/Portuguese-Brasil.json" // Tradução para PT-BR
             "sEmptyTable": "Nenhum dado disponível na tabela",

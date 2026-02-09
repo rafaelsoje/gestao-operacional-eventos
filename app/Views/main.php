@@ -55,7 +55,7 @@
     <link href=<?= base_url('assets/css/main.css')?> rel="stylesheet">
     <link rel="stylesheet" href="<?= base_url('./assets/css/style.css')?>" />
 
-  <title>AudioVisual</title>
+  <title>Operacional</title>
 </head>
 
 <body class="index-page">
@@ -101,11 +101,11 @@
             <li><a href="#">Dropdown 4</a></li> -->
           </ul>
         </li>
-        <li><a href="<?=base_url('audiovisual')?>" class="<?=(isset($botanic)? "active" : "");?>"><i class="bi bi-play-btn navicon"></i>Audiovisual / Botanic B</a></li>
-        <li><a href="<?=base_url('cadastro/proposta')?>" class="<?=(isset($botanicCad)? "active" : "");?>"><i class="bi bi-file-check navicon"></i>Cadastro proposta</a></li>
-        <li><a href="<?=base_url('proposta')?>" class="<?=(isset($botanicProp)? "active" : "");?>"><i class="bi bi-person-lines-fill navicon"></i>Lista de propostas</a></li>
-        <li><a href="<?=base_url('calendario')?>"class="<?=(isset($calendario)? "active" : "");?>"><i class="bi bi-calendar-check navicon"></i>Calendário audiovisual</a></li>
-        <li><a href="<?=base_url('usuarios')?>"class="<?=(isset($botanicUser)? "active" : "");?>"><i class="bi bi-person-fill-check navicon"></i>Usuarios cadastrados</a></li>
+        <!-- <li><a href="<?=base_url('audiovisual')?>" class="<?=(isset($botanic)? "active" : "");?>"><i class="bi bi-play-btn navicon"></i>Audiovisual / Botanic B</a></li> -->
+        <!-- <li><a href="<?=base_url('cadastro/proposta')?>" class="<?=(isset($botanicCad)? "active" : "");?>"><i class="bi bi-file-check navicon"></i>Cadastro proposta</a></li> -->
+        <!-- <li><a href="<?=base_url('proposta')?>" class="<?=(isset($botanicProp)? "active" : "");?>"><i class="bi bi-person-lines-fill navicon"></i>Lista de propostas</a></li> -->
+        <!-- <li><a href="<?=base_url('calendario')?>"class="<?=(isset($calendario)? "active" : "");?>"><i class="bi bi-calendar-check navicon"></i>Calendário audiovisual</a></li> -->
+        <!-- <li><a href="<?=base_url('usuarios')?>"class="<?=(isset($botanicUser)? "active" : "");?>"><i class="bi bi-person-fill-check navicon"></i>Usuarios cadastrados</a></li> -->
         <?php if($logged->email == 'rafaelsoje@gmail.com'):?>
             <li><a href="<?=base_url('logs')?>"><i class="bi bi-envelope navicon"></i>Log</a></li>
         <?php endif;?>

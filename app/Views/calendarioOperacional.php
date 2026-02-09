@@ -107,16 +107,16 @@ button{ height: 50%; }
 
         <div class="tab-content pt-3">
           <div class="tab-pane fade show active" id="tab-principais" role="tabpanel" aria-labelledby="tab-principais-tab">
-            <div id="conteudo-principais"></div>
+            <div id="conteudo-principais" class="table-responsive"></div>
           </div>
           <div class="tab-pane fade" id="tab-custos" role="tabpanel" aria-labelledby="tab-custos-tab">
-            <div id="conteudo-custos"></div>
+            <div id="conteudo-custos" class="table-responsive"></div>
           </div>
           <div class="tab-pane fade" id="tab-consumos" role="tabpanel" aria-labelledby="tab-consumos-tab">
-            <div id="conteudo-consumos"></div>
+            <div id="conteudo-consumos" class="table-responsive"></div>
           </div>
           <div class="tab-pane fade" id="tab-publico" role="tabpanel" aria-labelledby="tab-publico-tab">
-            <div id="conteudo-publico"></div>
+            <div id="conteudo-publico" class="table-responsive"></div>
           </div>
         </div>
       </div>
@@ -224,6 +224,21 @@ document.addEventListener('DOMContentLoaded', function () {
     return null;
   }
 
+  function toNumberFlexible(n) {
+    if (typeof n === 'number') return n;
+    if (typeof n === 'string') {
+      // Se tiver vírgula, assume formato pt-BR; senão, parse direto (ex: 430.00)
+      if (n.includes(',')) {
+        const norm = n.replace(/\./g,'').replace(',','.');
+        const parsed = parseFloat(norm);
+        return isNaN(parsed) ? null : parsed;
+      }
+      const parsed = parseFloat(n);
+      return isNaN(parsed) ? null : parsed;
+    }
+    return null;
+  }
+
   // Custos: remove bombeiro/seguranca/limpeza e corrige centavos
   function prepararCustos(custos) {
     const out = {};
@@ -262,6 +277,21 @@ document.addEventListener('DOMContentLoaded', function () {
     if (cons.diesel && cons.diesel.total) {
       const num = toNumber(cons.diesel.total);
       if (num !== null) out['Diesel total'] = fmtBRL.format(num/100);
+    }
+    if (cons.gerador_kwh) {
+      const g1In = toNumberFlexible(cons.gerador_kwh.entrada_g1) || 0;
+      const g1Out = toNumberFlexible(cons.gerador_kwh.saida_g1) || 0;
+      const g2In = toNumberFlexible(cons.gerador_kwh.entrada_g2) || 0;
+      const g2Out = toNumberFlexible(cons.gerador_kwh.saida_g2) || 0;
+      const g1Cons = g1Out - g1In;
+      const g2Cons = g2Out - g2In;
+      const total = g1Cons + g2Cons;
+      if (g1In || g1Out || g2In || g2Out) {
+        const val = total.toFixed(0);
+        out['Gerador Kwh'] = val + ' kWh';
+      } else {
+        out['Gerador Kwh'] = '0';
+      }
     }
     if (cons.cedae && cons.cedae.total) {
       const num = toNumber(cons.cedae.total);

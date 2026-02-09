@@ -11,6 +11,7 @@
 <div class="container border pt-2 pb-2">
     <h3 class="text-center mb-3 border p-1">Atualiza de Proposta</h3>
     <form class="row g-3" method="post" action="<?= url_to('update.proposta.store');?>" enctype="multipart/form-data">
+        <?= csrf_field(); ?>
         
         <?php if (session()->has('error')) : ?>
           <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
@@ -42,11 +43,11 @@
             <label class="form-label">Data término</label>
             <input type="date" class="form-control" name="end_date" value="<?= $proposta->end_date;?>">
         </div>
-        <div class="col-6">
+        <div class="col-12 col-md-6">
             <label class="form-label">Nome do evento</label>
             <input type="text" class="form-control" name="event_name" value="<?= $proposta->event_name;?>">
         </div>
-        <div class="col-6">
+        <div class="col-12 col-md-6">
             <label for="inputAddress2" class="form-label">Nome Cliente</label>
             <input type="text" class="form-control" id="inputAddress2" name="client_name" value="<?= $proposta->client_name?>">
         </div>
@@ -98,12 +99,37 @@
             <textarea class="form-control" id="exampleFormControlTextarea1" rows="4" name="description"><?= $proposta->description;?></textarea>
         </div>
         <div class="col-md-12">            
-            <label for="inputCity" class="form-label">Proposta atual</label><strong><a href="<?= base_url('/uploads' . "/". $proposta->start_date . "/" .$proposta->file)?>" target="_blank"><?= " " . $proposta->file;?></a></strong>
+            <?php
+              $safeDate = preg_replace('/[^0-9\\-]/', '', $proposta->start_date);
+              $filePath = WRITEPATH . 'uploads/' . $safeDate . '/' . $proposta->file;
+              $legacyFilePath = FCPATH . 'uploads/' . $safeDate . '/' . $proposta->file;
+              $riderPath = WRITEPATH . 'uploads/' . $safeDate . '/' . $proposta->rider;
+              $legacyRiderPath = FCPATH . 'uploads/' . $safeDate . '/' . $proposta->rider;
+            ?>
+            <label for="inputCity" class="form-label">Proposta atual</label>
+            <strong>
+              <?php if(!empty($proposta->file) && (is_file($filePath) || is_file($legacyFilePath))):?>
+                <a href="<?= base_url('/uploads' . "/". $proposta->start_date . "/" .$proposta->file)?>" target="_blank"><?= " " . $proposta->file;?></a>
+              <?php elseif(!empty($proposta->file)):?>
+                <span class="text-danger">Arquivo não encontrado</span>
+              <?php else:?>
+                <span class="text-muted">Sem arquivo</span>
+              <?php endif;?>
+            </strong>
             <input type="file" class="form-control" id="inputCity" name="file">
         </div>
         <div class="col-md-12">
             <?php if($proposta->rider):?>           
-                <label for="inputCity" class="form-label">Rider atual</label><strong><a href="<?= base_url('/uploads' . "/". $proposta->start_date . "/" .$proposta->rider)?>" target="_blank"><?= " " . $proposta->rider;?></a></strong><input type="checkbox" class="mx-3 form-label" name="removeRider"/><span class="text-danger">Remover rider</span>
+                <label for="inputCity" class="form-label">Rider atual</label>
+                <strong>
+                  <?php if(!empty($proposta->rider) && (is_file($riderPath) || is_file($legacyRiderPath))):?>
+                    <a href="<?= base_url('/uploads' . "/". $proposta->start_date . "/" .$proposta->rider)?>" target="_blank"><?= " " . $proposta->rider;?></a>
+                  <?php elseif(!empty($proposta->rider)):?>
+                    <span class="text-danger">Arquivo não encontrado</span>
+                  <?php else:?>
+                    <span class="text-muted">Sem arquivo</span>
+                  <?php endif;?>
+                </strong><input type="checkbox" class="mx-3 form-label" name="removeRider"/><span class="text-danger">Remover rider</span>
                 <input type="file" class="form-control" id="inputCity" name="rider">
             <?php else:?>
                 <label for="inputCity" class="form-label">Anexar Rider</label>
@@ -119,7 +145,7 @@
   <!-- Script para aplicar a máscara -->
   <script>
     $(document).ready(function(){
-      $('.money').mask('000.000.000.000.000,00', {reverse: true});
+      $('input.money').mask('000.000.000.000.000,00', {reverse: true});
     });
 
     $(document).ready(function(){

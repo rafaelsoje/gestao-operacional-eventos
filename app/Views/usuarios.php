@@ -37,7 +37,8 @@
         <div class="flash text-center alert alert-success text-success"><?php echo session()->get('success') ?? ''; ?></div>
     <?php endif; ?>
   <?php if(isset($users) && !empty($users)): ?>
-    <table id="example" class="display table table-striped" style="width:100%">
+    <div class="table-responsive">
+    <table id="example" class="display table table-striped dt-stack" style="width:100%">
       <thead>
         <tr>
           <th>Nome</th>
@@ -121,7 +122,11 @@
                     <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                       <?php if($user->email != "rafaelsoje@gmail.com"):?>
-                        <a href="<?=base_url('/delete/usuario/' . $user->id)?>" type="button" class="btn btn-danger">Excluir</a>                     
+                        <form method="post" action="<?= base_url('/delete/usuario');?>" class="d-inline">
+                          <?= csrf_field(); ?>
+                          <input type="hidden" name="id" value="<?= $user->id; ?>">
+                          <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
                       <?php endif;?>
                     </div>
                   </div>
@@ -151,6 +156,7 @@
           <?php endforeach ;?>
       </tbody>
     </table>
+    </div>
   
 
     

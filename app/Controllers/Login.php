@@ -5,8 +5,11 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\Logs;
 use App\Models\Operacional;
+use App\Models\PasswordResets;
 use App\Models\Users;
 use CodeIgniter\HTTP\ResponseInterface;
+use CodeIgniter\I18n\Time;
+use Config\Services;
 use DateTime;
 use stdClass;
 
@@ -20,16 +23,18 @@ class Login extends BaseController
         if($this->request->getGet('recovery'))
         {
             $recovery = $this->request->getGet('recovery');
+            $tokenHash = hash('sha256', $recovery);
 
-            $users = (new Users())->findAll();
+            $reset = (new PasswordResets())
+                ->where('token_hash', $tokenHash)
+                ->where('expires_at >=', Time::now()->toDateTimeString())
+                ->first();
 
-            foreach($users as $user){
-                if($recovery == hash('sha256', $user->email))
-                {
-                    return view('newPasswd', ['recovery' => $recovery, 'id' => $user->id]);
-                }
+            if ($reset) {
+                return view('newPasswd', ['recovery' => $recovery]);
             }
-            return redirect()->route('login')->with('error', 'Usuario não encontrado.');
+
+            return redirect()->route('login')->with('error', 'Link de recuperação inválido ou expirado.');
         }
 
         return view('login');
@@ -48,7 +53,12 @@ class Login extends BaseController
             return redirect()->back()->with('error', 'Preencha os campos corretamente!!!');
         }
 
-        $user = (new Users())->where('email', $this->request->getPost('email'))->first();          
+        $email = $this->request->getPost('email');
+        if (!$this->allowLoginAttempt($email, $this->request->getIPAddress())) {
+            return redirect()->back()->with('error', 'Usuário ou Senha inválidos.');
+        }
+
+        $user = (new Users())->where('email', $email)->first();          
         
         if(!$user){
             return redirect()->back()->with('error', "Usuário ou Senha inválidos.");
@@ -65,7 +75,7 @@ class Login extends BaseController
 
             $data = [
                 'title' => 'FALHA LOGIN',
-                'description' => "Tentativa de login com falha " . $email . " " . date('d-m-Y H:i:s')
+                'description' => "Tentativa de login com falha " . $email . " " . date('Y-m-d H:i:s')
             ];
 
             $loginAttempt = $user->loginAttempts + 1 ;
@@ -160,7 +170,7 @@ class Login extends BaseController
 
             $data = [
                 'title' => 'LOGIN',
-                'description' => "O usuário " . $user->name  . " efetuou login em " . date('d-m-Y H:i:s')
+                'description' => "O usuário " . $user->name  . " efetuou login em " . date('Y-m-d H:i:s')
             ];           
 
             $item = [
@@ -173,7 +183,7 @@ class Login extends BaseController
 
             $log = (new Logs())->insert($data);
 
-            $this->telegran($user->name . " entrou no sistema!");
+            #$this->telegran($user->name . " entrou no sistema!");
            
             return redirect()->route('home')->with('success', 'Login efetuado com sucesso.'); 
 
@@ -183,7 +193,7 @@ class Login extends BaseController
 
             $data = [
                 'title' => 'FALHA LOGIN',
-                'description' => "Tentativa de login com falha " . $email . " " . date('d-m-Y H:i:s')
+                'description' => "Tentativa de login com falha " . $email . " " . date('Y-m-d H:i:s')
             ];
 
             $loginAttempt = $user->loginAttempts + 1 ;
@@ -197,7 +207,7 @@ class Login extends BaseController
 
             $log = (new Logs())->insert($data);    
             
-            $this->telegran("Tetantivade login com falha. \n". $email);
+            #$this->telegran("Tentativa de login com falha. \n". $email);
             return redirect()->back()->with('error', "Usuário ou Senha inválidos.");            
         }  
     }
@@ -216,13 +226,32 @@ class Login extends BaseController
 
     public function recoverySend(): ResponseInterface
     {
-        $email = $this->request->getPost();
+        $email = $this->request->getPost('email');
+
+        if (!$this->allowRecoveryAttempt($email, $this->request->getIPAddress())) {
+            return redirect('login')->with('success', 'Se o e-mail existir, enviaremos um link de redefinição.');
+        }
+
+        $resets = new PasswordResets();
+        $resets->where('expires_at <', Time::now()->toDateTimeString())->delete();
 
         $user = (new Users())->where('email', $email)->first();
 
         if($user){
 
-            $link = base_url() . "login?recovery=" .hash('sha256', $user->email);
+            $token = bin2hex(random_bytes(32));
+            $tokenHash = hash('sha256', $token);
+            $expiresAt = Time::now()->addHours(1)->toDateTimeString();
+
+            $resets->where('user_id', $user->id)->delete();
+            $resets->insert([
+                'user_id' => $user->id,
+                'token_hash' => $tokenHash,
+                'expires_at' => $expiresAt,
+                'created_at' => Time::now()->toDateTimeString(),
+            ]);
+
+            $link = base_url() . "login?recovery=" . $token;
 
             $to = $user->email;
             $subject = "Redefinição de senha";
@@ -237,36 +266,104 @@ class Login extends BaseController
             $html = str_replace("{{ano_atual}}", date("Y"), $html);
 
             mail($to, $subject, $html, $headers);
-
-            return redirect('login');
         }
 
-        return redirect()->back()->with('error', 'Endereço de email não encontrado.');
+        return redirect('login')->with('success', 'Se o e-mail existir, enviaremos um link de redefinição.');
         
+    }
+
+    private function allowRecoveryAttempt(?string $email, string $ip): bool
+    {
+        $cache = Services::cache();
+        $ttl = 3600;
+        $maxPerIp = 10;
+        $maxPerEmail = 5;
+
+        $ipKey = 'recovery_ip_' . sha1($ip);
+        $ipCount = (int)($cache->get($ipKey) ?? 0);
+        if ($ipCount >= $maxPerIp) {
+            return false;
+        }
+
+        $emailKey = null;
+        if (!empty($email)) {
+            $normEmail = mb_strtolower(trim($email));
+            $emailKey = 'recovery_email_' . sha1($normEmail);
+            $emailCount = (int)($cache->get($emailKey) ?? 0);
+            if ($emailCount >= $maxPerEmail) {
+                return false;
+            }
+        }
+
+        $cache->save($ipKey, $ipCount + 1, $ttl);
+        if ($emailKey) {
+            $emailCount = (int)($cache->get($emailKey) ?? 0);
+            $cache->save($emailKey, $emailCount + 1, $ttl);
+        }
+
+        return true;
+    }
+
+    private function allowLoginAttempt(?string $email, string $ip): bool
+    {
+        $cache = Services::cache();
+        $ttl = 900; // 15 min
+        $maxPerIp = 20;
+        $maxPerEmail = 8;
+
+        $ipKey = 'login_ip_' . sha1($ip);
+        $ipCount = (int)($cache->get($ipKey) ?? 0);
+        if ($ipCount >= $maxPerIp) {
+            return false;
+        }
+
+        $emailKey = null;
+        if (!empty($email)) {
+            $normEmail = mb_strtolower(trim($email));
+            $emailKey = 'login_email_' . sha1($normEmail);
+            $emailCount = (int)($cache->get($emailKey) ?? 0);
+            if ($emailCount >= $maxPerEmail) {
+                return false;
+            }
+        }
+
+        $cache->save($ipKey, $ipCount + 1, $ttl);
+        if ($emailKey) {
+            $emailCount = (int)($cache->get($emailKey) ?? 0);
+            $cache->save($emailKey, $emailCount + 1, $ttl);
+        }
+
+        return true;
     }
 
     public function recoveryStore()
     {
         $post = $this->request->getPost();       
 
-        $users = (new Users())->findAll();
+        (new PasswordResets())->where('expires_at <', Time::now()->toDateTimeString())->delete();
 
-        foreach($users as $user)
-        {
-            if($post['recovery'] == hash('sha256', $user->email))
-            {
-                $data = [
-                    'password' => password_hash($post['password'], PASSWORD_DEFAULT)
-                ];
+        $tokenHash = hash('sha256', $post['recovery']);
 
-                if((new Users())->update($post['id'], $data))
-                {
-                    return redirect()->route('login')->with('success', 'Senha atualizada con sucesso.');
-                }
-            }
+        $reset = (new PasswordResets())
+            ->where('token_hash', $tokenHash)
+            ->where('expires_at >=', Time::now()->toDateTimeString())
+            ->first();
 
-            return redirect()->route('login')->with('error', 'Erro ao redefinir senha.');
+        if (!$reset) {
+            return redirect()->route('login')->with('error', 'Link de recuperação inválido ou expirado.');
         }
+
+        $data = [
+            'password' => password_hash($post['password'], PASSWORD_DEFAULT)
+        ];
+
+        if((new Users())->update($reset->user_id, $data))
+        {
+            (new PasswordResets())->delete($reset->id);
+            return redirect()->route('login')->with('success', 'Senha atualizada com sucesso.');
+        }
+
+        return redirect()->route('login')->with('error', 'Erro ao redefinir senha.');
 
     }
 

@@ -1,6 +1,7 @@
 <?= $this->extend('main')?>;
 
 <?php $this->section('content');?>
+<?php helper('format'); ?>
 
 <!-- <nav class="mt-3" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
         <ol class="breadcrumb">
@@ -18,19 +19,20 @@
         <?php endif; ?>
   
         <div class="d-flex justify-content-between">
-    <div class="col-4">        
-        <!-- <select id="inputState" class="form-select ">
+    <div class="col-12 col-lg-4">        
+        <!-- <select id="inputState" class="form-select">
             <option selected>Todas as propostas</option>
             <option>Proposta aceita</option>
             <option>Proposta recusada</option>                
         </select>         -->
     </div>
-    <div class="d-flex align-items-end justify-content-end mb-3">
+    <div class="d-flex flex-wrap align-items-end justify-content-end gap-2 mb-3">
         <a href="<?= base_url('/cadastro/operacional');?>" type="button" class="btn btn-success">+ Cadastrar Evento</a>
     </div>
   </div>    
      <!-- Tabela Striped
-     <table class="table table-striped">
+     <div class="table-responsive">
+     <table class="table table-striped dt-stack">
       <thead>
         <tr>
           <th>#</th>
@@ -86,7 +88,8 @@
           </td>
         </tr>
       </tbody>
-    </table>
+     </table>
+     </div>
 </div> -->
 
 
@@ -99,7 +102,8 @@
 
 <div class="container-fluid">
   <?php if($data):?>
-    <table id="propostas" class="display table table-striped" style="width:100%">
+    <div class="table-responsive">
+    <table id="propostas" class="display table table-striped dt-stack" style="width:100%">
       <thead>
         <tr>
         <!-- <th>ID</th> -->
@@ -110,6 +114,8 @@
           <th>Gerador</th>
           <th>Cedae</th>
           <th>Light</th>
+          <!-- <th>KWH G1</th> -->
+          <!-- <th>KWH G2</th> -->
           <th>Custo do Evento</th>
           <th>Ação</th>
         </tr>
@@ -117,18 +123,22 @@
       <tbody>
       <?php foreach($data as $item):?>
           <?php 
-            $data = implode('/', array_reverse(explode('-',$item->data)));
+            $data = br_date($item->data);
             $operacional =  $item->valor_premontagem + $item->super_op;
+            $kwhG1 = (float)$item->kwh_saida_g1 - (float)$item->kwh_entrada_g1;
+            $kwhG2 = (float)$item->kwh_saida_g2 - (float)$item->kwh_entrada_g2;
           ?>          
         <tr>        
           <td><?= $data;?></td>          
           <td><?= $item->nome;?></td>
           <td><?= $item->tipo;?></td>          
-          <td class=""><?= "R$ " . number_format($operacional, 2, ',', '.');?></td>
-          <td class=""><?= "R$ " . number_format($item->diesel_total, 2, ',', '.');?></td>
-          <td class=""><?= "R$ " . number_format($item->cedae_total, 2, ',', '.');?></td>
-          <td class=""><?= "R$ " . number_format($item->light_total, 2, ',', '.');?></td>
-          <td class=""><?= "R$ " . number_format($item->total_consumo, 2, ',', '.');?></td>
+          <td class=""><?= br_money($operacional);?></td>
+          <td class=""><?= br_money($item->diesel_total);?></td>
+          <td class=""><?= br_money($item->cedae_total);?></td>
+          <td class=""><?= br_money($item->light_total);?></td>
+          <!-- <td class=""><?= br_number($kwhG1, 0);?><?= $kwhG1 ? ' kWh' : ''; ?></td> -->
+          <!-- <td class=""><?= br_number($kwhG2, 0);?><?= $kwhG2 ? ' kWh' : ''; ?></td> -->
+          <td class=""><?= br_money($item->total_consumo);?></td>
           <td class="d-flex justify-content-center" >
             <?php if(!empty($item->descricao)):?>
               <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#i<?= $item->id;?>"><i class="fas fa-comment"></i></a>
@@ -178,6 +188,7 @@
                 </div>
                 <div class="modal-footer">
                   <form method="post" action="<?= base_url('/delete/operacional');?>">
+                    <?= csrf_field(); ?>
                     <input type="hidden" name="id" value="<?= $item->id;?>" />
                     <input type="hidden" name="nome" value="<?= $item->nome;?>" />
                     
@@ -192,7 +203,8 @@
 
         <?php endforeach;?>       
       </tbody>
-    </table>    
+    </table>
+    </div>
     <?php else:?>
       <h4>Nenhuma dado cadastrado!</h4>
     <?php endif;?>  

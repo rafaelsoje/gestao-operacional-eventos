@@ -10,7 +10,8 @@
 
 <div class="container border pt-2 pb-2 mb-5">
     <h3 class="text-center mb-3 border p-1 bg-white"><?= (isset($item))? "Atualização de cadastro" : "Previsão de custo";?></h3>
-    <form class="row g-3" method="post" action="<?= url_to('cadastro.operacional.store');?>" enctype="multipart/form-data">
+    <form class="row g-3" method="post" action="<?= url_to('cadastro.planejamento.store');?>" enctype="multipart/form-data">
+        <?= csrf_field(); ?>
         
         <?php if (session()->has('error')) : ?>
           <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
@@ -78,6 +79,20 @@
             <label class="form-label">Total</label>
             <input type="text" class="form-control money" name="total_operacional" <?= isset($item) ? 'value="' . $item->total_operacional . '"' : ''; ?>>            
         </div> 
+        <div class="col-md-3">
+            <label class="form-label">Equipe manhã</label>
+            <select class="form-select" name="equipe_manha">
+                <option value="0" <?= (isset($item) && empty($item->equipe_manha)) ? 'selected' : ''; ?>>Não</option>
+                <option value="1" <?= (isset($item) && (int)$item->equipe_manha === 1) ? 'selected' : ''; ?>>Sim</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Equipe noite</label>
+            <select class="form-select" name="equipe_noite">
+                <option value="0" <?= (isset($item) && empty($item->equipe_noite)) ? 'selected' : ''; ?>>Não</option>
+                <option value="1" <?= (isset($item) && (int)$item->equipe_noite === 1) ? 'selected' : ''; ?>>Sim</option>
+            </select>
+        </div>
         
         <div class="p-1 fs-5">Consumo</div>        
         <div class="col-md-3">
@@ -159,7 +174,7 @@
     $(document).ready(function(){
 
     //   Aplica mascara   
-      $('.money').mask('000.000.000.000.000,00', {reverse: true});    
+      $('input.money').mask('000.000.000.000.000,00', {reverse: true});    
       $('.phone').mask('(00)00000-0000', {reverse: false});
 
         // Adiciona o prefixo "R$ " automaticamente ao campo

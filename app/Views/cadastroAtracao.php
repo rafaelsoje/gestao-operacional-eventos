@@ -31,11 +31,11 @@
             <label for="inputPassword4" class="form-label">Data término</label>
             <input type="date" class="form-control" id="inputPassword4">
         </div>
-        <div class="col-6">
+        <div class="col-12 col-md-6">
             <label for="inputAddress" class="form-label">Nome do evento</label>
             <input type="text" class="form-control" id="inputAddress">
         </div>
-        <div class="col-6">
+        <div class="col-12 col-md-6">
             <label for="inputAddress2" class="form-label">Nome Cliente</label>
             <input type="text" class="form-control" id="inputAddress2">
         </div>
@@ -111,7 +111,7 @@
   <!-- Script para aplicar a máscara -->
   <script>
     $(document).ready(function(){
-      $('.money').mask('000.000.000.000.000,00', {reverse: true});
+      $('input.money').mask('000.000.000.000.000,00', {reverse: true});
     });
 
     // Adiciona o prefixo "R$ " automaticamente ao campo

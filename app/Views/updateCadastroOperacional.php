@@ -11,6 +11,7 @@
 <div class="container border pt-2 pb-2 mb-5">
     <h3 class="text-center mb-3 border p-1 bg-white">Atualização de dado Operacional</h3>
     <form class="row g-3" method="post" action="<?= url_to('update.operacional.store');?>" enctype="multipart/form-data">
+        <?= csrf_field(); ?>
         
         <?php if (session()->has('error')) : ?>
           <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
@@ -66,46 +67,94 @@
             <input type="number" class="form-control" name="monitor_sonoro" value="<?= $item->monitor_sonoro;?>" >
         </div>       
         <div class="p-1 fs-5">Gerador</div>
-        <div class="col-2">
+        <div class="col-12 col-md-4 col-lg-2">
             <label class="form-label">Gerador 1 ligado</label>
             <input type="time" class="form-control" name="liga_g1" value="<?= $item->liga_g1;?>" >
         </div>
-        <div class="col-2">
+        <div class="col-12 col-md-4 col-lg-2">
             <label for="inputAddress2" class="form-label">Gerador 1 desligado</label>
             <input type="time" class="form-control" name="desliga_g1" value="<?= $item->desliga_g1;?>" >
         </div>
-        <div class="col-2">
+        <div class="col-12 col-md-4 col-lg-2">
             <label for="inputAddress2" class="form-label">Tempo gerador 1</label>
             <input type="time" class="form-control" name="tempo_g1" value="<?= $item->tempo_g1;?>" >
         </div>
-        <div class="col-2">
+        <div class="col-12 col-md-4 col-lg-2">
+            <label class="form-label">Leitura G1 (hora)</label>
+            <input type="time" class="form-control" name="leitura_g1" value="<?= $item->leitura_g1;?>" >
+        </div>
+        <div class="col-12 col-md-4 col-lg-2">
+            <label class="form-label">KWH entrada G1</label>
+            <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_entrada_g1" value="<?= (int)$item->kwh_entrada_g1;?>" >
+        </div>
+        <div class="col-12 col-md-4 col-lg-2">
+            <label class="form-label">KWH saída G1</label>
+            <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_saida_g1" value="<?= (int)$item->kwh_saida_g1;?>" >
+        </div>
+        <div class="col-12 col-md-4 col-lg-2">
+            <label class="form-label">Consumo KWH G1</label>
+            <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_consumo_g1" readonly>
+        </div>
+        <div class="col-12 col-md-4 col-lg-2">
             <label class="form-label">Gerador 2 ligado</label>
             <input type="time" class="form-control" name="liga_g2" value="<?= $item->liga_g2;?>">
         </div>
-        <div class="col-2">
+        <div class="col-12 col-md-4 col-lg-2">
             <label for="inputAddress2" class="form-label">Gerador 2 desligado</label>
             <input type="time" class="form-control" name="desliga_g2"value="<?= $item->desliga_g2;?>" >
         </div>
-        <div class="col-2">
+        <div class="col-12 col-md-4 col-lg-2">
             <label for="inputAddress2" class="form-label">Tempo gerador 2</label>
             <input type="time" class="form-control" name="tempo_g2" value="<?= $item->tempo_g2;?>">
         </div>
+        <div class="col-12 col-md-4 col-lg-2">
+            <label class="form-label">Leitura G2 (hora)</label>
+            <input type="time" class="form-control" name="leitura_g2" value="<?= $item->leitura_g2;?>">
+        </div>
+        <div class="col-12 col-md-4 col-lg-2">
+            <label class="form-label">KWH entrada G2</label>
+            <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_entrada_g2" value="<?= (int)$item->kwh_entrada_g2;?>">
+        </div>
+        <div class="col-2">
+            <label class="form-label">KWH saída G2</label>
+            <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_saida_g2" value="<?= (int)$item->kwh_saida_g2;?>">
+        </div>
+        <div class="col-2">
+            <label class="form-label">Consumo KWH G2</label>
+            <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_consumo_g2" readonly>
+        </div>
         <div class="p-1 fs-5">Equipe operacional</div>
-        <div class="col-3">
+        <div class="col-12 col-md-6 col-lg-3">
             <label class="form-label">Supervisor</label>
             <input type="number" class="form-control" name="supervisor" value="<?= $item->supervisor;?>">
         </div>
-        <div class="col-3">
+        <div class="col-12 col-md-6 col-lg-3">
             <label for="inputAddress2" class="form-label">Segurança</label>
             <input type="number" class="form-control" name="seguranca" value="<?= $item->seguranca;?>">
         </div>
-        <div class="col-3">
+        <div class="col-12 col-md-6 col-lg-3">
             <label class="form-label">Bombeiro</label>
             <input type="number" class="form-control" name="bombeiro" value="<?= $item->bombeiro;?>">
         </div>
-        <div class="col-3">
+        <div class="col-12 col-md-6 col-lg-3">
             <label for="inputAddress2" class="form-label">Limpeza</label>
             <input type="number" class="form-control" name="limpeza" value="<?= $item->limpeza;?>">
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label">Equipe manhã</label>
+            <?php $equipeManha = $item->equipe_manha ?? 0; ?>
+            <select class="form-select" name="equipe_manha">
+                <option value="0" <?= empty($equipeManha) ? 'selected' : ''; ?>>Não</option>
+                <option value="1" <?= (int)$equipeManha === 1 ? 'selected' : ''; ?>>Sim</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label">Equipe noite</label>
+            <?php $equipeNoite = $item->equipe_noite ?? 0; ?>
+            <select class="form-select" name="equipe_noite">
+                <option value="0" <?= empty($equipeNoite) ? 'selected' : ''; ?>>Não</option>
+                <option value="1" <?= (int)$equipeNoite === 1 ? 'selected' : ''; ?>>Sim</option>
+            </select>
         </div>
         <div class="p-1 fs-5">Público</div>
         <div class="col-md-4">
@@ -178,7 +227,7 @@
             <input type="file" class="form-control" id="inputCity" name="rider">
         </div>-->
         <div class="col-12 d-flex justify-content-end">
-            <button type="submit" class="btn btn-primary ">Atualizar dados operaionais</button>
+            <button type="submit" class="btn btn-primary">Atualizar dados operaionais</button>
         </div>
     </form>
 </div>
@@ -188,7 +237,7 @@
     $(document).ready(function(){
 
     //   Aplica mascara   
-      $('.money').mask('000.000.000.000.000,00', {reverse: true});    
+      $('input.money').mask('000.000.000.000.000,00', {reverse: true});    
       $('.phone').mask('(00)00000-0000', {reverse: false});
 
         // Adiciona o prefixo "R$ " automaticamente ao campo
@@ -251,7 +300,22 @@
         }   
 
         $("input").on("input", calcularConsumo);
-    
+
+        function calcularKwh() {
+            const entradaG1 = parseFloat($("input[name='kwh_entrada_g1']").val()) || 0;
+            const saidaG1 = parseFloat($("input[name='kwh_saida_g1']").val()) || 0;
+            const consumoG1 = saidaG1 - entradaG1;
+            $("input[name='kwh_consumo_g1']").val(consumoG1.toFixed(0));
+
+            const entradaG2 = parseFloat($("input[name='kwh_entrada_g2']").val()) || 0;
+            const saidaG2 = parseFloat($("input[name='kwh_saida_g2']").val()) || 0;
+            const consumoG2 = saidaG2 - entradaG2;
+            $("input[name='kwh_consumo_g2']").val(consumoG2.toFixed(0));
+        }
+
+        $("input[name='kwh_entrada_g1'], input[name='kwh_saida_g1'], input[name='kwh_entrada_g2'], input[name='kwh_saida_g2']").on("input", calcularKwh);
+        calcularKwh();
+
         function calcularTempo(entrada, saida, resultado) {
             let inicio = $("input[name='" + entrada + "']").val();
             let fim = $("input[name='" + saida + "']").val();

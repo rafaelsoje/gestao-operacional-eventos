@@ -11,6 +11,7 @@
         </ol>
     </nav> -->
     <form class="row" method="post" action="<?= url_to('search.operacional');?>" enctype="multipart/form-data">
+        <?= csrf_field(); ?>
         <div class="col">
             <input type="date" id="data_inicial" name="data_inicial" class="form-control"  required disabled>
         </div>
@@ -39,49 +40,62 @@
 
 
 <div class="px-1 text-center p-2">
-  <div class="row">
-    <div class="col ms-1 me-1 bg-white text-primary rounded shadow-lg">
+  <div class="row g-3">
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="stat-card bg-white text-primary rounded shadow-lg">
      <div class="pt-3">Total Propostas aceitas</div>
      <div class="fw-bold pt-3 pb-3 fs-4"><?= "R$ " . number_format($aceita['value'], 2, ',', '.');?></div>
+      </div>
     </div>
-    <div class="col ms-1 me-1 text-success bg-white bg-gradient rounded shadow-lg">
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="stat-card text-success bg-white bg-gradient rounded shadow-lg">
       <div class="pt-3">Saldo acumulado <?= date('Y');?></div>
       <div class="fw-bold pt-3 pb-3 fs-4"><?= "R$ " . number_format($saldo, 2, ',', '.');?></div>
+      </div>
     </div>
-    <div class="col ms-1 me-1 bg-white bg-gradient rounded text-info shadow-lg">
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="stat-card bg-white bg-gradient rounded text-info shadow-lg">
       <div class="pt-3">Propostas em análise</div>
       <div class="fw-bold pt-3 pb-3 fs-4"><?= "R$ " . number_format($analise['value'], 2, ',', '.');?></div>
+      </div>
     </div>
-    <div class="col ms-1 me-1 bg-white bg-gradient rounded text-warning shadow-lg">
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="stat-card bg-white bg-gradient rounded text-warning shadow-lg">
       <div class="pt-3">sem utilização</div>
       <div class="fw-bold pt-3 pb-3 fs-4">Sem informação</div>
+      </div>
     </div>
   </div>
 </div>
 
 
-<div class="chart row d-flex mt-2 mb-2 h-25">
-    <div class="col-6" id="column_chart"></div>
-    <div class="col-6" id="pie_chart"></div>
+<div class="chart row g-3 mt-2 mb-2 h-25">
+    <div class="col-12 col-md-6">
+      <div class="chart-box shadow-sm" id="column_chart"></div>
+    </div>
+    <div class="col-12 col-md-6">
+      <div class="chart-box shadow-sm" id="pie_chart"></div>
+    </div>
 </div>
 <!-- <div class="chart row d-flex border m-1 h-25">
-    <div class="col-6" id="donut_chart"></div>
-    <div class="col-6" id="line_chart"></div>
-    <div class="col-6" id="scatter_chart"></div>
+    <div class="col-12 col-md-6" id="donut_chart"></div>
+    <div class="col-12 col-md-6" id="line_chart"></div>
+    <div class="col-12 col-md-6" id="scatter_chart"></div>
 
 </div> -->
 
 
 <!-- <div class="chart row d-flex border m-1">
-    <canvas class="col-3 chart-container w-50 h-25" id="meuGrafico"></canvas>
-    <canvas class="col-3 chart-container w-50 h-25" id="meuGrafico2"></canva>
+    <canvas class="col-12 col-md-6 col-lg-3 chart-container w-50 h-25" id="meuGrafico"></canvas>
+    <canvas class="col-12 col-md-6 col-lg-3 chart-container w-50 h-25" id="meuGrafico2"></canva>
 </div> -->
 
 <?php if(!empty($recent)):?>
 
     <a href="<?= base_url('/proposta');?>" class="shadow text-decoration-none bg-white d-block px-2 pt-1">
         <h6 class="mt-3">Últimas Propostas enviadas</h6>
-        <table class="table table-white table-hover mt-2">
+        <div class="table-responsive">
+        <table class="table table-white table-hover mt-2 dt-stack">
         <thead>
             <tr>
             <th scope="col">Data</th>
@@ -106,6 +120,7 @@
         </tbody>
         <?php endforeach;?>
         </table>
+        </div>
     </a>
 <?php endif;?>
 
@@ -117,7 +132,7 @@
 $(document).ready(function(){
 
 //   Aplica mascara
-  $('.money').mask('000.000.000.000.000,00', {reverse: true});
+  $('input.money').mask('000.000.000.000.000,00', {reverse: true});
   $('.phone').mask('(00)00000-0000', {reverse: false});
 });
 

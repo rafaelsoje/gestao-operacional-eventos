@@ -11,8 +11,8 @@
         <?php endif; ?>
   
         <div class="d-flex justify-content-between">
-    <div class="col-4">        
-        <!-- <select id="inputState" class="form-select ">
+    <div class="col-12 col-lg-4">        
+        <!-- <select id="inputState" class="form-select">
             <option selected>Todas as propostas</option>
             <option>Proposta aceita</option>
             <option>Proposta recusada</option>                
@@ -23,7 +23,8 @@
     </div>
   </div>    
      <!-- Tabela Striped
-     <table class="table table-striped">
+     <div class="table-responsive">
+     <table class="table table-striped dt-stack">
       <thead>
         <tr>
           <th>#</th>
@@ -79,7 +80,8 @@
           </td>
         </tr>
       </tbody>
-    </table>
+     </table>
+     </div>
 </div> -->
 
 
@@ -92,7 +94,8 @@
 
 <div class="container-fluid">
   <?php if($propostas):?>
-    <table id="propostas" class="display table table-striped" style="width:100%">
+    <div class="table-responsive">
+    <table id="propostas" class="display table table-striped dt-stack" style="width:100%">
       <thead>
         <tr>
           <th>Data</th>
@@ -124,7 +127,20 @@
           <td><?= $proposta->event_name;?></td>
           <td class="text-end"><?= "R$ " . number_format($proposta->value, 2, ',', '.');?></td>
           <td><?= $status;?></td>
-          <td><a  href="<?= base_url('/uploads' . "/" . $proposta->start_date . "/" . $proposta->file );?>" target="_blank">Download</a></td>
+          <td>
+            <?php
+              $safeDate = preg_replace('/[^0-9\\-]/', '', $proposta->start_date);
+              $filePath = WRITEPATH . 'uploads/' . $safeDate . '/' . $proposta->file;
+              $legacyFilePath = FCPATH . 'uploads/' . $safeDate . '/' . $proposta->file;
+            ?>
+            <?php if(!empty($proposta->file) && (is_file($filePath) || is_file($legacyFilePath))):?>
+              <a href="<?= base_url('/uploads' . "/" . $proposta->start_date . "/" . $proposta->file );?>" target="_blank">Download</a>
+            <?php elseif(!empty($proposta->file)):?>
+              <span class="text-danger">Arquivo não encontrado</span>
+            <?php else:?>
+              <span class="text-muted">Sem arquivo</span>
+            <?php endif;?>
+          </td>
           <td class="d-flex justify-content-center" >
             <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#i<?= $proposta->id;?>"><i class="fas fa-eye"></i></a>
             <a href="<?= base_url('/update/proposta/' . $proposta->id);?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="fas fa-pen"></i></a>
@@ -171,6 +187,7 @@
                 </div>
                 <div class="modal-footer">
                   <form method="post" action="<?= base_url('/delete/proposta');?>">
+                    <?= csrf_field(); ?>
                     <input type="hidden" name="id" value="<?= $proposta->id;?>" />
                     <input type="hidden" name="file" value="<?= $proposta->file;?>" />
                     <input type="hidden" name="date" value="<?= $proposta->start_date;?>" />
@@ -185,7 +202,8 @@
 
         <?php endforeach;?>       
       </tbody>
-    </table>    
+    </table>
+    </div>
     <?php else:?>
       <h4>Nenhuma proposta cadastrada!</h4>
     <?php endif;?>  

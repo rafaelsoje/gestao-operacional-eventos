@@ -8,7 +8,8 @@
     --primary: #FFF;
     --secondary: #000;
     --border: #3197DA;
-    --buttom: #4AADAA;
+    --button: #4AADAA;
+    --buttom: var(--button);
 }
 
 *{
@@ -27,6 +28,27 @@ body{
     /* background-color: #ccc; */
     background-color: var(--background);
     /* background-color: var(--background); */
+}
+
+body,
+.main,
+.container-fluid{
+    overflow-x: hidden;
+}
+
+.chart-box,
+.chart-box canvas,
+.chart-box svg{
+    max-width: 100%;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible{
+    outline: 2px solid var(--border);
+    outline-offset: 2px;
 }
 
 .hr{
@@ -108,13 +130,103 @@ footer a{
 /* Garantir que o canvas ocupe o espaço corretamente */
 .chart-container {
 position: relative;
-height: 50%; /* Definir altura */
-width: 50%;  /* Definir largura */
+width: 100%;
+height: 320px;
+}
+
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 140px;
+    padding: 0 0.75rem;
+    height: 100%;
+}
+
+.chart-box {
+    width: 100%;
+    min-height: 320px;
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+      height: 260px;
+  }
+
+  .stat-card {
+      min-height: 120px;
+  }
+
+  .chart-box {
+      min-height: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .row.g-3 > [class*="col-"] {
+      flex: 0 0 100%;
+      max-width: 100%;
+  }
+
+  .table-responsive {
+      -webkit-overflow-scrolling: touch;
+  }
+
+  table.dt-stack thead {
+      display: none;
+  }
+
+  table.dt-stack,
+  table.dt-stack tbody,
+  table.dt-stack tr,
+  table.dt-stack td,
+  table.dt-stack th {
+      display: block;
+      width: 100%;
+  }
+
+  table.dt-stack tr {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      padding: 0.5rem 0.5rem 0.25rem;
+  }
+
+  table.dt-stack td,
+  table.dt-stack th {
+      border: none;
+      position: relative;
+      padding-left: 50%;
+      text-align: right;
+      white-space: normal;
+  }
+
+  table.dt-stack td::before,
+  table.dt-stack th::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 0.5rem;
+      width: 45%;
+      font-weight: 600;
+      text-align: left;
+      color: #6c757d;
+  }
+
+  .dataTables_wrapper .dataTables_length,
+  .dataTables_wrapper .dataTables_filter,
+  .dataTables_wrapper .dataTables_info,
+  .dataTables_wrapper .dataTables_paginate {
+      float: none;
+      text-align: left;
+  }
+
+  .dataTables_wrapper .dataTables_paginate {
+      margin-top: 0.5rem;
+  }
 }
 
 
 .min-height{
-    height: 100vh; /* 100% da altura da viewport */
+    min-height: 100vh; /* 100% da altura da viewport */
 }
-
-

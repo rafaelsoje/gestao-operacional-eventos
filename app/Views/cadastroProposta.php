@@ -11,6 +11,7 @@
 <div class="container border pt-2 pb-2">
     <h3 class="text-center mb-3 border p-1 bg-white">Cadastro de Propostas</h3>
     <form class="row g-3" method="post" action="<?= url_to('cadastro.proposta.store');?>" enctype="multipart/form-data">
+        <?= csrf_field(); ?>
         
         <?php if (session()->has('error')) : ?>
           <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
@@ -39,11 +40,11 @@
             <label class="form-label">Data término</label>
             <input type="date" class="form-control" name="end_date">
         </div>
-        <div class="col-6">
+        <div class="col-12 col-md-6">
             <label class="form-label">Nome do evento</label>
             <input type="text" class="form-control" name="event_name">
         </div>
-        <div class="col-6">
+        <div class="col-12 col-md-6">
             <label for="inputAddress2" class="form-label">Nome Cliente</label>
             <input type="text" class="form-control" id="inputAddress2" name="client_name">
         </div>
@@ -111,7 +112,7 @@
   <!-- Script para aplicar a máscara -->
   <script>
     $(document).ready(function(){
-      $('.money').mask('000.000.000.000.000,00', {reverse: true});
+      $('input.money').mask('000.000.000.000.000,00', {reverse: true});
     });
 
     $(document).ready(function(){

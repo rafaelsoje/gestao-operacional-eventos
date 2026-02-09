@@ -20,6 +20,7 @@ use Composer\Installers\PhpBBInstaller;
         </ol>
     </nav> -->
     <form class="row" method="post" action="<?= url_to('search.operacional');?>" enctype="multipart/form-data">
+        <?= csrf_field(); ?>
         <div class="col">
             <input type="date" id="data_inicial" name="data_inicial" class="form-control"  required>
         </div>
@@ -46,11 +47,12 @@ use Composer\Installers\PhpBBInstaller;
     </form>
 </div>
 
+<?php helper('format'); ?>
 <?php if(isset($search)):?>
     <div>
         <?php
-            $inicio = implode('/', array_reverse(explode('-', $search['data_inicial'])));
-            $fim = implode('/', array_reverse(explode('-', $search['data_final'])));
+            $inicio = br_date($search['data_inicial']);
+            $fim = br_date($search['data_final']);
         ?>
         <h6>Exibindo resultados do período de <span class="text-danger"><?= $inicio . " a " . $fim;?></span>
         <?php foreach($tipo as $item){
@@ -67,64 +69,89 @@ use Composer\Installers\PhpBBInstaller;
 
 
 <div class="px-1 text-center p-2">
-    <div class="row">
-        <div class="col ms-1 me-1 bg-white text-success rounded shadow-lg">
-            <div class="pt-3">Gerador </br><?= $sum->diesel_litros . " litros" # em " . ($sum->tempo_g1 + $sum->tempo_g2). " horas"?></div>
-            <div class="fw-bold pt-3 pb-3 fs-4 money"><?= $sum->diesel_total;?></div>
+    <div class="row g-3">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card bg-white text-success rounded shadow-lg">
+                <div class="pt-3">Gerador </br><?= $sum->diesel_litros . " litros" # em " . ($sum->tempo_g1 + $sum->tempo_g2). " horas"?></div>
+                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($sum->diesel_total);?></div>
+            </div>
         </div>
-        <div class="col ms-1 me-1 text-success bg-white bg-gradient rounded shadow-lg">
-            <div class="pt-3">Água e esgoto </br><?= $sum->cedae_consumo . " M³";?></div>
-            <div class="fw-bold pt-3 pb-3 fs-4 money"><?= $sum->cedae_total;?></div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card bg-white text-success rounded shadow-lg">
+                <div class="pt-3">Gerador Kwh</div>
+                <?php $kwhTotal = (float)($sum->kwh_total ?? 0); ?>
+                <div class="fw-bold pt-3 pb-3 fs-4"><?= br_number($kwhTotal, 0);?><?= $kwhTotal ? ' kWh' : ''; ?></div>
+            </div>
         </div>
-        <div class="col ms-1 me-1 bg-white bg-gradient rounded text-success shadow-lg">
-            <div class="pt-3">Light </br><?= $sum->light_consumo . " Kwh";?></div>
-            <div class="fw-bold pt-3 pb-3 fs-4 money"><?= $sum->light_total;?></div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card text-success bg-white bg-gradient rounded shadow-lg">
+                <div class="pt-3">Água e esgoto </br><?= $sum->cedae_consumo . " M³";?></div>
+                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($sum->cedae_total);?></div>
+            </div>
         </div>
-        <div class="col ms-1 me-1 bg-white bg-gradient rounded text-success shadow-lg">
-            <div class="pt-3">Operacional </br>Pré-montagem</div>
-            <div class="fw-bold pt-3 pb-3 fs-4 money"><?= $sum->valor_premontagem;?></div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card bg-white bg-gradient rounded text-success shadow-lg">
+                <div class="pt-3">Light </br><?= $sum->light_consumo . " Kwh";?></div>
+                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($sum->light_total);?></div>
+            </div>
         </div>
-        <div class="col ms-1 me-1 bg-white bg-gradient rounded text-success shadow-lg">
-            <div class="pt-3">Operacional </br> evento</div>
-            <div class="fw-bold pt-3 pb-3 fs-4 money"><?= $sum->super_op;?></div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card bg-white bg-gradient rounded text-success shadow-lg">
+                <div class="pt-3">Operacional </br>Pré-montagem</div>
+                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($sum->valor_premontagem);?></div>
+            </div>
         </div>
-        <div class="col ms-1 me-1 bg-white bg-gradient rounded text-primary shadow-lg">
-            <div class="pt-3">Taxa de <br>cozinha</div>
-            <div class="fw-bold pt-3 pb-3 fs-4 money"><?= ($sum->taxa_cozinha) ?? '0,00';?></div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card bg-white bg-gradient rounded text-success shadow-lg">
+                <div class="pt-3">Operacional </br> evento</div>
+                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($sum->super_op);?></div>
+            </div>
         </div>
-        <div class="col ms-1 me-1 bg-white bg-gradient rounded text-danger shadow-lg">
-            <div class="pt-3">Custo total <br>no período</div>
-            <div class="fw-bold pt-3 pb-3 fs-4 money"><?= $sum->total_consumo;?></div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card bg-white bg-gradient rounded text-primary shadow-lg">
+                <div class="pt-3">Custo médio<br>por evento</div>
+                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($avg_event_cost ?? 0);?></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card bg-white bg-gradient rounded text-danger shadow-lg">
+                <div class="pt-3">Custo total <br>no período</div>
+                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($sum->total_consumo);?></div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="chart row d-flex mt-2 mb-2">
-    <div class="col-6 shadow-lg" id="donut_chart"></div>
-    <div class="col-6 shadow-lg" id="column_chart"></div>
+<div class="chart row g-3 mt-2 mb-2">
+    <div class="col-12 col-md-6">
+        <div class="chart-box shadow-lg" id="donut_chart"></div>
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="chart-box shadow-lg" id="column_chart"></div>
+    </div>
 </div>
 
-<div class="chart row mt-2 mb-2">
-    <div class="col-6 shadow" id="column_chart2" ></div>
-    <div class="col-6 shadow" id="line_chart1"></div>
-    <!-- <div class="col-6 shadow" id="curve_chart" ></div> -->
-     <!-- <div class="col-6 shadow" id="line_chart"></div> -->
-</div>
-<div class="chart row mt-2 mb-2">
-    <!-- <div class="col-6 shadow" id="column_chart2" ></div> -->
-    <!-- <div class="col-6 shadow" id="curve_chart" ></div> -->
-     <div class="col-12 shadow" id="line_chart"></div>
-</div>
-<?php if(!isset($search)):?>
-    <div class="chart row mt-2 mb-2">
-        <div class="col-12 shadow" id="line_chart"></div>
-        <!-- <div class="col-6" id="scatter_chart"></div> -->
+<div class="chart row g-3 mt-2 mb-2">
+    <div class="col-12 col-md-6">
+        <div class="chart-box shadow" id="column_chart2" ></div>
     </div>
-<?php endif;?>
+    <div class="col-12 col-md-6">
+        <div class="chart-box shadow" id="top_events_chart"></div>
+    </div>
+    <!-- <div class="col-12 col-md-6 shadow" id="curve_chart" ></div> -->
+     <!-- <div class="col-12 col-md-6 shadow" id="line_chart"></div> -->
+</div>
+<div class="chart row g-3 mt-2 mb-2">
+    <!-- <div class="col-12 col-md-6 shadow" id="column_chart2" ></div> -->
+    <!-- <div class="col-12 col-md-6 shadow" id="curve_chart" ></div> -->
+     <div class="col-12">
+        <div class="chart-box shadow" id="line_chart"></div>
+     </div>
+</div>
 
 <!-- <div class="chart row d-flex border m-1">
-    <canvas class="col-3 chart-container w-50 h-25" id="meuGrafico"></canvas>
-    <canvas class="col-3 chart-container w-50 h-25" id="meuGrafico2"></canva>
+    <canvas class="col-12 col-md-6 col-lg-3 chart-container w-50 h-25" id="meuGrafico"></canvas>
+    <canvas class="col-12 col-md-6 col-lg-3 chart-container w-50 h-25" id="meuGrafico2"></canva>
 </div> -->
 <?php else:?>
     <?php if(isset($search)):?>
@@ -136,6 +163,7 @@ use Composer\Installers\PhpBBInstaller;
 
             <h4 class="mt-4"><?= "Sua pesquisa por " . "<span class='text-danger'>" . $inicio ." a ". $fim . "</span>" . " não retornou nenhum resultado.";?></h4>
             <form class="row" method="post" action="<?= url_to('search.operacional');?>" enctype="multipart/form-data">
+                <?= csrf_field(); ?>
                 <div class="col">
                     <input type="date" id="data_inicial" name="data_inicial" class="form-control"  required>
                 </div>
@@ -159,7 +187,8 @@ use Composer\Installers\PhpBBInstaller;
 
 <a href="<?= (isset($get))? base_url('operacional/planejamento/lista') : base_url('/operacional/lista');?>" class="shadow-lg text-decoration-none bg-white d-block px-2 pt-1">
     <h6 class="mt-3">Eventos realizados</h6>
-    <table class="table table-white table-hover mt-2">
+    <div class="table-responsive">
+    <table class="table table-white table-hover mt-2 dt-stack">
     <thead>
         <tr>
         <th>Data</th>
@@ -167,6 +196,7 @@ use Composer\Installers\PhpBBInstaller;
           <th>Tipo de evento</th>
           <th>Operacional</th>
           <th>Gerador</th>
+          <th>Gerador Kwh</th>
           <th>Cedae</th>
           <th>Light</th>
           <th>Custo do Evento</th>
@@ -175,29 +205,34 @@ use Composer\Installers\PhpBBInstaller;
     <tbody>
         <?php foreach($data as $item):?>
             <?php
-                $data = implode('/', array_reverse(explode('-', $item->data)));
+                $data = br_date($item->data);
+                $kwhGerador = (float)$item->kwh_saida_g1 - (float)$item->kwh_entrada_g1;
+                $kwhGerador += (float)$item->kwh_saida_g2 - (float)$item->kwh_entrada_g2;
             ?>
         <tr>
             <th scope="row"><?= $data;?></th>
             <td><?= $item->nome;?></td>
             <td><?= $item->tipo;?></td>
             <?php $operacional = $item->super_op + $item->valor_premontagem; ?>
-            <td class=""><?= "R$ " . number_format($operacional, 2, ',', '.');?></td>
-            <td class=""><?= "R$ " . number_format($item->diesel_total, 2, ',', '.');?></td>
-            <td class=""><?= "R$ " . number_format($item->cedae_total, 2, ',', '.');?></td>
-            <td class=""><?= "R$ " . number_format($item->light_total, 2, ',', '.');?></td>
-            <td class=""><?= "R$ " . number_format($item->total_consumo, 2, ',', '.');?></td>
+            <td class=""><?= br_money($operacional);?></td>
+            <td class=""><?= br_money($item->diesel_total);?></td>
+            <td class=""><?= br_number($kwhGerador, 0);?><?= $kwhGerador ? ' kWh' : ''; ?></td>
+            <td class=""><?= br_money($item->cedae_total);?></td>
+            <td class=""><?= br_money($item->light_total);?></td>
+            <td class=""><?= br_money($item->total_consumo);?></td>
 
         </tr>
     </tbody>
     <?php endforeach;?>
     </table>
+    </div>
 </a>
 <?php endif;?>
 
 <?php else:?>
     <div class="px-4 mb-3 mt-2 d-flex align-items-center justify-content-end">
         <form class="row" method="post" action="<?= url_to('search.operacional');?>" enctype="multipart/form-data">
+            <?= csrf_field(); ?>
              <div class="col">
             <input type="date" id="data_inicial" name="data_inicial" class="form-control"  required>
             </div>
@@ -239,7 +274,7 @@ use Composer\Installers\PhpBBInstaller;
 $(document).ready(function(){
 
 //   Aplica mascara
-  $('.money').mask('000.000.000.000.000,00', {reverse: true});
+  $('input.money').mask('000.000.000.000.000,00', {reverse: true});
   $('.phone').mask('(00)00000-0000', {reverse: false});
 });
 
@@ -274,11 +309,8 @@ function validarDatas() {
     drawDonutChart();
      drawColumnChart();
      drawColumnChart2();
+     drawTopEventsChart();
      drawLineChart();
-     drawLineChart2();
-     drawChart();     
-     drawPieChart();
-     drawScatterChart();
  }
 
 //  GRAFICO COLUNA
@@ -287,7 +319,7 @@ function validarDatas() {
 //
 //
 //
-var bar = <?= $bar;?>
+var bar = <?= $bar ?? '[]' ?>;
 
 
  function drawColumnChart() {
@@ -345,52 +377,18 @@ var bar = <?= $bar;?>
 
 
 
- var cozinha = <?= $cozinha;?>
-//  GRAFICO LINHA
- function drawLineChart2() {
-     var data = new google.visualization.DataTable();
-     data.addColumn('string', 'Ano');
-     data.addColumn('number', 'Valor Mensal');
-    
-     data.addRows(cozinha);
-
-     var options = {
-        title: 'Taxa de cozinha',
-        //  hAxis: { title: ''   },
-        vAxis: { title: 'Custo' },
-        legend: { position: 'bottom' },
-        colors: ['#00f']         
-     };
-
-     var chart = new google.visualization.LineChart(document.getElementById('line_chart1'));
-     chart.draw(data, options);
- }
-
-
- var line = <?= $line;?>
+var line = <?= $line ?? '[]' ?>;
+var topEvents = <?= $topEvents ?? '[]' ?>;
 //  GRAFICO LINHA
  function drawLineChart() {
-     var data = new google.visualization.DataTable();
-     data.addColumn('string', 'Ano');
-     data.addColumn('number', 'Custo Mensal');
-
-    //  data.addRows([
-    //      [2019, 10],
-    //      [2020, 15],
-    //      [2021, 25],
-    //      [2022, 30],
-    //      [2023, 35],
-    //      [2024, 20]
-    //  ]);
-
-     data.addRows(line);
+     var data = google.visualization.arrayToDataTable(line);
 
      var options = {
          title: 'Custo Anual',
         //  hAxis: { title: ''   },
          vAxis: { title: 'Custo' },
          legend: { position: 'bottom' },
-         colors: ['#f00']
+         colors: ['#999', '#f00']
      };
 
      var chart = new google.visualization.LineChart(document.getElementById('line_chart'));
@@ -418,7 +416,7 @@ function drawChart() {
     chart.draw(data, options);
 }
 
-var barChart = <?= $barChart;?>;
+var barChart = <?= $barChart ?? '[]' ?>;
 
  function drawColumnChart2() {
     //    var data = google.visualization.arrayToDataTable([
@@ -469,7 +467,38 @@ var options = {
       chart.draw(data, options);
 }
 
-var donut = <?= $donut;?>
+function drawTopEventsChart() {
+    if (!topEvents || topEvents.length <= 1) {
+        return;
+    }
+    var data = google.visualization.arrayToDataTable(topEvents);
+    var view = new google.visualization.DataView(data);
+    view.setColumns([0, 1, 3, 4]);
+
+    var options = {
+        title: 'Ranking de eventos por custo',
+        legend: { position: 'none' },
+        bars: 'horizontal',
+        height: 320,
+        colors: ['#3b82f6'],
+        chartArea: { left: 140, width: '70%' },
+        tooltip: { isHtml: false }
+    };
+    var chart = new google.visualization.BarChart(document.getElementById('top_events_chart'));
+    chart.draw(view, options);
+
+    google.visualization.events.addListener(chart, 'select', function () {
+        var selection = chart.getSelection();
+        if (!selection.length) return;
+        var row = selection[0].row;
+        var id = data.getValue(row, 5);
+        if (id) {
+            window.location.href = "<?= site_url('update/operacional') ?>/" + id;
+        }
+    });
+}
+
+var donut = <?= $donut ?? '[]' ?>;
 
 function drawDonutChart() {
     // Dados do gráfico

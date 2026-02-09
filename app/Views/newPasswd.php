@@ -95,15 +95,8 @@
   <!-- Validação com JavaScript -->
   <script>
     function validateForm() {
-      let email = document.getElementById('email').value;
       let password = document.getElementById('password').value;
       let errorMsg = '';
-
-      // Validação do e-mail
-      const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-      if (!emailPattern.test(email)) {
-        errorMsg += 'Por favor, insira um e-mail válido.\n';
-      }
 
       // Validação da senha (mínimo de 6 caracteres)
       if (password.length < 6) {
@@ -124,7 +117,7 @@
   <div class="login-container">
     <!-- Logo -->
     <!-- <img class="w-50" src="<?= base_url('./media/logo-black.png')?>" alt="Logo" class="logo"> Substitua 'logo.png' pelo caminho da sua logo -->
-<?php if(isset($recovery) && isset($id)):?>
+<?php if(isset($recovery)):?>
     <h1>Cadastro de nova senha</h1>
 
     <!-- Formulário com validação -->
@@ -133,14 +126,13 @@
         <?= csrf_field(); ?> 
           
         <?php if (session()->has('error')) : ?>
-          <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
+          <div class="flash text-center alert alert-danger text-danger" role="alert" aria-live="assertive"><?php echo session()->get('error') ?? ''; ?></div>
         <?php endif; ?>
-          <input type="hidden" class="form-control" id="email" name="recovery" value="<?= $recovery;?>" required>
-          <input type="hidden" class="form-control" name="id" value="<?= $id;?>" required>
+          <input type="hidden" class="form-control" name="recovery" value="<?= $recovery;?>" required>
         <label for="email" class="form-label">Senha</label>
         <div class="input-group">
           <span class="input-group-text"><i class="fas fa-lock"></i></span>
-          <input type="password" class="form-control" id="email" name="password" placeholder="Digite sua senha" required>
+          <input type="password" class="form-control" id="password" name="password" placeholder="Digite sua senha" required>
         </div>
       </div>
 
