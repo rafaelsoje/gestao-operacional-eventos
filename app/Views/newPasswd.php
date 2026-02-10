@@ -116,22 +116,8 @@
     function passwordRules(password, confirmation) {
       return {
         length: password.length >= 8,
-        lower: /[a-z]/.test(password),
-        upper: /[A-Z]/.test(password),
-        digit: /\d/.test(password),
-        symbol: /[^A-Za-z0-9]/.test(password),
         match: confirmation.length > 0 && password === confirmation
       };
-    }
-
-    function calcStrength(rules) {
-      let score = 0;
-      if (rules.length) score++;
-      if (rules.lower) score++;
-      if (rules.upper) score++;
-      if (rules.digit) score++;
-      if (rules.symbol) score++;
-      return score;
     }
 
     function updatePasswordUi() {
@@ -142,14 +128,8 @@
       const strengthBar = document.getElementById('password-strength');
 
       const rules = passwordRules(passwordInput.value, confirmInput.value);
-      const score = calcStrength(rules);
-
       const map = [
         ['rule-length', rules.length],
-        ['rule-lower', rules.lower],
-        ['rule-upper', rules.upper],
-        ['rule-digit', rules.digit],
-        ['rule-symbol', rules.symbol],
         ['rule-match', rules.match],
       ];
 
@@ -160,21 +140,15 @@
       });
 
       strengthBar.className = 'progress-bar';
-      strengthBar.style.width = (score * 20) + '%';
-      strengthBar.setAttribute('aria-valuenow', String(score * 20));
-      if (score <= 2) {
-        strengthBar.classList.add('bg-danger');
-      } else if (score <= 4) {
-        strengthBar.classList.add('bg-warning');
-      } else {
-        strengthBar.classList.add('bg-success');
-      }
+      strengthBar.style.width = rules.length ? '100%' : '40%';
+      strengthBar.setAttribute('aria-valuenow', rules.length ? '100' : '40');
+      strengthBar.classList.add(rules.length ? 'bg-success' : 'bg-warning');
 
-      const isValid = rules.length && rules.lower && rules.upper && rules.digit && rules.symbol && rules.match;
+      const isValid = rules.length && rules.match;
       submitBtn.disabled = !isValid;
       feedback.textContent = isValid
         ? 'Senha válida.'
-        : 'A senha precisa atender aos requisitos abaixo.';
+        : 'A senha precisa ter ao menos 8 caracteres e confirmação igual.';
 
       return isValid;
     }
@@ -234,10 +208,6 @@
         </div>
         <ul class="password-hints">
           <li id="rule-length">Pelo menos 8 caracteres</li>
-          <li id="rule-lower">Letra minúscula</li>
-          <li id="rule-upper">Letra maiúscula</li>
-          <li id="rule-digit">Número</li>
-          <li id="rule-symbol">Símbolo (ex.: !@#$)</li>
           <li id="rule-match">Confirmação igual à senha</li>
         </ul>
         <div id="password-feedback" class="small text-muted" aria-live="polite"></div>

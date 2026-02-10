@@ -96,18 +96,12 @@
   <script>
     function validateForm() {
       let email = document.getElementById('email').value;
-      let password = document.getElementById('password').value;
       let errorMsg = '';
 
       // Validação do e-mail
       const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
       if (!emailPattern.test(email)) {
         errorMsg += 'Por favor, insira um e-mail válido.\n';
-      }
-
-      // Validação da senha (mínimo de 6 caracteres)
-      if (password.length < 6) {
-        errorMsg += 'A senha deve ter pelo menos 6 caracteres.\n';
       }
 
       if (errorMsg) {

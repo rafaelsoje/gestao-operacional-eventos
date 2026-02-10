@@ -866,6 +866,9 @@ class Home extends BaseController
             }
 
             if (!empty($data['password'])) {
+                if (strlen((string)$data['password']) < 8) {
+                    return redirect()->route('usuarios')->with('error', 'A senha deve ter pelo menos 8 caracteres.');
+                }
                 (new Users())->update($data['id'], [
                     'password' => password_hash($data['password'], PASSWORD_DEFAULT)
                 ]);
@@ -1000,8 +1003,8 @@ class Home extends BaseController
                 return redirect()->route('perfil')->with('error', 'Senha atual incorreta.');
             }
 
-            if (strlen($newPassword) < 6) {
-                return redirect()->route('perfil')->with('error', 'Nova senha deve ter pelo menos 6 caracteres.');
+            if (strlen($newPassword) < 8) {
+                return redirect()->route('perfil')->with('error', 'Nova senha deve ter pelo menos 8 caracteres.');
             }
 
             $items['password'] = password_hash($newPassword, PASSWORD_DEFAULT);

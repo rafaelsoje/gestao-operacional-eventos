@@ -341,12 +341,12 @@ class Login extends BaseController
         }
 
         $validate = $this->validate([
-            'password' => 'required|min_length[8]|max_length[72]|matches[password_confirmation]|regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/]',
+            'password' => 'required|min_length[8]|max_length[72]|matches[password_confirmation]',
             'password_confirmation' => 'required',
         ]);
 
         if (!$validate) {
-            return redirect()->back()->with('error', 'Use ao menos 8 caracteres, com maiúscula, minúscula, número, símbolo e confirmação igual.');
+            return redirect()->back()->with('error', 'Senha deve ter no mínimo 8 caracteres e confirmação igual.');
         }
 
         $user = session()->get('user');
@@ -450,7 +450,7 @@ class Login extends BaseController
         $ip = (string)$this->request->getIPAddress();
         $validate = $this->validate([
             'recovery' => 'required|exact_length[64]|alpha_numeric',
-            'password' => 'required|min_length[8]|max_length[72]|matches[password_confirmation]|regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/]',
+            'password' => 'required|min_length[8]|max_length[72]|matches[password_confirmation]',
             'password_confirmation' => 'required',
         ]);
 

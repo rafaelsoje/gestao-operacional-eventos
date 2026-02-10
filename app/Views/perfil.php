@@ -55,7 +55,7 @@
                         <div class="mb-3">
                             <label class="form-label">Nova senha</label>
                             <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Digite a nova senha">
-                            <div class="form-text">Mínimo de 6 caracteres.</div>
+                            <div class="form-text">Mínimo de 8 caracteres.</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Confirmar nova senha</label>
@@ -90,9 +90,9 @@
 
             if (!p && !c) return;
 
-            if (p.length > 0 && p.length < 6) {
+            if (p.length > 0 && p.length < 8) {
                 pwd.classList.add('is-invalid');
-                feedback.textContent = 'A senha deve ter pelo menos 6 caracteres.';
+                feedback.textContent = 'A senha deve ter pelo menos 8 caracteres.';
                 feedback.classList.add('text-danger');
                 return;
             }

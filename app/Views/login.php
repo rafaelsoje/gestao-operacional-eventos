@@ -105,9 +105,9 @@
         errorMsg += 'Por favor, insira um e-mail válido.\n';
       }
 
-      // Validação da senha (mínimo de 6 caracteres)
-      if (password.length < 6) {
-        errorMsg += 'A senha deve ter pelo menos 6 caracteres.\n';
+      // Validação da senha (mínimo de 8 caracteres)
+      if (password.length < 8) {
+        errorMsg += 'A senha deve ter pelo menos 8 caracteres.\n';
       }
 
       if (errorMsg) {
