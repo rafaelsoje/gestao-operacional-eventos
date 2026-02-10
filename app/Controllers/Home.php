@@ -1359,8 +1359,43 @@ class Home extends BaseController
     public function logs()
     {
         $data = (new Logs())->select()->orderBy('id', 'desc')->limit(50)->findAll();
+        foreach ($data as $log) {
+            $description = (string) ($log->description ?? '');
+            $log->user_name = $this->extractLogUserName($description);
+            $log->clean_description = $this->stripUserFromDescription($description);
+        }
 
         return view('logs', ['logs' => $data]);
+    }
+
+    private function extractLogUserName(string $description): string
+    {
+        $description = trim($description);
+        if ($description === '') {
+            return '---';
+        }
+
+        $pattern = '/(?:^|\\b)(?:o\\s+)?usu[aá]rio\\s+(.+?)\\s+(?:cadastrou|efetuou|apagou|removeu|atualizou|editou|entrou)\\b/iu';
+        if (preg_match($pattern, $description, $matches) === 1) {
+            $name = trim((string) ($matches[1] ?? ''));
+            return $name !== '' ? $name : '---';
+        }
+
+        return '---';
+    }
+
+    private function stripUserFromDescription(string $description): string
+    {
+        $description = trim($description);
+        if ($description === '') {
+            return '';
+        }
+
+        $pattern = '/^(?:o\\s+)?usu[aá]rio\\s+.+?\\s+(?=(?:cadastrou|efetuou|apagou|removeu|atualizou|editou|entrou)\\b)/iu';
+        $clean = preg_replace($pattern, '', $description);
+        $clean = trim((string) $clean);
+
+        return $clean !== '' ? $clean : $description;
     }
 
     public function telegran($texto)

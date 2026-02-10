@@ -19,6 +19,7 @@
         <tr>
         <th>ID</th>
           <th>Ação</th>
+          <th>Usuário</th>
           <th>Descrição</th>          
         </tr>
       </thead>
@@ -27,7 +28,8 @@
           <tr>
           <td><?= $log->id;?></td>
             <td><?= $log->title;?></td>
-            <td><?=$log->description;?></td>
+            <td><?= esc($log->user_name ?? '---'); ?></td>
+            <td><?= esc($log->clean_description ?? $log->description ?? ''); ?></td>
           <?php endforeach ;?>
       </tbody>
     </table>
