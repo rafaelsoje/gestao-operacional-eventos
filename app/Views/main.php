@@ -45,8 +45,8 @@
     <style>
       .site-credit {
         position: fixed;
-        right: 14px;
-        bottom: 10px;
+        right: 64px;
+        bottom: 18px;
         z-index: 998;
         font-size: 12px;
         line-height: 1.2;
@@ -66,8 +66,8 @@
 
       @media (max-width: 768px) {
         .site-credit {
-          right: 12px;
-          bottom: 8px;
+          right: 58px;
+          bottom: 16px;
           font-size: 11px;
         }
       }
