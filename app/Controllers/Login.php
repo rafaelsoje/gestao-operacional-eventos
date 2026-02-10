@@ -12,6 +12,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\I18n\Time;
 use Config\Services;
 use DateTime;
+use Throwable;
 use stdClass;
 
 class Login extends BaseController
@@ -357,10 +358,14 @@ class Login extends BaseController
         $password = (string)$this->request->getPost('password');
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
-        $updated = (new Users())->update($user->id, [
+        $updateData = [
             'password' => $hash,
-            'must_change_password' => 0,
-        ]);
+        ];
+        if ($this->hasUsersMustChangePasswordColumn()) {
+            $updateData['must_change_password'] = 0;
+        }
+
+        $updated = (new Users())->update($user->id, $updateData);
 
         if (!$updated) {
             return redirect()->back()->with('error', 'Erro ao atualizar a senha.');
@@ -479,23 +484,34 @@ class Login extends BaseController
             return redirect()->route('login')->with('error', 'Link de recuperação inválido ou expirado.');
         }
 
+        $resetUserId = $this->rowValue($reset, 'user_id');
+        $resetId = $this->rowValue($reset, 'id');
+        if ($resetUserId === null || $resetId === null) {
+            $this->logRecoveryEvent('TOKEN_ESTRUTURA_INVALIDA', [
+                'ip' => $ip,
+            ]);
+            return redirect()->route('login')->with('error', 'Não foi possível processar o link de recuperação.');
+        }
+
         $data = [
             'password' => password_hash((string)$post['password'], PASSWORD_DEFAULT),
-            'must_change_password' => 0,
         ];
+        if ($this->hasUsersMustChangePasswordColumn()) {
+            $data['must_change_password'] = 0;
+        }
 
-        if((new Users())->update($reset->user_id, $data))
+        if((new Users())->update((int)$resetUserId, $data))
         {
-            (new PasswordResets())->delete($reset->id);
+            (new PasswordResets())->delete((int)$resetId);
             $this->logRecoveryEvent('SENHA_REDEFINIDA', [
-                'user_id' => (int)$reset->user_id,
+                'user_id' => (int)$resetUserId,
                 'ip' => $ip,
             ]);
             return redirect()->route('login')->with('success', 'Senha atualizada com sucesso.');
         }
 
         $this->logRecoveryEvent('FALHA_ATUALIZAR_SENHA', [
-            'user_id' => (int)$reset->user_id,
+            'user_id' => (int)$resetUserId,
             'ip' => $ip,
         ]);
         return redirect()->route('login')->with('error', 'Erro ao redefinir senha.');
@@ -513,10 +529,37 @@ class Login extends BaseController
         }
         $parts[] = 'ts=' . date('Y-m-d H:i:s');
 
-        (new Logs())->insert([
-            'title' => 'RECOVERY',
-            'description' => implode(' | ', $parts),
-        ]);
+        try {
+            (new Logs())->insert([
+                'title' => 'RECOVERY',
+                'description' => implode(' | ', $parts),
+            ]);
+        } catch (Throwable $e) {
+            log_message('warning', 'Falha ao registrar auditoria de recovery: {message}', ['message' => $e->getMessage()]);
+        }
+    }
+
+    private function hasUsersMustChangePasswordColumn(): bool
+    {
+        static $hasColumn = null;
+        if ($hasColumn !== null) {
+            return $hasColumn;
+        }
+
+        $hasColumn = db_connect()->fieldExists('must_change_password', 'users');
+        return $hasColumn;
+    }
+
+    private function rowValue($row, string $key)
+    {
+        if (is_array($row)) {
+            return $row[$key] ?? null;
+        }
+        if (is_object($row)) {
+            return $row->{$key} ?? null;
+        }
+
+        return null;
     }
 
     private function maskEmail(string $email): string

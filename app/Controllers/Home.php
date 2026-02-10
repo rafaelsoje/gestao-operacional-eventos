@@ -770,7 +770,9 @@ class Home extends BaseController
         $data['role'] = $role;
         $data['admin'] = ($role === 'admin') ? 1 : 0;
         $data['password'] = $pass;
-        $data['must_change_password'] = 1;
+        if ($this->hasUsersMustChangePasswordColumn()) {
+            $data['must_change_password'] = 1;
+        }
 
         $add = new Users();
         $result = $add->insert($data);
@@ -1008,7 +1010,9 @@ class Home extends BaseController
             }
 
             $items['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
-            $items['must_change_password'] = 0;
+            if ($this->hasUsersMustChangePasswordColumn()) {
+                $items['must_change_password'] = 0;
+            }
         }
 
         if (empty($items)) {
@@ -1303,6 +1307,17 @@ class Home extends BaseController
         $erro = curl_error($ch);
         curl_close($ch);
 
+    }
+
+    private function hasUsersMustChangePasswordColumn(): bool
+    {
+        static $hasColumn = null;
+        if ($hasColumn !== null) {
+            return $hasColumn;
+        }
+
+        $hasColumn = db_connect()->fieldExists('must_change_password', 'users');
+        return $hasColumn;
     }
 
 }
