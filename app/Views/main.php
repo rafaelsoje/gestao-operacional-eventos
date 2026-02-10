@@ -39,6 +39,36 @@
     <?php if ($isCalendarPage && $calendarBundleReady): ?>
     <script src="<?= base_url('assets/build/calendar.js?v=' . $calendarJsV) ?>"></script>
     <?php endif; ?>
+    <style>
+      .site-credit {
+        position: fixed;
+        right: 14px;
+        bottom: 10px;
+        z-index: 998;
+        font-size: 12px;
+        line-height: 1.2;
+        color: rgba(33, 37, 41, 0.55);
+        text-align: right;
+      }
+
+      .site-credit a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .site-credit a:hover {
+        color: rgba(33, 37, 41, 0.9);
+        text-decoration: underline;
+      }
+
+      @media (max-width: 768px) {
+        .site-credit {
+          right: 12px;
+          bottom: 8px;
+          font-size: 11px;
+        }
+      }
+    </style>
 
   <title>Operacional</title>
 </head>
@@ -111,10 +141,13 @@
   </div> -->
 
   </header>
-  <main class="main">
+<main class="main">
     <!-- Content page -->
     <?= $this->renderSection('content');?>
   </main>
+  <small class="site-credit">
+    Desenvolvido por <a href="https://rafaelsoje.com" target="_blank" rel="noopener noreferrer">Rafael Soje</a>
+  </small>
 <!-- <footer id="footer" class="footer position-absolute dark-background">
   <div class="container">
     <div class="copyright text-center "><a href="https://rafaelsoje.com" target="_blank">
