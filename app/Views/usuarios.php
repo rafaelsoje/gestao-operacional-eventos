@@ -64,27 +64,27 @@
             <td><?=$nivel;?></td>
             <td class="d-flex justify-content-center" >
               
-              <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#view<?=$user->id;?>"><i class="fas fa-eye"></i></a>
+              <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#view<?=$user->id;?>"><i class="bi bi-eye"></i></a>
 
               <?php $session =  session()->get('user');?>
               <?php $sessionRole = $session->role ?? (($session->admin ?? 0) == 1 ? 'admin' : 'user'); ?>
               <?php if($user->email == $session->email):?>
-                <a href="<?= base_url('/perfil');?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="fas fa-pen"></i></a>
+                <a href="<?= base_url('/perfil');?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="bi bi-pencil"></i></a>
               <?php elseif($sessionRole === 'admin' || $sessionRole === 'superuser'):?>
-                <a href="<?= base_url('/update/usuario/' . $user->id);?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="fas fa-pen"></i></a>
+                <a href="<?= base_url('/update/usuario/' . $user->id);?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="bi bi-pencil"></i></a>
               <?php else:?>
-                <a href="#" type="button" class="btn btn-warning text-white me-2 ms-2 disabled"><i class="fas fa-pen"></i></a>
+                <a href="#" type="button" class="btn btn-warning text-white me-2 ms-2 disabled"><i class="bi bi-pencil"></i></a>
               <?php endif;?>
 
                                          
               <?php if($user->email != $session->email && ($sessionRole === 'admin' || $sessionRole === 'superuser')):?>                       
-                <button type="button" class="btn btn-danger text-white" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="fas fa-trash"></i></button>
+                <button type="button" class="btn btn-danger text-white" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="bi bi-trash"></i></button>
               <?php elseif($user->email == $session->email):?>
-                <button href="#" type="button" class="btn btn-secondary text-white disabled" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="fas fa-trash"></i></button>
+                <button href="#" type="button" class="btn btn-secondary text-white disabled" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="bi bi-trash"></i></button>
               <?php else:?>
-                <button href="#" type="button" class="btn btn-secondary text-white disabled" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="fas fa-trash"></i></button>
+                <button href="#" type="button" class="btn btn-secondary text-white disabled" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="bi bi-trash"></i></button>
               <?php endif;?>
-              <!-- <button type="button" class="btn btn-danger" onclick="confirmarExclusao(1, 'Ana Silva')"><i class="fas fa-trash"></i></button> -->
+              <!-- <button type="button" class="btn btn-danger" onclick="confirmarExclusao(1, 'Ana Silva')"><i class="bi bi-trash"></i></button> -->
               <!-- <button class="btn btn-danger btn-sm" onclick="confirmarExclusao(1, 'Ana Silva')">Excluir</button> -->
             </td>
           </tr>

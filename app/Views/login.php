@@ -134,7 +134,7 @@
 
         <label for="email" class="form-label">E-mail</label>
         <div class="input-group">
-          <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
           <input type="email" class="form-control" id="email" name="email" placeholder="Digite seu e-mail" required>
         </div>
       </div>
@@ -142,7 +142,7 @@
       <div class="mb-3">
         <label for="password" class="form-label">Senha</label>
         <div class="input-group">
-          <span class="input-group-text"><i class="fas fa-lock"></i></span>
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
           <input type="password" class="form-control" id="password" name="password" placeholder="Digite sua senha" required>
         </div>
       </div>
@@ -152,9 +152,9 @@
 
     <!-- <div class="social-login">
       <p>Ou entre com</p>
-      <i class="fab fa-facebook"></i>
-      <i class="fab fa-google"></i>
-      <i class="fab fa-twitter"></i>
+      <i class="bi bi-facebook"></i>
+      <i class="bi bi-google"></i>
+      <i class="bi bi-twitter-x"></i>
     </div> -->
 
     <div class="forgot-password">

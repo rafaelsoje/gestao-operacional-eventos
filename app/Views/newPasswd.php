@@ -168,7 +168,7 @@
       if (!input) return;
       const hidden = input.type === 'password';
       input.type = hidden ? 'text' : 'password';
-      btn.innerHTML = hidden ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+      btn.innerHTML = hidden ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
     }
   </script>
 </head>
@@ -193,9 +193,9 @@
         <?php endif;?>
         <label for="password" class="form-label">Senha</label>
         <div class="input-group">
-          <span class="input-group-text"><i class="fas fa-lock"></i></span>
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
           <input type="password" class="form-control" id="password" name="password" placeholder="Digite sua senha" autocomplete="new-password" required>
-          <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('password', this)" aria-label="Mostrar ou ocultar senha"><i class="fas fa-eye"></i></button>
+          <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('password', this)" aria-label="Mostrar ou ocultar senha"><i class="bi bi-eye"></i></button>
         </div>
         <div class="strength-wrap">
           <div class="progress" style="height: 6px;">
@@ -211,9 +211,9 @@
       <div class="mb-3">
         <label for="password_confirmation" class="form-label">Confirmar senha</label>
         <div class="input-group">
-          <span class="input-group-text"><i class="fas fa-lock"></i></span>
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
           <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Confirme sua senha" autocomplete="new-password" required>
-          <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('password_confirmation', this)" aria-label="Mostrar ou ocultar confirmação"><i class="fas fa-eye"></i></button>
+          <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('password_confirmation', this)" aria-label="Mostrar ou ocultar confirmação"><i class="bi bi-eye"></i></button>
         </div>
       </div>
 
@@ -222,9 +222,9 @@
 
     <!-- <div class="social-login">
       <p>Ou entre com</p>
-      <i class="fab fa-facebook"></i>
-      <i class="fab fa-google"></i>
-      <i class="fab fa-twitter"></i>
+      <i class="bi bi-facebook"></i>
+      <i class="bi bi-google"></i>
+      <i class="bi bi-twitter-x"></i>
     </div> -->
 
     <!-- <div class="forgot-password">

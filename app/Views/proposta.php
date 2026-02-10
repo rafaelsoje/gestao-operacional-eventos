@@ -48,9 +48,9 @@
           <td>ana.silva@example.com</td>
           <td>Gerente</td>
           <td>
-            <a href="#" type="button" class="btn btn-info text-white"><i class="fas fa-eye"></i></a>
-            <a href="" type="button" class="btn btn-warning text-white"><i class="fas fa-pen"></i></a>
-            <a href="" type="button" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+            <a href="#" type="button" class="btn btn-info text-white"><i class="bi bi-eye"></i></a>
+            <a href="" type="button" class="btn btn-warning text-white"><i class="bi bi-pencil"></i></a>
+            <a href="" type="button" class="btn btn-danger"><i class="bi bi-trash"></i></a>
           </td>
         </tr>
         <tr>
@@ -59,9 +59,9 @@
           <td>bruno.lima@example.com</td>
           <td>Desenvolvedor</td>
           <td>
-            <a href="#" type="button" class="btn btn-info text-white"><i class="fas fa-eye"></i></a>
-            <a href="" type="button" class="btn btn-warning text-white"><i class="fas fa-pen"></i></a>
-            <a href="" type="button" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+            <a href="#" type="button" class="btn btn-info text-white"><i class="bi bi-eye"></i></a>
+            <a href="" type="button" class="btn btn-warning text-white"><i class="bi bi-pencil"></i></a>
+            <a href="" type="button" class="btn btn-danger"><i class="bi bi-trash"></i></a>
           </td>
         </tr>
         <tr>
@@ -70,9 +70,9 @@
           <td>carlos.souza@example.com</td>
           <td>Designer</td>
           <td>
-            <a href="#" type="button" class="btn btn-info text-white"><i class="fas fa-eye"></i></a>
-            <a href="" type="button" class="btn btn-warning text-white"><i class="fas fa-pen"></i></a>
-            <a href="" type="button" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+            <a href="#" type="button" class="btn btn-info text-white"><i class="bi bi-eye"></i></a>
+            <a href="" type="button" class="btn btn-warning text-white"><i class="bi bi-pencil"></i></a>
+            <a href="" type="button" class="btn btn-danger"><i class="bi bi-trash"></i></a>
           </td>
         </tr>
         <tr>
@@ -81,9 +81,9 @@
           <td>daniela.castro@example.com</td>
           <td>Analista</td>
           <td>
-            <a href="#" type="button" class="btn btn-info text-white"><i class="fas fa-eye"></i></a>
-            <a href="" type="button" class="btn btn-warning text-white"><i class="fas fa-pen"></i></a>
-            <a href="" type="button" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+            <a href="#" type="button" class="btn btn-info text-white"><i class="bi bi-eye"></i></a>
+            <a href="" type="button" class="btn btn-warning text-white"><i class="bi bi-pencil"></i></a>
+            <a href="" type="button" class="btn btn-danger"><i class="bi bi-trash"></i></a>
           </td>
         </tr>
       </tbody>
@@ -158,9 +158,9 @@
             <?php endif;?>
           </td>
           <td class="d-flex justify-content-center" >
-            <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#i<?= $proposta->id;?>"><i class="fas fa-eye"></i></a>
-            <a href="<?= base_url('/update/proposta/' . $proposta->id);?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="fas fa-pen"></i></a>
-            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#e<?= $proposta->id;?>"><i class="fas fa-trash"></i></button>
+            <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#i<?= $proposta->id;?>"><i class="bi bi-eye"></i></a>
+            <a href="<?= base_url('/update/proposta/' . $proposta->id);?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="bi bi-pencil"></i></a>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#e<?= $proposta->id;?>"><i class="bi bi-trash"></i></button>
             <!-- <button class="btn btn-danger btn-sm" onclick="confirmarExclusao(1, 'Ana Silva')">Excluir</button> -->
           </td>
         </tr> 

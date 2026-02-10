@@ -81,20 +81,20 @@
             <div class="hr"></div>
             <nav class="navbar">
                 <ul class="navbar-nav w-100">
-                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/');?>"><i class="fas fa-chart-simple pe-2 ps-2"></i>Dados Operaionais</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/cadastro/operacional');?>"><i class="fas fa-file-lines pe-2 ps-2"></i>Cadastro Operacional</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/operacional/lista');?>"><i class="fas fa-list-check pe-2 ps-2"></i>Listagem de eventos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/audiovisual');?>"><i class="fas fa-play pe-2 ps-2"></i>Audiovisual / Botanic B</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/cadastro/proposta');?>"><i class="fas fa-folder-open pe-2 ps-2"></i>Cadastro Proposta</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/proposta');?>"><i class="fas fa-list-ul pe-2 ps-2"></i>Listagem de Propostas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/usuarios');?>"><i class="fas fa-user pe-2 ps-2"></i>Usuários cadastrados</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/');?>"><i class="bi bi-bar-chart-line pe-2 ps-2"></i>Dados Operaionais</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/cadastro/operacional');?>"><i class="bi bi-file-earmark-text pe-2 ps-2"></i>Cadastro Operacional</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/operacional/lista');?>"><i class="bi bi-list-check pe-2 ps-2"></i>Listagem de eventos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/audiovisual');?>"><i class="bi bi-play-fill pe-2 ps-2"></i>Audiovisual / Botanic B</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/cadastro/proposta');?>"><i class="bi bi-folder2-open pe-2 ps-2"></i>Cadastro Proposta</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/proposta');?>"><i class="bi bi-list-ul pe-2 ps-2"></i>Listagem de Propostas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/usuarios');?>"><i class="bi bi-person pe-2 ps-2"></i>Usuários cadastrados</a></li>
                     <?php if($logged->email == 'rafaelsoje@gmail.com'):?>
-                        <li class="nav-item"><a class="nav-link" href="<?= base_url('/logs');?>"><i class="fas fa-paw pe-2 ps-2"></i>Logs</a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= base_url('/logs');?>"><i class="bi bi-journal-text pe-2 ps-2"></i>Logs</a></li>
                     <?php endif;?>
-                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/logout');?>"><i class="fas fa-sign-out-alt pe-2 ps-2"></i>Sair</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/logout');?>"><i class="bi bi-box-arrow-right pe-2 ps-2"></i>Sair</a></li>
                 </ul>
             </nav>
-            <!-- <div class="fixed-bottom d-flex align-items-center ms-3 text-white">Com <i class="fas fa-heart ms-1 me-1 text-danger"></i> e <i class="fas fa-coffee ms-1 me-1 text-info"></i>, <a href="/" class="ms-1 text-white">Rafael Soje</a></div> -->
+            <!-- <div class="fixed-bottom d-flex align-items-center ms-3 text-white">Com <i class="bi bi-heart-fill ms-1 me-1 text-danger"></i> e <i class="bi bi-cup-hot ms-1 me-1 text-info"></i>, <a href="/" class="ms-1 text-white">Rafael Soje</a></div> -->
             
         </section>
         <section class="col-10 content">

@@ -128,7 +128,7 @@
 
         <label for="email" class="form-label">E-mail</label>
         <div class="input-group">
-          <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
           <input type="email" class="form-control" id="email" name="email" placeholder="Digite seu e-mail" required>
         </div>
       </div>

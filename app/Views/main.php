@@ -2,8 +2,8 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-    <?php $uriPath = trim(service('uri')->getPath(), '/'); ?>
-    <?php $isCalendarPage = str_contains($uriPath, 'calendario'); ?>
+    <?php $isCalendarPage = isset($calendario) || isset($calendarioOp); ?>
+    <?php $calendarBundleReady = is_file(FCPATH . 'assets/build/calendar.js'); ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="#">
     <meta name="author" content="Rafael Soje - rafaelsoje@gmail.com">
@@ -33,7 +33,7 @@
 
     <link rel="stylesheet" href="<?= base_url('assets/build/app.css') ?>" />
     <script src="<?= base_url('assets/build/app.js') ?>"></script>
-    <?php if ($isCalendarPage): ?>
+    <?php if ($isCalendarPage && $calendarBundleReady): ?>
     <script src="<?= base_url('assets/build/calendar.js') ?>"></script>
     <?php endif; ?>
 

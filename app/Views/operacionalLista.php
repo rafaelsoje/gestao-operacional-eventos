@@ -49,9 +49,9 @@
           <td>ana.silva@example.com</td>
           <td>Gerente</td>
           <td>
-            <a href="#" type="button" class="btn btn-info text-white"><i class="fas fa-eye"></i></a>
-            <a href="" type="button" class="btn btn-warning text-white"><i class="fas fa-pen"></i></a>
-            <a href="" type="button" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+            <a href="#" type="button" class="btn btn-info text-white"><i class="bi bi-eye"></i></a>
+            <a href="" type="button" class="btn btn-warning text-white"><i class="bi bi-pencil"></i></a>
+            <a href="" type="button" class="btn btn-danger"><i class="bi bi-trash"></i></a>
           </td>
         </tr>
         <tr>
@@ -60,9 +60,9 @@
           <td>bruno.lima@example.com</td>
           <td>Desenvolvedor</td>
           <td>
-            <a href="#" type="button" class="btn btn-info text-white"><i class="fas fa-eye"></i></a>
-            <a href="" type="button" class="btn btn-warning text-white"><i class="fas fa-pen"></i></a>
-            <a href="" type="button" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+            <a href="#" type="button" class="btn btn-info text-white"><i class="bi bi-eye"></i></a>
+            <a href="" type="button" class="btn btn-warning text-white"><i class="bi bi-pencil"></i></a>
+            <a href="" type="button" class="btn btn-danger"><i class="bi bi-trash"></i></a>
           </td>
         </tr>
         <tr>
@@ -71,9 +71,9 @@
           <td>carlos.souza@example.com</td>
           <td>Designer</td>
           <td>
-            <a href="#" type="button" class="btn btn-info text-white"><i class="fas fa-eye"></i></a>
-            <a href="" type="button" class="btn btn-warning text-white"><i class="fas fa-pen"></i></a>
-            <a href="" type="button" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+            <a href="#" type="button" class="btn btn-info text-white"><i class="bi bi-eye"></i></a>
+            <a href="" type="button" class="btn btn-warning text-white"><i class="bi bi-pencil"></i></a>
+            <a href="" type="button" class="btn btn-danger"><i class="bi bi-trash"></i></a>
           </td>
         </tr>
         <tr>
@@ -82,9 +82,9 @@
           <td>daniela.castro@example.com</td>
           <td>Analista</td>
           <td>
-            <a href="#" type="button" class="btn btn-info text-white"><i class="fas fa-eye"></i></a>
-            <a href="" type="button" class="btn btn-warning text-white"><i class="fas fa-pen"></i></a>
-            <a href="" type="button" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+            <a href="#" type="button" class="btn btn-info text-white"><i class="bi bi-eye"></i></a>
+            <a href="" type="button" class="btn btn-warning text-white"><i class="bi bi-pencil"></i></a>
+            <a href="" type="button" class="btn btn-danger"><i class="bi bi-trash"></i></a>
           </td>
         </tr>
       </tbody>
@@ -141,14 +141,14 @@
           <td class=""><?= br_money($item->total_consumo);?></td>
           <td class="d-flex justify-content-center" >
             <?php if(!empty($item->descricao)):?>
-              <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#i<?= $item->id;?>"><i class="fas fa-comment"></i></a>
+              <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#i<?= $item->id;?>"><i class="bi bi-chat-left-text"></i></a>
               <?php else:?>
-                <a href="#" type="button" class="btn btn-secondary text-white" data-bs-target="#i<?= $item->id;?>"><i class="fas fa-comment-slash"></i></a>
+                <a href="#" type="button" class="btn btn-secondary text-white" data-bs-target="#i<?= $item->id;?>"><i class="bi bi-chat-left-text"></i></a>
             
               <?php endif;?>
 
-              <a href="<?= base_url('/update/operacional/'.$item->id);?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="fas fa-pen"></i></a>
-            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#e<?= $item->id;?>"><i class="fas fa-trash"></i></button>
+              <a href="<?= base_url('/update/operacional/'.$item->id);?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="bi bi-pencil"></i></a>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#e<?= $item->id;?>"><i class="bi bi-trash"></i></button>
             <!-- <button class="btn btn-danger btn-sm" onclick="confirmarExclusao(1, 'Ana Silva')">Excluir</button> -->
           </td>
         </tr> 
