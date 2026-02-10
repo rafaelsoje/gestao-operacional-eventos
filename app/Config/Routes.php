@@ -51,6 +51,10 @@ $routes->group('', ['filter' => 'auth'], function($routes){
     $routes->get('/uploads/(:segment)/(:segment)', 'Home::downloadUpload/$1/$2', ['as' => 'uploads.download']);
     $routes->get('/admin/notifications', 'Home::notifications', ['as' => 'admin.notifications', 'filter' => 'role:superuser']);
     $routes->post('/admin/notifications', 'Home::notificationsUpdate', ['as' => 'admin.notifications.update', 'filter' => ['csrf', 'role:superuser']]);
+    $routes->get('/password/force', 'Login::forcePasswordForm', ['as' => 'password.force']);
+    $routes->post('/password/force', 'Login::forcePasswordStore', ['as' => 'password.force.store', 'filter' => ['csrf']]);
+    $routes->get('/perfil', 'Home::perfil', ['as' => 'perfil']);
+    $routes->post('/perfil', 'Home::perfilUpdate', ['as' => 'perfil.update', 'filter' => ['csrf']]);
 
 
     

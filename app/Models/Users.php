@@ -20,6 +20,7 @@ class Users extends Model
         'admin',
         'role',
         'avatar',
+        'must_change_password',
         'lastLogin',
         'loginAttempts',
         'lastAttemptTime',

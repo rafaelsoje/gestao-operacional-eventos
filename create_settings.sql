@@ -1,6 +1,0 @@
-CREATE TABLE IF NOT EXISTS `settings` (
-  `key` VARCHAR(100) NOT NULL,
-  `value` TEXT NULL,
-  `updated_at` DATETIME NULL,
-  PRIMARY KEY (`key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

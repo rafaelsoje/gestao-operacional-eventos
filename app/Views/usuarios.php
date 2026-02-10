@@ -66,16 +66,21 @@
               
               <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#view<?=$user->id;?>"><i class="fas fa-eye"></i></a>
 
-              <?php $session =  session()->get('user');?>                            
-              <?php if($user->email != $session->email):?>                       
-                <a href="<?= base_url('/update/usuario/' . $user->id);?>" type="button" class="btn btn-warning text-white me-2 ms-2 disabled"><i class="fas fa-pen"></i></a>              
+              <?php $session =  session()->get('user');?>
+              <?php $sessionRole = $session->role ?? (($session->admin ?? 0) == 1 ? 'admin' : 'user'); ?>
+              <?php if($user->email == $session->email):?>
+                <a href="<?= base_url('/perfil');?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="fas fa-pen"></i></a>
+              <?php elseif($sessionRole === 'admin' || $sessionRole === 'superuser'):?>
+                <a href="<?= base_url('/update/usuario/' . $user->id);?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="fas fa-pen"></i></a>
               <?php else:?>
-                <a href="<?= base_url('/update/usuario/' . $user->id);?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="fas fa-pen"></i></a>              
+                <a href="#" type="button" class="btn btn-warning text-white me-2 ms-2 disabled"><i class="fas fa-pen"></i></a>
               <?php endif;?>
 
                                          
-              <?php if($user->email != $session->email):?>                       
+              <?php if($user->email != $session->email && ($sessionRole === 'admin' || $sessionRole === 'superuser')):?>                       
                 <button type="button" class="btn btn-danger text-white" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="fas fa-trash"></i></button>
+              <?php elseif($user->email == $session->email):?>
+                <button href="#" type="button" class="btn btn-secondary text-white disabled" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="fas fa-trash"></i></button>
               <?php else:?>
                 <button href="#" type="button" class="btn btn-secondary text-white disabled" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="fas fa-trash"></i></button>
               <?php endif;?>
@@ -85,22 +90,39 @@
           </tr>
 
               <!-- Modal view-->
-              <div class="modal fade" id="view<?=$user->id;?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h1 class="modal-title fs-5" id="exampleModalLabel">Dados do usuário</h1>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <div class="modal fade" id="view<?=$user->id;?>" tabindex="-1" aria-labelledby="viewUserLabel<?=$user->id;?>" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                  <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-light">
+                      <h1 class="modal-title fs-5" id="viewUserLabel<?=$user->id;?>">Perfil do usuário</h1>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                     </div>
-                    <div class="modal-body">
-                      <div>Nome: <?=$user->name;?></div>
-                      <div>Email: <?=$user->email;?></div>
-                      <div>Níve de acesso: <?=$nivel;?></div>
-                      <div><img class="mt-2 w-25" src="<?=base_url('./media/' . $user->avatar);?>"/></div>
+                    <div class="modal-body p-4">
+                      <div class="row align-items-center g-3">
+                        <div class="col-12 col-md-4 text-center">
+                          <img class="rounded-circle shadow-sm" src="<?=base_url('./media/' . $user->avatar);?>" style="width:120px;height:120px;object-fit:cover;" alt="Foto de <?=$user->name;?>"/>
+                          <div class="mt-3">
+                            <span class="badge bg-secondary"><?=$nivel;?></span>
+                          </div>
+                        </div>
+                        <div class="col-12 col-md-8">
+                          <div class="mb-2">
+                            <small class="text-muted">Nome</small>
+                            <div class="fw-semibold"><?=$user->name;?></div>
+                          </div>
+                          <div class="mb-2">
+                            <small class="text-muted">E-mail</small>
+                            <div class="fw-semibold"><?=$user->email;?></div>
+                          </div>
+                          <div class="mb-2">
+                            <small class="text-muted">Nível de acesso</small>
+                            <div class="fw-semibold"><?=$nivel;?></div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+                      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
                     </div>
                   </div>
                 </div>

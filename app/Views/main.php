@@ -75,7 +75,7 @@
     </a>
 
     <?php $logged = session()->get('user');?>
-    <!-- <p class="text-secondary">Seu ip: <?= " " . $logged->ip ;?></p> -->
+        <!-- <p class="text-secondary">Seu ip: <?= " " . ($logged->ip ?? '') ;?></p> -->
     <nav id="navmenu" class="navmenu">
       <ul>
         <li><a href="<?= base_url()?>" class="<?=(isset($operacional)? "active" : "");?>"><i class="bi bi-house navicon"></i>Dados operaionais</a></li>
@@ -109,6 +109,7 @@
         <?php if($navRole === 'admin' || $navRole === 'superuser'):?>
             <li><a href="<?=base_url('usuarios')?>"class="<?=(isset($botanicUser)? "active" : "");?>"><i class="bi bi-person-fill-check navicon"></i>Usuarios cadastrados</a></li>
         <?php endif;?>
+        <li><a href="<?=base_url('perfil')?>"><i class="bi bi-person-circle navicon"></i>Meu perfil</a></li>
         <?php if($logged->email == env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'))):?>            
             <li><a href="<?=base_url('admin/notifications')?>"><i class="bi bi-bell navicon"></i>Notificações</a></li>
             <li><a href="<?=base_url('logs')?>"><i class="bi bi-envelope navicon"></i>Log</a></li>

@@ -37,7 +37,8 @@
         </div> 
         <div class="col-12 col-md-6">
         <label class="form-label">Senha</label>
-        <input type="password" class="form-control" name="password" required>
+        <input type="text" class="form-control" value="Senha padrão será aplicada no cadastro" disabled>
+        <div class="form-text">O usuário será obrigado a alterar a senha no primeiro login.</div>
         </div> 
         <div class="col-12 d-flex justify-content-end">
             <button type="submit" class="btn btn-primary">Cadastrar Usuário</button>
