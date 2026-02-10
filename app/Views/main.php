@@ -69,9 +69,9 @@
         <!-- <li><a href="<?=base_url('operacional/planejamento/cadastro')?>" class="<?=(isset($cadastroProj)? "active" : "");?>"><i class="bi bi-check-square navicon"></i>Cadastro Planejamento</a></li> -->
         <li><a href="<?=base_url('operacional/lista')?>" class="<?=(isset($listaOp)? "active" : "");?>"><i class="bi bi-list-ol navicon"></i>Lista de eventos</a></li>        
         <li><a href="<?=base_url('operacional/calendario')?>" class="<?=(isset($calendarioOp)? "active" : "");?>"><i class="bi bi-calendar-date navicon"></i>Calendário Operacional</a></li> 
-        <li class="dropdown"><a href="<?= base_url('?id=0');?>" class="<?= (isset($planejado) ? "active" : "");?>"><i class="bi bi-graph-up-arrow navicon "></i> <span>Planejamento futuro</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
-          <ul>
-            <li><a href="<?= base_url('operacional/planejamento/cadastro')?>">Cadastro de custo</a></li>
+        <!-- <li class="dropdown"><a href="<?= base_url('?id=0');?>" class="<?= (isset($planejado) ? "active" : "");?>"><i class="bi bi-graph-up-arrow navicon "></i> <span>Planejamento futuro</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a> -->
+          <!-- <ul> -->
+            <!-- <li><a href="<?= base_url('operacional/planejamento/cadastro')?>">Cadastro de custo</a></li> -->
             <!-- <li class="dropdown"><a href="#"><span>Deep Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
               <ul>
                 <li><a href="#">Deep Dropdown 1</a></li>
@@ -81,11 +81,11 @@
                 <li><a href="#">Deep Dropdown 5</a></li>
               </ul>
             </li> -->
-            <li><a href="<?= base_url('operacional/planejamento/lista')?>">Lista de eventos futuros</a></li>
+            <!-- <li><a href="<?= base_url('operacional/planejamento/lista')?>">Lista de eventos futuros</a></li> -->
             <!-- <li><a href="#">Dropdown</a></li>
             <li><a href="#">Dropdown 4</a></li> -->
-          </ul>
-        </li>
+          <!-- </ul> -->
+        <!-- </li> -->
         <!-- <li><a href="<?=base_url('audiovisual')?>" class="<?=(isset($botanic)? "active" : "");?>"><i class="bi bi-play-btn navicon"></i>Audiovisual / Botanic B</a></li> -->
         <!-- <li><a href="<?=base_url('cadastro/proposta')?>" class="<?=(isset($botanicCad)? "active" : "");?>"><i class="bi bi-file-check navicon"></i>Cadastro proposta</a></li> -->
         <!-- <li><a href="<?=base_url('proposta')?>" class="<?=(isset($botanicProp)? "active" : "");?>"><i class="bi bi-person-lines-fill navicon"></i>Lista de propostas</a></li> -->
