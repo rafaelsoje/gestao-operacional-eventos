@@ -35,7 +35,7 @@ class ContentSecurityPolicy extends BaseConfig
      * HTTP to HTTPS. This directive is for websites with
      * large numbers of old URLs that need to be rewritten.
      */
-    public bool $upgradeInsecureRequests = true;
+    public bool $upgradeInsecureRequests = false;
 
     // -------------------------------------------------------------------------
     // Sources allowed
@@ -54,21 +54,21 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public $scriptSrc = ['self', 'unsafe-inline', 'https://www.gstatic.com'];
+    public $scriptSrc = 'self';
 
     /**
      * Lists allowed stylesheets' URLs.
      *
      * @var list<string>|string
      */
-    public $styleSrc = ['self', 'unsafe-inline', 'https://fonts.googleapis.com'];
+    public $styleSrc = 'self';
 
     /**
      * Defines the origins from which images can be loaded.
      *
      * @var list<string>|string
      */
-    public $imageSrc = ['self', 'data:', 'blob:'];
+    public $imageSrc = 'self';
 
     /**
      * Restricts the URLs that can appear in a page's `<base>` element.
@@ -77,7 +77,7 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string|null
      */
-    public $baseURI = 'self';
+    public $baseURI;
 
     /**
      * Lists the URLs for workers and embedded frame contents
@@ -92,14 +92,14 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public $connectSrc = ['self', 'https://www.gstatic.com'];
+    public $connectSrc = 'self';
 
     /**
      * Specifies the origins that can serve web fonts.
      *
      * @var list<string>|string
      */
-    public $fontSrc = ['self', 'data:', 'https://fonts.gstatic.com'];
+    public $fontSrc;
 
     /**
      * Lists valid endpoints for submission from `<form>` tags.
@@ -116,7 +116,7 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string|null
      */
-    public $frameAncestors = 'self';
+    public $frameAncestors;
 
     /**
      * The frame-src directive restricts the URLs which may
@@ -138,12 +138,12 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public $objectSrc = 'none';
+    public $objectSrc = 'self';
 
     /**
      * @var list<string>|string|null
      */
-    public $manifestSrc = 'self';
+    public $manifestSrc;
 
     /**
      * Limits the kinds of plugins a page may invoke.
