@@ -4,6 +4,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 module.exports = {
   entry: {
     app: path.resolve(__dirname, 'frontend/js/app.js'),
+    auth: path.resolve(__dirname, 'frontend/js/auth.js'),
     calendar: path.resolve(__dirname, 'frontend/js/chunks/calendar.js'),
   },
   output: {

@@ -18,11 +18,7 @@
     <link rel="icon" href="<?= base_url('/assets/images/logo.png'); ?>" sizes="16x16" type="image/png">
     <link rel="icon" href="<?= base_url('/assets/images/logo.png'); ?>">
 
-  <!-- Bootstrap CSS -->
-  <link href="<?=base_url('assets/vendor/bootstrap/css/bootstrap.min.css')?>" rel="stylesheet">
-
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="<?= base_url('assets/vendor/font-awesome/css/all.min.css')?>">
+  <link rel="stylesheet" href="<?= base_url('assets/build/auth.css') ?>">
 
   <title>AudioVisual - Login</title>
 
@@ -140,7 +136,6 @@
       <button type="submit" class="btn btn-primary">Enviar</button>
     </form>
 
-  <!-- Bootstrap JS -->
-  <script src="<?= base_url('assets/vendor/bootstrap/js/bootstrap.bundle.min.js')?>"></script>
+  <script src="<?= base_url('assets/build/auth.js') ?>"></script>
 </body>
 </html>
