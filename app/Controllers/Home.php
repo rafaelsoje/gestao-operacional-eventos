@@ -56,11 +56,6 @@ class Home extends BaseController
         }
 
         $data = $this->request->getPost();
-        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
-        $target = (new Users())->select('id,email')->where('id', $data['id'])->first();
-        if ($target && $target->email === $superEmail) {
-            return redirect()->route('usuarios')->with('error', 'Superusuário não pode ser editado.');
-        }
 
         $uploadService = new UploadService();
         $path = WRITEPATH . 'uploads/';
@@ -757,7 +752,6 @@ class Home extends BaseController
         $validate = $this->validate([
             'name' => 'required',
             'email' => 'required|valid_email',
-            'password' => 'required',
         ]);
 
         if (!$validate) {
@@ -766,7 +760,8 @@ class Home extends BaseController
         }
 
         $data = $this->request->getPost();
-        $pass = password_hash($this->request->getPost('password'), PASSWORD_DEFAULT);
+        $defaultPassword = env('DEFAULT_USER_PASSWORD', 'Bemvindo@2026');
+        $pass = password_hash($defaultPassword, PASSWORD_DEFAULT);
         $data['avatar'] = "avatar.svg";
         $role = $data['role'] ?? 'user';
         if (!in_array($role, ['admin', 'user'], true)) {
@@ -775,6 +770,7 @@ class Home extends BaseController
         $data['role'] = $role;
         $data['admin'] = ($role === 'admin') ? 1 : 0;
         $data['password'] = $pass;
+        $data['must_change_password'] = 1;
 
         $add = new Users();
         $result = $add->insert($data);
@@ -782,7 +778,7 @@ class Home extends BaseController
         if($result){
             $user = session()->get('user');
             $this->notifyTelegram($user->name . " cadastrou um usuário " . $data['name']);
-            return redirect()->route('usuarios');
+            return redirect()->route('usuarios')->with('success', 'Usuário cadastrado. Senha padrão: ' . $defaultPassword);
         }
 
         return redirect()->route('usuario')->with('error', 'Não foi possível cadastrar usuário.');
@@ -795,15 +791,19 @@ class Home extends BaseController
         {
             $temp = new Users();
             $user = $temp->select()->where('id', $id)->first();
+            if (!$user) {
+                return redirect()->route('usuarios')->with('error', 'Usuário não encontrado.');
+            }
             unset($user->password);
 
             $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
             if ($user && $user->email === $superEmail) {
                 return redirect()->route('usuarios')->with('error', 'Superusuário não pode ser editado.');
             }
-
             return view('updateUsuario', ['user' => $user]);
         }
+
+        return redirect()->route('usuarios')->with('error', 'Parâmetro inválido.');
     }
 
     public function updateUsuarioStore()
@@ -817,48 +817,59 @@ class Home extends BaseController
             'name' => 'required',
             'role' => 'required',
         ]);
-
-        $data = $this->request->getPost();
-
-        $img = $this->request->getFile('avatar');
-        if ($img && $img->isValid() && !$img->hasMoved()) {
-            $avatarOk = $this->validate([
-                'avatar' => [
-                    'rules' => 'uploaded[avatar]|is_image[avatar]|ext_in[avatar,jpg,png,jpeg]',
-                    'errors' => [
-                        'uploaded' => 'Você deve selecionar um arquivo para upload.',
-                        'is_image' => 'O arquivo enviado não é uma imagem válida.',
-                        'ext_in' => 'A imagem deve estar nos formatos: jpg, png, jpeg.',
-                    ],
-                ],
-            ]);
-
-            if (!$avatarOk) {
-                $errors = $this->validator->getErrors('avatar');
-                return redirect()->route('usuarios')->with('error', $errors['avatar']);
-            }
-
-            $name = sha1(uniqid()) . '.webp';
-            $data['avatar'] = $name;
-
-            \Config\Services::image('gd')
-                ->withFile($img)
-                ->convert(IMAGETYPE_WEBP)
-                ->resize(200, 237, true, 'auto')
-                ->save(FCPATH . 'media/' . $name);
-
-            $item = new Users();
-            $item->update($data['id'], ['avatar' => $name]);
+        if (!$validate) {
+            return redirect()->route('usuarios')->with('error', 'Preencha o formulário corretamente!');
         }
 
-        if($data['password']){
+        $data = $this->request->getPost();
+        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+        $target = (new Users())->select('id,email,admin,role')->where('id', $data['id'])->first();
+        if (!$target) {
+            return redirect()->route('usuarios')->with('error', 'Usuário não encontrado.');
+        }
+        if ($target && $target->email === $superEmail) {
+            return redirect()->route('usuarios')->with('error', 'Superusuário não pode ser editado.');
+        }
 
-            $item = [
-                'password' => password_hash($data['password'], PASSWORD_DEFAULT)
-            ];
+        $sessionUser = session()->get('user');
+        $isSelf = $sessionUser && (int)$sessionUser->id === (int)$data['id'];
 
-            $pass = new Users();
-            $result = $pass->update($data['id'], $item);
+        if ($isSelf) {
+            $img = $this->request->getFile('avatar');
+            if ($img && $img->isValid() && !$img->hasMoved()) {
+                $avatarOk = $this->validate([
+                    'avatar' => [
+                        'rules' => 'uploaded[avatar]|is_image[avatar]|ext_in[avatar,jpg,png,jpeg]',
+                        'errors' => [
+                            'uploaded' => 'Você deve selecionar um arquivo para upload.',
+                            'is_image' => 'O arquivo enviado não é uma imagem válida.',
+                            'ext_in' => 'A imagem deve estar nos formatos: jpg, png, jpeg.',
+                        ],
+                    ],
+                ]);
+
+                if (!$avatarOk) {
+                    $errors = $this->validator->getErrors('avatar');
+                    return redirect()->route('usuarios')->with('error', $errors['avatar']);
+                }
+
+                $name = sha1(uniqid()) . '.webp';
+                $data['avatar'] = $name;
+
+                \Config\Services::image('gd')
+                    ->withFile($img)
+                    ->convert(IMAGETYPE_WEBP)
+                    ->resize(200, 237, true, 'auto')
+                    ->save(FCPATH . 'media/' . $name);
+
+                (new Users())->update($data['id'], ['avatar' => $name]);
+            }
+
+            if (!empty($data['password'])) {
+                (new Users())->update($data['id'], [
+                    'password' => password_hash($data['password'], PASSWORD_DEFAULT)
+                ]);
+            }
         }
 
         $role = $data['role'] ?? 'user';
@@ -881,19 +892,23 @@ class Home extends BaseController
         $instance  = new Users();
         $user = $instance->select()->where('id', $data['id'])->first();
 
-        $userInfo = new stdClass;
-        $userInfo->id = $user->id;
-        $userInfo->name = $user->name;
-        $userInfo->email = $user->email;
-        $userInfo->admin = $user->admin;
-        $userInfo->avatar = $user->avatar;
-        $userInfo->role = $user->role ?? (($user->admin == '1') ? 'admin' : 'user');
+        $sessionUser = session()->get('user');
+        if ($sessionUser && (int)$sessionUser->id === (int)$data['id']) {
+            $userInfo = new stdClass;
+            $userInfo->id = $user->id;
+            $userInfo->name = $user->name;
+            $userInfo->email = $user->email;
+            $userInfo->admin = $user->admin;
+            $userInfo->avatar = $user->avatar;
+            $userInfo->role = $user->role ?? (($user->admin == '1') ? 'admin' : 'user');
+            $userInfo->ip = $user->ip ?? null;
 
-        session()->set('user', $userInfo);
-        if ($userInfo->role === 'admin' || $userInfo->role === 'superuser') {
-            session()->set('admin', true);
-        } else {
-            session()->remove('admin');
+            session()->set('user', $userInfo);
+            if ($userInfo->role === 'admin' || $userInfo->role === 'superuser') {
+                session()->set('admin', true);
+            } else {
+                session()->remove('admin');
+            }
         }
 
         $user = session()->get('user');
@@ -905,6 +920,110 @@ class Home extends BaseController
         $log = (new Logs())->insert($data);
 
         return redirect()->route('usuarios')->with('success', 'Dados atualizados com sucesso!');
+    }
+
+    public function perfil()
+    {
+        if (!session()->has('auth')) {
+            return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
+        }
+
+        $user = session()->get('user');
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
+        }
+
+        $dbUser = (new Users())->find($user->id);
+        if (!$dbUser) {
+            return redirect()->route('home')->with('error', 'Usuário não encontrado.');
+        }
+
+        $role = $dbUser->role ?? (($dbUser->admin == '1') ? 'admin' : 'user');
+
+        return view('perfil', [
+            'user' => $dbUser,
+            'role' => $role,
+        ]);
+    }
+
+    public function perfilUpdate()
+    {
+        if (!session()->has('auth')) {
+            return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
+        }
+
+        $user = session()->get('user');
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
+        }
+
+        $data = $this->request->getPost();
+        $items = [];
+
+        $img = $this->request->getFile('avatar');
+        if ($img && $img->isValid() && !$img->hasMoved()) {
+            $avatarOk = $this->validate([
+                'avatar' => [
+                    'rules' => 'uploaded[avatar]|is_image[avatar]|ext_in[avatar,jpg,png,jpeg]',
+                    'errors' => [
+                        'uploaded' => 'Você deve selecionar um arquivo para upload.',
+                        'is_image' => 'O arquivo enviado não é uma imagem válida.',
+                        'ext_in' => 'A imagem deve estar nos formatos: jpg, png, jpeg.',
+                    ],
+                ],
+            ]);
+
+            if (!$avatarOk) {
+                $errors = $this->validator->getErrors('avatar');
+                return redirect()->route('perfil')->with('error', $errors['avatar']);
+            }
+
+            $name = sha1(uniqid()) . '.webp';
+            \Config\Services::image('gd')
+                ->withFile($img)
+                ->convert(IMAGETYPE_WEBP)
+                ->resize(200, 237, true, 'auto')
+                ->save(FCPATH . 'media/' . $name);
+
+            $items['avatar'] = $name;
+        }
+
+        $newPassword = trim((string)($data['new_password'] ?? ''));
+        if ($newPassword !== '') {
+            $confirm = trim((string)($data['new_password_confirm'] ?? ''));
+            if ($newPassword !== $confirm) {
+                return redirect()->route('perfil')->with('error', 'As senhas não conferem.');
+            }
+            $currentPassword = (string)($data['current_password'] ?? '');
+            $dbUser = (new Users())->find($user->id);
+            if (!$dbUser || !password_verify($currentPassword, $dbUser->password)) {
+                return redirect()->route('perfil')->with('error', 'Senha atual incorreta.');
+            }
+
+            if (strlen($newPassword) < 6) {
+                return redirect()->route('perfil')->with('error', 'Nova senha deve ter pelo menos 6 caracteres.');
+            }
+
+            $items['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
+            $items['must_change_password'] = 0;
+        }
+
+        if (empty($items)) {
+            return redirect()->route('perfil')->with('success', 'Nenhuma alteração realizada.');
+        }
+
+        $updated = (new Users())->update($user->id, $items);
+        if (!$updated) {
+            return redirect()->route('perfil')->with('error', 'Erro ao atualizar perfil.');
+        }
+
+        if (isset($items['avatar'])) {
+            $userInfo = session()->get('user');
+            $userInfo->avatar = $items['avatar'];
+            session()->set('user', $userInfo);
+        }
+
+        return redirect()->route('perfil')->with('success', 'Perfil atualizado com sucesso!');
     }
 
     public function removeUsuario($id = null)

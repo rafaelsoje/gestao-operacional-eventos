@@ -96,11 +96,16 @@
   <script>
     function validateForm() {
       let password = document.getElementById('password').value;
+      let passwordConfirmation = document.getElementById('password_confirmation').value;
       let errorMsg = '';
 
-      // Validação da senha (mínimo de 6 caracteres)
-      if (password.length < 6) {
-        errorMsg += 'A senha deve ter pelo menos 6 caracteres.\n';
+      // Validação da senha (mínimo de 8 caracteres)
+      if (password.length < 8) {
+        errorMsg += 'A senha deve ter pelo menos 8 caracteres.\n';
+      }
+
+      if (password !== passwordConfirmation) {
+        errorMsg += 'A confirmação da senha não confere.\n';
       }
 
       if (errorMsg) {
@@ -117,22 +122,31 @@
   <div class="login-container">
     <!-- Logo -->
     <!-- <img class="w-50" src="<?= base_url('./media/logo-black.png')?>" alt="Logo" class="logo"> Substitua 'logo.png' pelo caminho da sua logo -->
-<?php if(isset($recovery)):?>
+<?php if(isset($recovery) || !empty($forceChange)):?>
     <h1>Cadastro de nova senha</h1>
 
     <!-- Formulário com validação -->
-    <form onsubmit="return validateForm()" method="post" action="<?= url_to('recovery.store');?>">
+    <form onsubmit="return validateForm()" method="post" action="<?= !empty($forceChange) ? url_to('password.force.store') : url_to('recovery.store');?>">
       <div class="mb-3">
         <?= csrf_field(); ?> 
           
         <?php if (session()->has('error')) : ?>
           <div class="flash text-center alert alert-danger text-danger" role="alert" aria-live="assertive"><?php echo session()->get('error') ?? ''; ?></div>
         <?php endif; ?>
+        <?php if(isset($recovery)):?>
           <input type="hidden" class="form-control" name="recovery" value="<?= $recovery;?>" required>
+        <?php endif;?>
         <label for="email" class="form-label">Senha</label>
         <div class="input-group">
           <span class="input-group-text"><i class="fas fa-lock"></i></span>
           <input type="password" class="form-control" id="password" name="password" placeholder="Digite sua senha" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="password_confirmation" class="form-label">Confirmar senha</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-lock"></i></span>
+          <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Confirme sua senha" required>
         </div>
       </div>
 

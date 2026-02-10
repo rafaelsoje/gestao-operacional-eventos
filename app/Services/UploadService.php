@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use CodeIgniter\HTTP\Files\UploadedFile;
+use Throwable;
 
 class UploadService
 {
@@ -34,8 +35,8 @@ class UploadService
             return ['name' => null, 'error' => 'Formato de arquivo não permitido.'];
         }
 
-        $mime = $file->getClientMimeType();
-        if ($mime && !in_array($mime, $this->allowedMimes, true)) {
+        $mime = strtolower((string)$file->getMimeType());
+        if ($mime === '' || !in_array($mime, $this->allowedMimes, true)) {
             return ['name' => null, 'error' => 'Tipo MIME não permitido.'];
         }
 
@@ -43,8 +44,14 @@ class UploadService
             mkdir($destDir, 0755, true);
         }
 
-        $name = $this->sanitizeFilename($file->getClientName());
-        $file->move($destDir, $name);
+        $name = $this->buildUniqueFilename($destDir, $this->sanitizeFilename($file->getClientName()), $ext);
+
+        try {
+            $file->move($destDir, $name);
+        } catch (Throwable $e) {
+            log_message('warning', 'Falha no upload: {message}', ['message' => $e->getMessage()]);
+            return ['name' => null, 'error' => 'Falha ao salvar o arquivo enviado.'];
+        }
 
         return ['name' => $name, 'error' => null];
     }
@@ -56,8 +63,32 @@ class UploadService
 
     private function sanitizeFilename(string $name): string
     {
+        $name = basename($name);
         $name = preg_replace('/\\s+/', '_', $name);
         $name = preg_replace('/[^\\w\\-\\.]/', '', $name);
+        if ($name === '' || $name === '.' || $name === '..') {
+            return 'arquivo';
+        }
         return $name;
+    }
+
+    private function buildUniqueFilename(string $destDir, string $name, string $fallbackExt): string
+    {
+        $base = pathinfo($name, PATHINFO_FILENAME);
+        if ($base === '') {
+            $base = 'arquivo';
+        }
+
+        $ext = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
+        if ($ext === '') {
+            $ext = $fallbackExt;
+        }
+
+        $candidate = $base . '.' . $ext;
+        if (!is_file($destDir . DIRECTORY_SEPARATOR . $candidate)) {
+            return $candidate;
+        }
+
+        return $base . '_' . date('YmdHis') . '_' . substr(sha1(uniqid('', true)), 0, 6) . '.' . $ext;
     }
 }

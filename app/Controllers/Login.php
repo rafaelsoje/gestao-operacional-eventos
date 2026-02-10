@@ -186,6 +186,10 @@ class Login extends BaseController
             $log = (new Logs())->insert($data);
 
             (new TelegramService())->send($user->name . " entrou no sistema");
+
+            if (!empty($user->must_change_password)) {
+                return redirect()->route('password.force')->with('warning', 'Defina uma nova senha para continuar.');
+            }
            
             return redirect()->route('home')->with('success', 'Login efetuado com sucesso.'); 
 
@@ -261,17 +265,80 @@ class Login extends BaseController
             $headers .= "Content-type: text/html; charset=UTF-8" . "\r\n";
             $headers .= "From: contato@rafaelsoje.com" . "\r\n";
 
-            $html = file_get_contents("template.html");
+            $templatePath = FCPATH . 'template.html';
+            $html = is_file($templatePath) ? file_get_contents($templatePath) : false;
+            if ($html === false) {
+                $html = '<p>Olá, {{nome_cliente}}.</p>'
+                    . '<p>Para redefinir sua senha, acesse: <a href="{{link_do_site}}">{{link_do_site}}</a></p>'
+                    . '<p>&copy; {{ano_atual}} {{nome_da_empresa}}</p>';
+            }
+
             $html = str_replace("{{nome_cliente}}", $user->name, $html);
             $html = str_replace("{{nome_da_empresa}}", "rafaelsoje.com", $html);
             $html = str_replace("{{link_do_site}}", $link, $html);
             $html = str_replace("{{ano_atual}}", date("Y"), $html);
 
-            mail($to, $subject, $html, $headers);
+            if (!mail($to, $subject, $html, $headers)) {
+                log_message('warning', 'Falha ao enviar e-mail de recuperação para: {email}', ['email' => $to]);
+            }
         }
 
         return redirect('login')->with('success', 'Se o e-mail existir, enviaremos um link de redefinição.');
         
+    }
+
+    public function forcePasswordForm(): string|ResponseInterface
+    {
+        if (!session()->has('auth')) {
+            return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
+        }
+
+        $user = session()->get('user');
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
+        }
+
+        $dbUser = (new Users())->find($user->id);
+        if (!$dbUser || empty($dbUser->must_change_password)) {
+            return redirect()->route('home');
+        }
+
+        return view('newPasswd', ['forceChange' => true]);
+    }
+
+    public function forcePasswordStore(): ResponseInterface
+    {
+        if (!session()->has('auth')) {
+            return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
+        }
+
+        $validate = $this->validate([
+            'password' => 'required|min_length[8]|max_length[72]|matches[password_confirmation]',
+            'password_confirmation' => 'required',
+        ]);
+
+        if (!$validate) {
+            return redirect()->back()->with('error', 'Senha deve ter no mínimo 8 caracteres e confirmação igual.');
+        }
+
+        $user = session()->get('user');
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
+        }
+
+        $password = (string)$this->request->getPost('password');
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+
+        $updated = (new Users())->update($user->id, [
+            'password' => $hash,
+            'must_change_password' => 0,
+        ]);
+
+        if (!$updated) {
+            return redirect()->back()->with('error', 'Erro ao atualizar a senha.');
+        }
+
+        return redirect()->route('home')->with('success', 'Senha atualizada com sucesso.');
     }
 
     private function resolveUserRole($user): string
@@ -352,7 +419,17 @@ class Login extends BaseController
 
     public function recoveryStore()
     {
-        $post = $this->request->getPost();       
+        $validate = $this->validate([
+            'recovery' => 'required|exact_length[64]|alpha_numeric',
+            'password' => 'required|min_length[8]|max_length[72]|matches[password_confirmation]',
+            'password_confirmation' => 'required',
+        ]);
+
+        if (!$validate) {
+            return redirect()->back()->with('error', 'Dados inválidos para redefinição de senha.');
+        }
+
+        $post = $this->request->getPost();
 
         (new PasswordResets())->where('expires_at <', Time::now()->toDateTimeString())->delete();
 
@@ -368,7 +445,8 @@ class Login extends BaseController
         }
 
         $data = [
-            'password' => password_hash($post['password'], PASSWORD_DEFAULT)
+            'password' => password_hash((string)$post['password'], PASSWORD_DEFAULT),
+            'must_change_password' => 0,
         ];
 
         if((new Users())->update($reset->user_id, $data))

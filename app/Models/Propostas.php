@@ -33,7 +33,7 @@ class Propostas extends Model
         'file',
         'rider',
         'created_at',
-        'updated-at',
+        'updated_at',
     ];
 
     protected bool $allowEmptyInserts = false;
