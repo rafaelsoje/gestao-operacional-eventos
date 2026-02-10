@@ -17,12 +17,15 @@
     <meta property="og:description" content="#">
     <meta property="og:image" content="<?= base_url('/assets/images/logo.png');?>">
     <meta property="og:url" content="<?= base_url();?>">
+    <meta name="theme-color" content="#3197da">
 
     <!-- Favicons -->
+    <link rel="icon" href="<?= base_url('/favicon.ico'); ?>" sizes="any">
     <link rel="apple-touch-icon" href="<?= base_url('/assets/images/logo.png') ?>" sizes="180x180">
     <link rel="icon" href="<?= base_url('/assets/images/logo.png'); ?>" sizes="32x32" type="image/png">
     <link rel="icon" href="<?= base_url('/assets/images/logo.png'); ?>" sizes="16x16" type="image/png">
     <link rel="icon" href="<?= base_url('/assets/images/logo.png'); ?>">
+    <link rel="manifest" href="<?= base_url('/manifest.webmanifest'); ?>">
 
     <!-- Google charts -->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -162,6 +165,13 @@
 <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 <!-- Preloader -->
 <div id="preloader"></div>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('<?= base_url('/service-worker.js'); ?>');
+    });
+  }
+</script>
 
 </body>
 </html>

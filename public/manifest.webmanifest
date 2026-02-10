@@ -1,0 +1,25 @@
+{
+  "name": "Operacional Audiovisual",
+  "short_name": "Operacional",
+  "description": "Gestao operacional de eventos e equipes.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1e2a38",
+  "theme_color": "#3197da",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "assets/images/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
