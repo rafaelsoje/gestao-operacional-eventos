@@ -18,18 +18,9 @@
           <div class="flash text-center alert alert-success text-success"><?php echo session()->get('success') ?? ''; ?></div>
         <?php endif; ?>
   
-        <div class="d-flex justify-content-between">
-    <div class="col-12 col-lg-4">        
-        <!-- <select id="inputState" class="form-select">
-            <option selected>Todas as propostas</option>
-            <option>Proposta aceita</option>
-            <option>Proposta recusada</option>                
-        </select>         -->
-    </div>
-    <div class="d-flex flex-wrap align-items-end justify-content-end gap-2 mb-3">
-        <a href="<?= base_url('/cadastro/operacional');?>" type="button" class="btn btn-success">+ Cadastrar Evento</a>
-    </div>
-  </div>    
+  <div class="d-flex flex-wrap align-items-end justify-content-end gap-2 mb-3">
+      <a href="<?= base_url('/cadastro/operacional');?>" type="button" class="btn btn-success">+ Cadastrar Evento</a>
+  </div>
      <!-- Tabela Striped
      <div class="table-responsive">
      <table class="table table-striped dt-stack">

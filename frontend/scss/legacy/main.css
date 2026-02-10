@@ -220,6 +220,16 @@ h6 {
   .header {
     left: -100%;
   }
+
+  /* Evita que o botão do menu flutuante sobreponha ações no topo das páginas */
+  .main {
+    padding-top: 64px;
+  }
+
+  .header .header-toggle {
+    left: 15px;
+    right: auto;
+  }
 }
 
 .header.header-show {
