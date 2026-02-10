@@ -218,6 +218,11 @@ class Login extends BaseController
 
     public function logOut(): ResponseInterface
     {
+        $user = session()->get('user');
+        if ($user && !empty($user->id)) {
+            $this->removeOnlinePresence((int) $user->id);
+        }
+
         session()->destroy();
 
         return redirect()->route('login');

@@ -45,6 +45,7 @@
           <th>Nome</th>
           <th>E-mail</th>
           <th>Nivel de acesso</th>
+          <th>Última atividade</th>
           <th>Ação</th>
         </tr>
       </thead>
@@ -62,6 +63,16 @@
                 }
               ?>
             <td><?=$nivel;?></td>
+            <td>
+              <?php $activityTs = (int)($user->last_activity_ts ?? 0); ?>
+              <?php if (!empty($user->is_online_now)): ?>
+                <span class="badge bg-success">Online agora</span>
+              <?php elseif ($activityTs > 0): ?>
+                <?= esc(date('d/m/Y H:i:s', $activityTs)); ?>
+              <?php else: ?>
+                <span class="text-muted">Sem atividade</span>
+              <?php endif; ?>
+            </td>
             <td class="d-flex justify-content-center" >
               
               <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#view<?=$user->id;?>"><i class="bi bi-eye"></i></a>
@@ -117,6 +128,19 @@
                           <div class="mb-2">
                             <small class="text-muted">Nível de acesso</small>
                             <div class="fw-semibold"><?=$nivel;?></div>
+                          </div>
+                          <div class="mb-2">
+                            <small class="text-muted">Última atividade</small>
+                            <div class="fw-semibold">
+                              <?php $activityTs = (int)($user->last_activity_ts ?? 0); ?>
+                              <?php if (!empty($user->is_online_now)): ?>
+                                Online agora
+                              <?php elseif ($activityTs > 0): ?>
+                                <?= esc(date('d/m/Y H:i:s', $activityTs)); ?>
+                              <?php else: ?>
+                                Sem atividade
+                              <?php endif; ?>
+                            </div>
                           </div>
                         </div>
                       </div>

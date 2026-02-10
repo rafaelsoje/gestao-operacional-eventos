@@ -22,6 +22,42 @@
       <button type="submit" class="btn btn-primary">Salvar</button>
     </div>
   </form>
+
+  <hr class="my-4">
+
+  <h4 class="mb-3">Usuários online agora</h4>
+  <?php $onlineUsers = $onlineUsers ?? []; ?>
+  <?php $onlineWindowSeconds = $onlineWindowSeconds ?? 300; ?>
+
+  <?php if (!empty($onlineUsers)): ?>
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered align-middle">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Última atividade</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($onlineUsers as $online): ?>
+            <?php
+              $lastSeen = (int) ($online['last_seen'] ?? 0);
+              $secondsAgo = max(0, time() - $lastSeen);
+            ?>
+            <tr>
+              <td><?= esc($online['name'] ?? ''); ?></td>
+              <td><?= esc($online['email'] ?? ''); ?></td>
+              <td><?= esc(date('d/m/Y H:i:s', $lastSeen)); ?> (há <?= esc((string) $secondsAgo); ?>s)</td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <small class="text-muted d-block mt-2">Considera online quem teve atividade nos últimos <?= esc((string) $onlineWindowSeconds); ?> segundos.</small>
+  <?php else: ?>
+    <div class="alert alert-info mb-0">Nenhum usuário online no momento.</div>
+  <?php endif; ?>
 </div>
 
 <?php $this->endSection('content');?>

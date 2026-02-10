@@ -765,6 +765,31 @@ class Home extends BaseController
         $list = new Users();
         $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
         $users = $list->select()->where('email !=', $superEmail)->findAll();
+        $onlineSnapshot = $this->getOnlineUsersSnapshot();
+        $onlineMap = [];
+
+        foreach ($onlineSnapshot as $online) {
+            $onlineMap[(int) ($online['id'] ?? 0)] = (int) ($online['last_seen'] ?? 0);
+        }
+
+        foreach ($users as $user) {
+            $id = (int) ($user->id ?? 0);
+            $onlineTs = $onlineMap[$id] ?? 0;
+
+            $lastLoginTs = !empty($user->lastLogin) ? strtotime((string) $user->lastLogin) : 0;
+            if ($lastLoginTs === false) {
+                $lastLoginTs = 0;
+            }
+
+            $updatedTs = !empty($user->updated_at) ? strtotime((string) $user->updated_at) : 0;
+            if ($updatedTs === false) {
+                $updatedTs = 0;
+            }
+
+            $activityTs = max($onlineTs, $lastLoginTs, $updatedTs);
+            $user->last_activity_ts = $activityTs;
+            $user->is_online_now = $onlineTs > 0;
+        }
 
         return view('usuarios', ['users' => $users, 'botanicUser' => true]);
     }
@@ -1122,7 +1147,13 @@ class Home extends BaseController
         }
 
         $enabled = (new TelegramService())->isEnabled();
-        return view('notifications', ['enabled' => $enabled]);
+        $onlineUsers = $this->getOnlineUsersSnapshot();
+
+        return view('notifications', [
+            'enabled' => $enabled,
+            'onlineUsers' => $onlineUsers,
+            'onlineWindowSeconds' => $this->getOnlineWindowSeconds(),
+        ]);
     }
 
     public function notificationsUpdate()
