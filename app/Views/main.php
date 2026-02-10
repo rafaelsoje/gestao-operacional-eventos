@@ -7,6 +7,7 @@
     <?php $appCssV = is_file(FCPATH . 'assets/build/app.css') ? filemtime(FCPATH . 'assets/build/app.css') : time(); ?>
     <?php $appJsV = is_file(FCPATH . 'assets/build/app.js') ? filemtime(FCPATH . 'assets/build/app.js') : time(); ?>
     <?php $calendarJsV = is_file(FCPATH . 'assets/build/calendar.js') ? filemtime(FCPATH . 'assets/build/calendar.js') : time(); ?>
+    <?php $googleChartsSri = trim((string) env('GOOGLE_CHARTS_SRI', '')); ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="#">
     <meta name="author" content="Rafael Soje - rafaelsoje@gmail.com">
@@ -28,7 +29,7 @@
     <link rel="manifest" href="<?= base_url('/manifest.webmanifest'); ?>">
 
     <!-- Google charts -->
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"<?= $googleChartsSri !== '' ? ' integrity="' . esc($googleChartsSri) . '" crossorigin="anonymous"' : ''; ?>></script>
 
     <!-- Pré-conexões para otimizar carregamento de fontes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
