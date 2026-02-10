@@ -2,15 +2,20 @@
 
 <?php
 
-use Composer\Installers\PhpBBInstaller;
-
  $this->section('content');?>
+<?php helper('format'); ?>
+<?php
+$rows = $data ?? [];
+$hasRows = !empty($rows);
+$topEventsRows = json_decode($topEvents ?? '[]', true);
+$hasTopEvents = is_array($topEventsRows) && count($topEventsRows) > 1;
+?>
 
 
 
-<?php if($sum->total_consumo):?>
+<?php if($hasRows || (float)($sum->total_consumo ?? 0) > 0):?>
 
-<?php if(!empty($data)):?>
+<?php if($hasRows):?>
 <div class="px-4 mb-3 mt-2 d-flex align-items-center justify-content-end">
 
 <!-- <nav class="" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
@@ -42,12 +47,11 @@ use Composer\Installers\PhpBBInstaller;
             </div>
         </div>
         <div class="col">
-            <button type="submit" class="form-control btn btn-success w-auto" onclick="return validarDatas()">Pesquisar</button>
+            <button type="submit" class="form-control btn btn-success w-auto" onclick="return validarDatas(this.form)">Pesquisar</button>
         </div>
     </form>
 </div>
 
-<?php helper('format'); ?>
 <?php if(isset($search)):?>
     <div>
         <?php
@@ -136,7 +140,13 @@ use Composer\Installers\PhpBBInstaller;
         <div class="chart-box shadow" id="column_chart2" ></div>
     </div>
     <div class="col-12 col-md-6">
-        <div class="chart-box shadow" id="top_events_chart"></div>
+        <?php if ($hasTopEvents): ?>
+            <div class="chart-box shadow" id="top_events_chart"></div>
+        <?php else: ?>
+            <div class="chart-box shadow d-flex align-items-center justify-content-center text-muted">
+                Ainda não há eventos suficientes para montar o ranking.
+            </div>
+        <?php endif; ?>
     </div>
     <!-- <div class="col-12 col-md-6 shadow" id="curve_chart" ></div> -->
      <!-- <div class="col-12 col-md-6 shadow" id="line_chart"></div> -->
@@ -171,7 +181,7 @@ use Composer\Installers\PhpBBInstaller;
                     <input type="date" id="data_final" name="data_final" class="form-control" required>
                 </div>
                 <div class="col">
-                    <button type="submit" class="form-control btn btn-success w-auto" onclick="return validarDatas()">Pesquisar</button>
+                    <button type="submit" class="form-control btn btn-success w-auto" onclick="return validarDatas(this.form)">Pesquisar</button>
                 </div>
             </form>
         </div>
@@ -203,14 +213,14 @@ use Composer\Installers\PhpBBInstaller;
         </tr>
     </thead>
     <tbody>
-        <?php foreach($data as $item):?>
+        <?php foreach($rows as $item):?>
             <?php
-                $data = br_date($item->data);
+                $rowDate = br_date($item->data);
                 $kwhGerador = (float)$item->kwh_saida_g1 - (float)$item->kwh_entrada_g1;
                 $kwhGerador += (float)$item->kwh_saida_g2 - (float)$item->kwh_entrada_g2;
             ?>
         <tr>
-            <th scope="row"><?= $data;?></th>
+            <th scope="row"><?= $rowDate;?></th>
             <td><?= $item->nome;?></td>
             <td><?= $item->tipo;?></td>
             <?php $operacional = $item->super_op + $item->valor_premontagem; ?>
@@ -261,11 +271,11 @@ use Composer\Installers\PhpBBInstaller;
                     </div>
                 </div>
             </div>
-                <button type="submit" class="form-control btn btn-success w-auto" onclick="return validarDatas()">Pesquisar</button>
+                <button type="submit" class="form-control btn btn-success w-auto" onclick="return validarDatas(this.form)">Pesquisar</button>
             </div>
         </form>
     </div>
-    <h4 class="mt-4">Sem eventos no período!</h4>
+    <div class="alert alert-info mt-4">Sem eventos no período selecionado.</div>
     <a href="<?= (isset($get))? base_url('operacional/planejamento/cadastro') : base_url('cadastro/operacional') ?>" class="btn btn-success px-4 mb-3 mt-2">+ Cadastrar evento</a>
 <?php endif ;?>
 
@@ -278,17 +288,29 @@ $(document).ready(function(){
   $('.phone').mask('(00)00000-0000', {reverse: false});
 });
 
-function validarDatas() {
-    let dataInicial = document.getElementById("data_inicial").value;
-    let dataFinal = document.getElementById("data_final").value;
+function validarDatas(form) {
+    const dataInicial = form.querySelector('input[name="data_inicial"]')?.value || '';
+    const dataFinal = form.querySelector('input[name="data_final"]')?.value || '';
 
-    if (dataInicial && dataFinal) { // Verifica se os campos estão preenchidos
-        let dtInicial = new Date(dataInicial);
-        let dtFinal = new Date(dataFinal);
+    if (!dataInicial || !dataFinal) {
+        alert("Preencha data inicial e final.");
+        return false;
+    }
 
-        if (dtInicial > dtFinal) {
-            alert("A data inicial deve ser anterior à data final!");
-            return false; // Impede o envio do formulário
+    let dtInicial = new Date(dataInicial);
+    let dtFinal = new Date(dataFinal);
+
+    if (dtInicial > dtFinal) {
+        alert("A data inicial deve ser anterior à data final!");
+        return false; // Impede o envio do formulário
+    }
+
+    const checkboxes = form.querySelectorAll('input[type="checkbox"][name]');
+    if (checkboxes.length) {
+        const checked = Array.from(checkboxes).some(function (cb) { return cb.checked; });
+        if (!checked) {
+            alert("Selecione ao menos um tipo de evento.");
+            return false;
         }
     }
 
@@ -323,6 +345,9 @@ var bar = <?= $bar ?? '[]' ?>;
 
 
  function drawColumnChart() {
+     if (!hasChartRows(bar) || !document.getElementById('column_chart')) {
+         return;
+     }
     //   var data = google.visualization.arrayToDataTable([
     //       ['ano', 'Vendas', 'Despesas', 'teste', 'teste2'],
     //       ['Social', 1000, 400, 300, 100],
@@ -379,8 +404,15 @@ var bar = <?= $bar ?? '[]' ?>;
 
 var line = <?= $line ?? '[]' ?>;
 var topEvents = <?= $topEvents ?? '[]' ?>;
+
+function hasChartRows(arr) {
+    return Array.isArray(arr) && arr.length > 1;
+}
 //  GRAFICO LINHA
  function drawLineChart() {
+     if (!hasChartRows(line) || !document.getElementById('line_chart')) {
+         return;
+     }
      var data = google.visualization.arrayToDataTable(line);
 
      var options = {
@@ -419,6 +451,9 @@ function drawChart() {
 var barChart = <?= $barChart ?? '[]' ?>;
 
  function drawColumnChart2() {
+    if (!hasChartRows(barChart) || !document.getElementById('column_chart2')) {
+        return;
+    }
     //    var data = google.visualization.arrayToDataTable([
     //        ['ano', 'Vendas', 'Despesas', 'teste', 'teste2'],
     //        ['Social', 1000, 400, 300, 100],
@@ -468,7 +503,7 @@ var options = {
 }
 
 function drawTopEventsChart() {
-    if (!topEvents || topEvents.length <= 1) {
+    if (!hasChartRows(topEvents) || !document.getElementById('top_events_chart')) {
         return;
     }
     var data = google.visualization.arrayToDataTable(topEvents);
@@ -501,6 +536,9 @@ function drawTopEventsChart() {
 var donut = <?= $donut ?? '[]' ?>;
 
 function drawDonutChart() {
+    if (!hasChartRows(donut) || !document.getElementById('donut_chart')) {
+        return;
+    }
     // Dados do gráfico
     // var data = google.visualization.arrayToDataTable([
     //     ['Categoria', 'Valor'],

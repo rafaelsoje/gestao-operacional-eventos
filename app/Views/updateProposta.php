@@ -109,7 +109,7 @@
             <label for="inputCity" class="form-label">Proposta atual</label>
             <strong>
               <?php if(!empty($proposta->file) && (is_file($filePath) || is_file($legacyFilePath))):?>
-                <a href="<?= base_url('/uploads' . "/". $proposta->start_date . "/" .$proposta->file)?>" target="_blank"><?= " " . $proposta->file;?></a>
+                <a href="<?= url_to('uploads.download', $proposta->start_date, $proposta->file);?>" target="_blank"><?= " " . $proposta->file;?></a>
               <?php elseif(!empty($proposta->file)):?>
                 <span class="text-danger">Arquivo não encontrado</span>
               <?php else:?>
@@ -123,7 +123,7 @@
                 <label for="inputCity" class="form-label">Rider atual</label>
                 <strong>
                   <?php if(!empty($proposta->rider) && (is_file($riderPath) || is_file($legacyRiderPath))):?>
-                    <a href="<?= base_url('/uploads' . "/". $proposta->start_date . "/" .$proposta->rider)?>" target="_blank"><?= " " . $proposta->rider;?></a>
+                    <a href="<?= url_to('uploads.download', $proposta->start_date, $proposta->rider);?>" target="_blank"><?= " " . $proposta->rider;?></a>
                   <?php elseif(!empty($proposta->rider)):?>
                     <span class="text-danger">Arquivo não encontrado</span>
                   <?php else:?>

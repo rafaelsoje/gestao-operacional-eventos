@@ -71,7 +71,7 @@
         <section class="col-2 side-bar vh-auto">
             <div class="logged-user ms-2  mt-1 mb-1 d-flex align-items-center">
                 <?php $user = session()->get('user');?>
-                <img class="w-25" src="<?= base_url('./media/' . $user->avatar);?>" data-bs-toggle="modal" data-bs-target="#exampleModal5"/>
+                <img class="w-25" src="<?= url_to('avatar.show', $user->avatar ?? 'avatar.svg');?>" data-bs-toggle="modal" data-bs-target="#exampleModal5"/>
                 <?php
                     $logged = explode(' ', $user->name);
                 ?>
@@ -109,7 +109,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img class="w-50" src="<?= base_url('./media/' . $user->avatar);?>"/>
+                    <img class="w-50" src="<?= url_to('avatar.show', $user->avatar ?? 'avatar.svg');?>"/>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

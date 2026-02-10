@@ -134,7 +134,7 @@
               $legacyFilePath = FCPATH . 'uploads/' . $safeDate . '/' . $proposta->file;
             ?>
             <?php if(!empty($proposta->file) && (is_file($filePath) || is_file($legacyFilePath))):?>
-              <a href="<?= base_url('/uploads' . "/" . $proposta->start_date . "/" . $proposta->file );?>" target="_blank">Download</a>
+              <a href="<?= url_to('uploads.download', $proposta->start_date, $proposta->file);?>" target="_blank">Download</a>
             <?php elseif(!empty($proposta->file)):?>
               <span class="text-danger">Arquivo não encontrado</span>
             <?php else:?>

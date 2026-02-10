@@ -40,6 +40,11 @@
 
 
 <div class="px-1 text-center p-2">
+  <?php if (empty($hasDashboardData)): ?>
+    <div class="alert alert-info mb-3" role="alert">
+      Ainda não há dados suficientes para montar a dashboard.
+    </div>
+  <?php endif; ?>
   <div class="row g-3">
     <div class="col-12 col-md-6 col-lg-3">
       <div class="stat-card bg-white text-primary rounded shadow-lg">
@@ -71,10 +76,22 @@
 
 <div class="chart row g-3 mt-2 mb-2 h-25">
     <div class="col-12 col-md-6">
-      <div class="chart-box shadow-sm" id="column_chart"></div>
+      <?php if (!empty($hasChartData)): ?>
+        <div class="chart-box shadow-sm" id="column_chart"></div>
+      <?php else: ?>
+        <div class="chart-box shadow-sm d-flex align-items-center justify-content-center text-muted">
+          Sem dados de propostas por trimestre.
+        </div>
+      <?php endif; ?>
     </div>
     <div class="col-12 col-md-6">
-      <div class="chart-box shadow-sm" id="pie_chart"></div>
+      <?php if (!empty($hasChartData)): ?>
+        <div class="chart-box shadow-sm" id="pie_chart"></div>
+      <?php else: ?>
+        <div class="chart-box shadow-sm d-flex align-items-center justify-content-center text-muted">
+          Sem dados financeiros para distribuição.
+        </div>
+      <?php endif; ?>
     </div>
 </div>
 <!-- <div class="chart row d-flex border m-1 h-25">
@@ -123,6 +140,11 @@
         </div>
     </a>
 <?php endif;?>
+<?php if (empty($recent)): ?>
+    <div class="shadow bg-white d-block px-2 pt-3 pb-3 text-center text-muted">
+      Nenhuma proposta recente encontrada.
+    </div>
+<?php endif; ?>
 
 
 
@@ -140,15 +162,15 @@ function validarDatas() {
     let dataInicial = document.getElementById("data_inicial").value;
     let dataFinal = document.getElementById("data_final").value;
 
-    if (dataInicial && dataFinal) { // Verifica se os campos estão preenchidos
-        let dtInicial = new Date(dataInicial);
-        let dtFinal = new Date(dataFinal);
+    if (!dataInicial || !dataFinal) {
+        alert("Você precisa preencher os campos!");
+        return false;
+    }
 
-        if (dtInicial > dtFinal) {
-            alert("A data inicial deve ser anterior à data final!");
-            return false; // Impede o envio do formulário
-        }
-        alert("Você precisa preencher os campos!")
+    let dtInicial = new Date(dataInicial);
+    let dtFinal = new Date(dataFinal);
+    if (dtInicial > dtFinal) {
+        alert("A data inicial deve ser anterior à data final!");
         return false;
     }
 
@@ -166,18 +188,19 @@ function validarDatas() {
  function drawCharts() {
      drawColumnChart();
      drawPieChart();
-     drawLineChart();
-     drawDonutChart();
-     drawScatterChart();
- }
+}
 
 //  GRAFICO COLUNA
 
 // Dados passados do PHP para o JavaScript
 var columnChart = <?= $columnChart; ?>;
 var pieChart = <?= $pieChart; ?>;
+var hasChartData = <?= !empty($hasChartData) ? 'true' : 'false'; ?>;
 
  function drawColumnChart() {
+    if (!hasChartData || !document.getElementById('column_chart')) {
+      return;
+    }
     //  var data = google.visualization.arrayToDataTable([
     //      ['Ano', 'Vendas', 'Despesas'],
     //      ['2019', 1000, 400],
@@ -205,6 +228,9 @@ var pieChart = <?= $pieChart; ?>;
 //  GRAFICO PIZZA
 
  function drawPieChart() {
+    if (!hasChartData || !document.getElementById('pie_chart')) {
+      return;
+    }
     //  var data = google.visualization.arrayToDataTable([
     //      ['Categoria', 'Valor'],
     //      ['Alimentos', 30],
@@ -227,81 +253,6 @@ var pieChart = <?= $pieChart; ?>;
  }
 
 
-
-//  GRAFICO LINHA
- function drawLineChart() {
-     var data = new google.visualization.DataTable();
-     data.addColumn('number', 'Ano');
-     data.addColumn('number', 'Crescimento');
-
-     data.addRows([
-         [2019, 10],
-         [2020, 15],
-         [2021, 25],
-         [2022, 30],
-         [2023, 35],
-         [2024, 20]
-     ]);
-
-     var options = {
-         title: 'Crescimento Anual',
-         hAxis: { title: 'Ano' },
-         vAxis: { title: 'Crescimento (%)' },
-         legend: { position: 'bottom' }
-     };
-
-     var chart = new google.visualization.LineChart(document.getElementById('line_chart'));
-     chart.draw(data, options);
- }
-
-  function drawScatterChart() {
-      var data = google.visualization.arrayToDataTable([
-          ['X', 'Y'],
-          [1, 1],
-          [2, 4],
-          [3, 9],
-          [4, 16],
-          [5, 25]
-      ]);
-
-var options = {
-          title: 'Gráfico de Dispersão',
-          hAxis: { title: 'X' },
-          vAxis: { title: 'Y' },
-          legend: 'none'
-      };
-
-      var chart = new google.visualization.ScatterChart(document.getElementById('scatter_chart'));
-      chart.draw(data, options);
-}
-
-function drawDonutChart() {
-    // Dados do gráfico
-    var data = google.visualization.arrayToDataTable([
-        ['Categoria', 'Valor'],
-        ['Categoria A', 30],
-        ['Categoria B', 70],
-        ['Categoria C', 40],
-        ['Categoria D', 60]
-    ]);
-
-    // Opções do gráfico
-    var options = {
-        title: 'Distribuição de Categorias',
-        pieHole: 0.4, // Tamanho do furo no meio
-        slices: {
-            0: { offset: 0.1 }, // Destacar a primeira fatia (opcional)
-            1: { offset: 0.1 }, // Destacar a segunda fatia (opcional)
-        },
-        legend: { position: 'right' },
-        pieSliceText: 'percentage', // Mostrar percentual nas fatias
-        is3D: false // Se deseja um efeito 3D (opcional)
-    };
-
-    // Criar e desenhar o gráfico
-    var chart = new google.visualization.PieChart(document.getElementById('donut_chart'));
-    chart.draw(data, options);
-}
 
 </script>
 

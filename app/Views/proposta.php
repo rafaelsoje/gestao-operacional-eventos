@@ -146,13 +146,13 @@
               $legacyRiderPath = FCPATH . 'uploads/' . $safeDate . '/' . $proposta->rider;
             ?>
             <?php if(!empty($proposta->file) && (is_file($filePath) || is_file($legacyFilePath))):?>
-              <a href="<?= base_url('/uploads' . "/" . $proposta->start_date . "/" . $proposta->file );?>" target="_blank">Proposta</a>
+              <a href="<?= url_to('uploads.download', $proposta->start_date, $proposta->file);?>" target="_blank">Proposta</a>
             <?php elseif(!empty($proposta->file)):?>
               <span class="text-danger">Proposta não encontrada</span>
             <?php endif;?>
 
             <?php if(!empty($proposta->rider) && (is_file($riderPath) || is_file($legacyRiderPath))):?>
-              / <a href="<?= base_url('/uploads' . "/" . $proposta->start_date . "/" . $proposta->rider );?>" target="_blank">Rider</a>
+              / <a href="<?= url_to('uploads.download', $proposta->start_date, $proposta->rider);?>" target="_blank">Rider</a>
             <?php elseif(!empty($proposta->rider)):?>
               / <span class="text-danger">Rider não encontrado</span>
             <?php endif;?>
@@ -180,7 +180,7 @@
                   <div><strong>Descrição / Observação: </strong><br/><?= $proposta->description;?></div>
                   <div><strong>Proposta: </strong><br/>
                     <?php if(!empty($proposta->file) && (is_file($filePath) || is_file($legacyFilePath))):?>
-                      <a href="<?= base_url('/uploads' . "/" . $proposta->start_date . "/" . $proposta->file );?>" target="_blank"><?= $proposta->file;?></a>
+                      <a href="<?= url_to('uploads.download', $proposta->start_date, $proposta->file);?>" target="_blank"><?= $proposta->file;?></a>
                     <?php elseif(!empty($proposta->file)):?>
                       <span class="text-danger">Arquivo não encontrado</span>
                     <?php else:?>

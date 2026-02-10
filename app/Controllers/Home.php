@@ -10,8 +10,11 @@ use App\Services\DashboardService;
 use App\Services\OperacionalService;
 use App\Services\TelegramService;
 use App\Services\UploadService;
+use App\Services\AvatarService;
 use CodeIgniter\Database\Query;
+use CodeIgniter\HTTP\ResponseInterface;
 use PhpParser\Node\Scalar\Float_;
+use Throwable;
 use stdClass;
 
 class Home extends BaseController
@@ -490,9 +493,24 @@ class Home extends BaseController
         $eventCount = (int)($sum->event_count ?? 0);
         $avgEventCost = $eventCount > 0 ? ((float)$sum->total_consumo / $eventCount) : 0;
 
+        $payload = [
+            'sum' => $sum,
+            'avg_event_cost' => $avgEventCost,
+            'data' => $data,
+            'donut' => json_encode($donutChart),
+            'bar' => json_encode($bar),
+            'barChart' => json_encode($barchart),
+            'line' => json_encode($line),
+        ];
+
         if(isset($post)){
             $topEvents = $service->topEventsByCost($filters ?? []);
-            return view('operacional', ['operacional' => true, 'sum' => $sum, 'avg_event_cost' => $avgEventCost, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'topEvents' => json_encode($topEvents), 'search' => $post, 'tipo' => $array]);
+            return view('operacional', $payload + [
+                'operacional' => true,
+                'topEvents' => json_encode($topEvents),
+                'search' => $post,
+                'tipo' => $array ?? [],
+            ]);
         }else{
             if($get == 0){
                 $filters = [
@@ -501,7 +519,12 @@ class Home extends BaseController
                     'flag' => 0,
                 ];
                 $topEvents = $service->topEventsByCost($filters);
-                return view('operacional', ['planejado' => true, 'sum' => $sum, 'avg_event_cost' => $avgEventCost, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'topEvents' => json_encode($topEvents), 'get' => $get, 'mes' => $this->mes(date('m')+1)]);
+                return view('operacional', $payload + [
+                    'planejado' => true,
+                    'topEvents' => json_encode($topEvents),
+                    'get' => $get,
+                    'mes' => $this->mes(date('m') + 1),
+                ]);
             }
             $filters = [
                 'month' => $mesSearch,
@@ -509,7 +532,11 @@ class Home extends BaseController
                 'flag' => 1,
             ];
             $topEvents = $service->topEventsByCost($filters);
-            return view('operacional', ['operacional' => true, 'sum' => $sum, 'avg_event_cost' => $avgEventCost, 'data' => $data, 'donut' => json_encode($donutChart), 'bar' => json_encode($bar), 'barChart' => json_encode($barchart), 'line' => json_encode($line), 'topEvents' => json_encode($topEvents), 'mes' => $this->mes($mesSearch)]);
+            return view('operacional', $payload + [
+                'operacional' => true,
+                'topEvents' => json_encode($topEvents),
+                'mes' => $this->mes($mesSearch),
+            ]);
         }
     }
 
@@ -750,16 +777,23 @@ class Home extends BaseController
     public function usuarioStore()
     {
         $validate = $this->validate([
-            'name' => 'required',
-            'email' => 'required|valid_email',
+            'name' => 'required|min_length[3]|max_length[120]',
+            'email' => 'required|valid_email|max_length[190]',
+            'role' => 'required|in_list[user,admin]',
         ]);
 
         if (!$validate) {
-            // return redirect()->route('login')->with('errors', $this->validator->getErrors());
-            return redirect()->route('usuario')->with('error', 'Preencha o formulário corretamente!');
+            return redirect()->route('usuario')->with('error', 'Preencha o formulário corretamente.');
         }
 
         $data = $this->request->getPost();
+        $data['email'] = mb_strtolower(trim((string)($data['email'] ?? '')));
+        $data['name'] = trim((string)($data['name'] ?? ''));
+
+        if ((new Users())->where('email', $data['email'])->first()) {
+            return redirect()->route('usuario')->with('error', 'Este e-mail já está cadastrado.');
+        }
+
         $defaultPassword = env('DEFAULT_USER_PASSWORD', 'Bemvindo@2026');
         $pass = password_hash($defaultPassword, PASSWORD_DEFAULT);
         $data['avatar'] = "avatar.svg";
@@ -775,7 +809,15 @@ class Home extends BaseController
         }
 
         $add = new Users();
-        $result = $add->insert($data);
+        try {
+            $result = $add->insert($data);
+        } catch (Throwable $e) {
+            if ($this->isDuplicateEmailException($e)) {
+                return redirect()->route('usuario')->with('error', 'Este e-mail já está cadastrado.');
+            }
+            log_message('error', 'Falha ao cadastrar usuário: {message}', ['message' => $e->getMessage()]);
+            return redirect()->route('usuario')->with('error', 'Não foi possível cadastrar usuário.');
+        }
 
         if($result){
             $user = session()->get('user');
@@ -815,15 +857,16 @@ class Home extends BaseController
         // }
 
         $validate = $this->validate([
-            'id' => 'required',
-            'name' => 'required',
-            'role' => 'required',
+            'id' => 'required|is_natural_no_zero',
+            'name' => 'required|min_length[3]|max_length[120]',
+            'role' => 'required|in_list[user,admin]',
         ]);
         if (!$validate) {
             return redirect()->route('usuarios')->with('error', 'Preencha o formulário corretamente!');
         }
 
         $data = $this->request->getPost();
+        $data['name'] = trim((string)($data['name'] ?? ''));
         $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
         $target = (new Users())->select('id,email,admin,role')->where('id', $data['id'])->first();
         if (!$target) {
@@ -855,14 +898,11 @@ class Home extends BaseController
                     return redirect()->route('usuarios')->with('error', $errors['avatar']);
                 }
 
-                $name = sha1(uniqid()) . '.webp';
-                $data['avatar'] = $name;
-
-                \Config\Services::image('gd')
-                    ->withFile($img)
-                    ->convert(IMAGETYPE_WEBP)
-                    ->resize(200, 237, true, 'auto')
-                    ->save(FCPATH . 'media/' . $name);
+                try {
+                    $name = (new AvatarService())->save($img);
+                } catch (\Throwable $e) {
+                    return redirect()->route('usuarios')->with('error', 'Não foi possível salvar o avatar.');
+                }
 
                 (new Users())->update($data['id'], ['avatar' => $name]);
             }
@@ -983,12 +1023,11 @@ class Home extends BaseController
                 return redirect()->route('perfil')->with('error', $errors['avatar']);
             }
 
-            $name = sha1(uniqid()) . '.webp';
-            \Config\Services::image('gd')
-                ->withFile($img)
-                ->convert(IMAGETYPE_WEBP)
-                ->resize(200, 237, true, 'auto')
-                ->save(FCPATH . 'media/' . $name);
+            try {
+                $name = (new AvatarService())->save($img);
+            } catch (\Throwable $e) {
+                return redirect()->route('perfil')->with('error', 'Não foi possível salvar o avatar.');
+            }
 
             $items['avatar'] = $name;
         }
@@ -1031,6 +1070,25 @@ class Home extends BaseController
         }
 
         return redirect()->route('perfil')->with('success', 'Perfil atualizado com sucesso!');
+    }
+
+    public function avatar(string $file): ResponseInterface
+    {
+        if (!session()->get('auth')) {
+            return redirect()->route('login')->with('error', 'Sessão expirada. Faça login novamente.');
+        }
+
+        $path = (new AvatarService())->resolvePath($file);
+        if (!is_file($path)) {
+            return $this->response->setStatusCode(404);
+        }
+
+        $mime = mime_content_type($path) ?: 'application/octet-stream';
+
+        return $this->response
+            ->setHeader('Content-Type', $mime)
+            ->setHeader('Cache-Control', 'private, max-age=86400')
+            ->setBody((string)file_get_contents($path));
     }
 
     public function removeUsuario($id = null)
@@ -1318,6 +1376,12 @@ class Home extends BaseController
 
         $hasColumn = db_connect()->fieldExists('must_change_password', 'users');
         return $hasColumn;
+    }
+
+    private function isDuplicateEmailException(Throwable $e): bool
+    {
+        $message = mb_strtolower($e->getMessage());
+        return str_contains($message, 'duplicate') && str_contains($message, 'email');
     }
 
 }

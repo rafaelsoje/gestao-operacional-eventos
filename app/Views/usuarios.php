@@ -100,7 +100,7 @@
                     <div class="modal-body p-4">
                       <div class="row align-items-center g-3">
                         <div class="col-12 col-md-4 text-center">
-                          <img class="rounded-circle shadow-sm" src="<?=base_url('./media/' . $user->avatar);?>" style="width:120px;height:120px;object-fit:cover;" alt="Foto de <?=$user->name;?>"/>
+                          <img class="rounded-circle shadow-sm" src="<?= url_to('avatar.show', $user->avatar ?? 'avatar.svg');?>" style="width:120px;height:120px;object-fit:cover;" alt="Foto de <?=$user->name;?>"/>
                           <div class="mt-3">
                             <span class="badge bg-secondary"><?=$nivel;?></span>
                           </div>

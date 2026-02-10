@@ -47,7 +47,7 @@ class DashboardService
             ['4º Trimestre', $totaisPassado[3], $totaisAtual[3]],
         ];
 
-        $data = (new Propostas())
+        $accepted = (new Propostas())
             ->where('status', '1')
             ->where('YEAR(start_date)', $anoAtual)
             ->selectSum('value')
@@ -56,21 +56,25 @@ class DashboardService
             ->selectSum('third')
             ->first();
 
-        $saldo = $data->value - $data->charge - $data->rent - $data->third;
+        $acceptedValue = (float)($accepted->value ?? 0);
+        $acceptedCharge = (float)($accepted->charge ?? 0);
+        $acceptedRent = (float)($accepted->rent ?? 0);
+        $acceptedThird = (float)($accepted->third ?? 0);
+        $saldo = $acceptedValue - $acceptedCharge - $acceptedRent - $acceptedThird;
 
         $pieChart = [
             ['Categoria', 'Valor'],
-            ['Equipe', (int)$data->charge],
-            ['Locação', (int)$data->rent],
-            ['Terceiros', (int)$data->third],
+            ['Equipe', (int)$acceptedCharge],
+            ['Locação', (int)$acceptedRent],
+            ['Terceiros', (int)$acceptedThird],
             ['Saldo', (int)$saldo],
         ];
 
         $aceita = [
-            'value' => $data->value ?? 0,
-            'charge' => $data->charge ?? 0,
-            'rent' => $data->rent ?? 0,
-            'third' => $data->third ?? 0,
+            'value' => $acceptedValue,
+            'charge' => $acceptedCharge,
+            'rent' => $acceptedRent,
+            'third' => $acceptedThird,
         ];
 
         $analiseData = (new Propostas())
@@ -81,8 +85,12 @@ class DashboardService
             ->first();
 
         $analise = [
-            'value' => $analiseData->value ?? 0,
+            'value' => (float)($analiseData->value ?? 0),
         ];
+
+        $hasChartData = array_sum($totaisPassado) + array_sum($totaisAtual) > 0;
+        $hasFinancialData = $aceita['value'] > 0 || $analise['value'] > 0;
+        $hasRecentData = !empty($recent);
 
         return [
             'aceita' => $aceita,
@@ -91,6 +99,9 @@ class DashboardService
             'columnChart' => json_encode($columnChart),
             'pieChart' => json_encode($pieChart),
             'recent' => $recent,
+            'hasDashboardData' => $hasChartData || $hasFinancialData || $hasRecentData,
+            'hasChartData' => $hasChartData,
+            'hasRecentData' => $hasRecentData,
         ];
     }
 }

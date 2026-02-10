@@ -55,7 +55,7 @@ class Login extends BaseController
             return redirect()->back()->with('error', 'Preencha os campos corretamente!!!');
         }
 
-        $email = $this->request->getPost('email');
+        $email = mb_strtolower(trim((string)$this->request->getPost('email')));
         if (!$this->allowLoginAttempt($email, $this->request->getIPAddress())) {
             return redirect()->back()->with('error', 'Usuário ou Senha inválidos.');
         }
@@ -72,8 +72,6 @@ class Login extends BaseController
 
     
         if($user->loginAttempts >= 2 && $interval < 30){ 
-
-            $email = $this->request->getPost('email');
 
             $data = [
                 'title' => 'FALHA LOGIN',
@@ -164,6 +162,7 @@ class Login extends BaseController
             $userInfo->ip = $user->ip;
             $userInfo->role = $this->resolveUserRole($user);
 
+            $this->session->regenerate(true);
             session()->set('auth', true);
             session()->set('user', $userInfo);            
 
@@ -195,8 +194,6 @@ class Login extends BaseController
             return redirect()->route('home')->with('success', 'Login efetuado com sucesso.'); 
 
         }else{
-
-            $email = $this->request->getPost('email');
 
             $data = [
                 'title' => 'FALHA LOGIN',
@@ -234,6 +231,9 @@ class Login extends BaseController
     public function recoverySend(): ResponseInterface
     {
         $email = mb_strtolower(trim((string)$this->request->getPost('email')));
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return redirect('login')->with('success', 'Se o e-mail existir, enviaremos um link de redefinição.');
+        }
         $ip = (string)$this->request->getIPAddress();
 
         $this->logRecoveryEvent('SOLICITACAO', [
@@ -276,7 +276,7 @@ class Login extends BaseController
             $headers .= "Content-type: text/html; charset=UTF-8" . "\r\n";
             $headers .= "From: contato@rafaelsoje.com" . "\r\n";
 
-            $templatePath = FCPATH . 'template.html';
+            $templatePath = APPPATH . 'Views/emails/recovery_template.html';
             $html = is_file($templatePath) ? file_get_contents($templatePath) : false;
             if ($html === false) {
                 $html = '<p>Olá, {{nome_cliente}}.</p>'

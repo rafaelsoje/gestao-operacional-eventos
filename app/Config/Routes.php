@@ -49,6 +49,7 @@ $routes->group('', ['filter' => 'auth'], function($routes){
 
     $routes->post('/search/operacional', 'Home::operacional', ['as' => 'search.operacional', 'filter' => 'csrf']);
     $routes->get('/uploads/(:segment)/(:segment)', 'Home::downloadUpload/$1/$2', ['as' => 'uploads.download']);
+    $routes->get('/avatar/(:segment)', 'Home::avatar/$1', ['as' => 'avatar.show']);
     $routes->get('/admin/notifications', 'Home::notifications', ['as' => 'admin.notifications', 'filter' => 'role:superuser']);
     $routes->post('/admin/notifications', 'Home::notificationsUpdate', ['as' => 'admin.notifications.update', 'filter' => ['csrf', 'role:superuser']]);
     $routes->get('/password/force', 'Login::forcePasswordForm', ['as' => 'password.force']);

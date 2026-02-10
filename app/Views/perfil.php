@@ -16,7 +16,7 @@
         <div class="col-12 col-lg-4">
             <div class="card">
                 <div class="card-body text-center">
-                    <img src="<?= base_url('./media/' . ($user->avatar ?? 'avatar.svg'));?>" class="rounded-circle mb-3" style="width: 140px; height: 140px; object-fit: cover;" alt="Foto do usuário">
+                    <img src="<?= url_to('avatar.show', $user->avatar ?? 'avatar.svg');?>" class="rounded-circle mb-3" style="width: 140px; height: 140px; object-fit: cover;" alt="Foto do usuário">
                     <h5 class="mb-1"><?= esc($user->name ?? '') ?></h5>
                     <div class="text-muted"><?= esc($user->email ?? '') ?></div>
                     <div class="mt-2">
