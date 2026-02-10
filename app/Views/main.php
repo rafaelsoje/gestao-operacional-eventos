@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
     <?php $isCalendarPage = isset($calendario) || isset($calendarioOp); ?>
     <?php $calendarBundleReady = is_file(FCPATH . 'assets/build/calendar.js'); ?>
+    <?php $appCssV = is_file(FCPATH . 'assets/build/app.css') ? filemtime(FCPATH . 'assets/build/app.css') : time(); ?>
+    <?php $appJsV = is_file(FCPATH . 'assets/build/app.js') ? filemtime(FCPATH . 'assets/build/app.js') : time(); ?>
+    <?php $calendarJsV = is_file(FCPATH . 'assets/build/calendar.js') ? filemtime(FCPATH . 'assets/build/calendar.js') : time(); ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="#">
     <meta name="author" content="Rafael Soje - rafaelsoje@gmail.com">
@@ -31,10 +34,10 @@
     <!-- Fontes -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="<?= base_url('assets/build/app.css') ?>" />
-    <script src="<?= base_url('assets/build/app.js') ?>"></script>
+    <link rel="stylesheet" href="<?= base_url('assets/build/app.css?v=' . $appCssV) ?>" />
+    <script src="<?= base_url('assets/build/app.js?v=' . $appJsV) ?>"></script>
     <?php if ($isCalendarPage && $calendarBundleReady): ?>
-    <script src="<?= base_url('assets/build/calendar.js') ?>"></script>
+    <script src="<?= base_url('assets/build/calendar.js?v=' . $calendarJsV) ?>"></script>
     <?php endif; ?>
 
   <title>Operacional</title>

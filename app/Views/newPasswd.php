@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">      
+    <?php $authCssV = is_file(FCPATH . 'assets/build/auth.css') ? filemtime(FCPATH . 'assets/build/auth.css') : time(); ?>
+    <?php $authJsV = is_file(FCPATH . 'assets/build/auth.js') ? filemtime(FCPATH . 'assets/build/auth.js') : time(); ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="#">
     <meta name="author" content="Rafael Soje - rafaelsoje@gmail.com">
@@ -18,7 +20,7 @@
     <link rel="icon" href="<?= base_url('/assets/images/logo.png'); ?>" sizes="16x16" type="image/png">
     <link rel="icon" href="<?= base_url('/assets/images/logo.png'); ?>">
 
-  <link rel="stylesheet" href="<?= base_url('assets/build/auth.css') ?>">
+  <link rel="stylesheet" href="<?= base_url('assets/build/auth.css?v=' . $authCssV) ?>">
 
   <title>AudioVisual - Login</title>
 
@@ -235,6 +237,6 @@
     <h1>Forbiden</h1>
   <?php endif;?>
 
-  <script src="<?= base_url('assets/build/auth.js') ?>"></script>
+  <script src="<?= base_url('assets/build/auth.js?v=' . $authJsV) ?>"></script>
 </body>
 </html>
