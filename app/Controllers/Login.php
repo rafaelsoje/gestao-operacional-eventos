@@ -232,9 +232,19 @@ class Login extends BaseController
 
     public function recoverySend(): ResponseInterface
     {
-        $email = $this->request->getPost('email');
+        $email = mb_strtolower(trim((string)$this->request->getPost('email')));
+        $ip = (string)$this->request->getIPAddress();
 
-        if (!$this->allowRecoveryAttempt($email, $this->request->getIPAddress())) {
+        $this->logRecoveryEvent('SOLICITACAO', [
+            'email' => $this->maskEmail($email),
+            'ip' => $ip,
+        ]);
+
+        if (!$this->allowRecoveryAttempt($email, $ip)) {
+            $this->logRecoveryEvent('RATE_LIMIT', [
+                'email' => $this->maskEmail($email),
+                'ip' => $ip,
+            ]);
             return redirect('login')->with('success', 'Se o e-mail existir, enviaremos um link de redefinição.');
         }
 
@@ -280,7 +290,25 @@ class Login extends BaseController
 
             if (!mail($to, $subject, $html, $headers)) {
                 log_message('warning', 'Falha ao enviar e-mail de recuperação para: {email}', ['email' => $to]);
+                $this->logRecoveryEvent('EMAIL_FALHA', [
+                    'user_id' => (int)$user->id,
+                    'email' => $this->maskEmail($to),
+                    'ip' => $ip,
+                    'expires_at' => $expiresAt,
+                ]);
+            } else {
+                $this->logRecoveryEvent('EMAIL_ENVIADO', [
+                    'user_id' => (int)$user->id,
+                    'email' => $this->maskEmail($to),
+                    'ip' => $ip,
+                    'expires_at' => $expiresAt,
+                ]);
             }
+        } else {
+            $this->logRecoveryEvent('EMAIL_NAO_ENCONTRADO', [
+                'email' => $this->maskEmail($email),
+                'ip' => $ip,
+            ]);
         }
 
         return redirect('login')->with('success', 'Se o e-mail existir, enviaremos um link de redefinição.');
@@ -313,12 +341,12 @@ class Login extends BaseController
         }
 
         $validate = $this->validate([
-            'password' => 'required|min_length[8]|max_length[72]|matches[password_confirmation]',
+            'password' => 'required|min_length[8]|max_length[72]|matches[password_confirmation]|regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/]',
             'password_confirmation' => 'required',
         ]);
 
         if (!$validate) {
-            return redirect()->back()->with('error', 'Senha deve ter no mínimo 8 caracteres e confirmação igual.');
+            return redirect()->back()->with('error', 'Use ao menos 8 caracteres, com maiúscula, minúscula, número, símbolo e confirmação igual.');
         }
 
         $user = session()->get('user');
@@ -419,13 +447,17 @@ class Login extends BaseController
 
     public function recoveryStore()
     {
+        $ip = (string)$this->request->getIPAddress();
         $validate = $this->validate([
             'recovery' => 'required|exact_length[64]|alpha_numeric',
-            'password' => 'required|min_length[8]|max_length[72]|matches[password_confirmation]',
+            'password' => 'required|min_length[8]|max_length[72]|matches[password_confirmation]|regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/]',
             'password_confirmation' => 'required',
         ]);
 
         if (!$validate) {
+            $this->logRecoveryEvent('FALHA_VALIDACAO', [
+                'ip' => $ip,
+            ]);
             return redirect()->back()->with('error', 'Dados inválidos para redefinição de senha.');
         }
 
@@ -441,6 +473,9 @@ class Login extends BaseController
             ->first();
 
         if (!$reset) {
+            $this->logRecoveryEvent('TOKEN_INVALIDO_OU_EXPIRADO', [
+                'ip' => $ip,
+            ]);
             return redirect()->route('login')->with('error', 'Link de recuperação inválido ou expirado.');
         }
 
@@ -452,11 +487,50 @@ class Login extends BaseController
         if((new Users())->update($reset->user_id, $data))
         {
             (new PasswordResets())->delete($reset->id);
+            $this->logRecoveryEvent('SENHA_REDEFINIDA', [
+                'user_id' => (int)$reset->user_id,
+                'ip' => $ip,
+            ]);
             return redirect()->route('login')->with('success', 'Senha atualizada com sucesso.');
         }
 
+        $this->logRecoveryEvent('FALHA_ATUALIZAR_SENHA', [
+            'user_id' => (int)$reset->user_id,
+            'ip' => $ip,
+        ]);
         return redirect()->route('login')->with('error', 'Erro ao redefinir senha.');
 
+    }
+
+    private function logRecoveryEvent(string $status, array $context = []): void
+    {
+        $parts = ['status=' . $status];
+        foreach ($context as $key => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+            $parts[] = $key . '=' . $value;
+        }
+        $parts[] = 'ts=' . date('Y-m-d H:i:s');
+
+        (new Logs())->insert([
+            'title' => 'RECOVERY',
+            'description' => implode(' | ', $parts),
+        ]);
+    }
+
+    private function maskEmail(string $email): string
+    {
+        if ($email === '' || strpos($email, '@') === false) {
+            return 'indefinido';
+        }
+
+        [$user, $domain] = explode('@', $email, 2);
+        if ($user === '') {
+            return '***@' . $domain;
+        }
+
+        return substr($user, 0, 1) . '***@' . $domain;
     }
 
     public function telegran($texto): void

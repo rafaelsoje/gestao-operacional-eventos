@@ -90,30 +90,115 @@
       margin-top: 1rem;
       font-size: 14px;
     }
+
+    .password-hints {
+      margin: 0.5rem 0 0;
+      padding-left: 1rem;
+      font-size: 0.85rem;
+    }
+
+    .password-hints li {
+      color: #6c757d;
+      margin-bottom: 0.2rem;
+    }
+
+    .password-hints li.ok {
+      color: #198754;
+    }
+
+    .strength-wrap {
+      margin-top: 0.5rem;
+    }
   </style>
 
   <!-- Validação com JavaScript -->
   <script>
+    function passwordRules(password, confirmation) {
+      return {
+        length: password.length >= 8,
+        lower: /[a-z]/.test(password),
+        upper: /[A-Z]/.test(password),
+        digit: /\d/.test(password),
+        symbol: /[^A-Za-z0-9]/.test(password),
+        match: confirmation.length > 0 && password === confirmation
+      };
+    }
+
+    function calcStrength(rules) {
+      let score = 0;
+      if (rules.length) score++;
+      if (rules.lower) score++;
+      if (rules.upper) score++;
+      if (rules.digit) score++;
+      if (rules.symbol) score++;
+      return score;
+    }
+
+    function updatePasswordUi() {
+      const passwordInput = document.getElementById('password');
+      const confirmInput = document.getElementById('password_confirmation');
+      const submitBtn = document.getElementById('submit-password');
+      const feedback = document.getElementById('password-feedback');
+      const strengthBar = document.getElementById('password-strength');
+
+      const rules = passwordRules(passwordInput.value, confirmInput.value);
+      const score = calcStrength(rules);
+
+      const map = [
+        ['rule-length', rules.length],
+        ['rule-lower', rules.lower],
+        ['rule-upper', rules.upper],
+        ['rule-digit', rules.digit],
+        ['rule-symbol', rules.symbol],
+        ['rule-match', rules.match],
+      ];
+
+      map.forEach(function(item) {
+        const el = document.getElementById(item[0]);
+        if (!el) return;
+        el.classList.toggle('ok', item[1]);
+      });
+
+      strengthBar.className = 'progress-bar';
+      strengthBar.style.width = (score * 20) + '%';
+      strengthBar.setAttribute('aria-valuenow', String(score * 20));
+      if (score <= 2) {
+        strengthBar.classList.add('bg-danger');
+      } else if (score <= 4) {
+        strengthBar.classList.add('bg-warning');
+      } else {
+        strengthBar.classList.add('bg-success');
+      }
+
+      const isValid = rules.length && rules.lower && rules.upper && rules.digit && rules.symbol && rules.match;
+      submitBtn.disabled = !isValid;
+      feedback.textContent = isValid
+        ? 'Senha válida.'
+        : 'A senha precisa atender aos requisitos abaixo.';
+
+      return isValid;
+    }
+
     function validateForm() {
-      let password = document.getElementById('password').value;
-      let passwordConfirmation = document.getElementById('password_confirmation').value;
-      let errorMsg = '';
+      return updatePasswordUi();
+    }
 
-      // Validação da senha (mínimo de 8 caracteres)
-      if (password.length < 8) {
-        errorMsg += 'A senha deve ter pelo menos 8 caracteres.\n';
-      }
+    document.addEventListener('DOMContentLoaded', function () {
+      const passwordInput = document.getElementById('password');
+      const confirmInput = document.getElementById('password_confirmation');
+      if (!passwordInput || !confirmInput) return;
 
-      if (password !== passwordConfirmation) {
-        errorMsg += 'A confirmação da senha não confere.\n';
-      }
-
-      if (errorMsg) {
-        alert(errorMsg);
-        return false; // Bloqueia o envio do formulário
-      }
-
-      return true; // Permite o envio do formulário se passar nas validações
+      passwordInput.addEventListener('input', updatePasswordUi);
+      confirmInput.addEventListener('input', updatePasswordUi);
+      updatePasswordUi();
+    });
+    
+    function togglePassword(id, btn) {
+      const input = document.getElementById(id);
+      if (!input) return;
+      const hidden = input.type === 'password';
+      input.type = hidden ? 'text' : 'password';
+      btn.innerHTML = hidden ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
     }
   </script>
 </head>
@@ -136,21 +221,37 @@
         <?php if(isset($recovery)):?>
           <input type="hidden" class="form-control" name="recovery" value="<?= $recovery;?>" required>
         <?php endif;?>
-        <label for="email" class="form-label">Senha</label>
+        <label for="password" class="form-label">Senha</label>
         <div class="input-group">
           <span class="input-group-text"><i class="fas fa-lock"></i></span>
-          <input type="password" class="form-control" id="password" name="password" placeholder="Digite sua senha" required>
+          <input type="password" class="form-control" id="password" name="password" placeholder="Digite sua senha" autocomplete="new-password" required>
+          <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('password', this)" aria-label="Mostrar ou ocultar senha"><i class="fas fa-eye"></i></button>
         </div>
+        <div class="strength-wrap">
+          <div class="progress" style="height: 6px;">
+            <div id="password-strength" class="progress-bar" role="progressbar" style="width:0%" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+          </div>
+        </div>
+        <ul class="password-hints">
+          <li id="rule-length">Pelo menos 8 caracteres</li>
+          <li id="rule-lower">Letra minúscula</li>
+          <li id="rule-upper">Letra maiúscula</li>
+          <li id="rule-digit">Número</li>
+          <li id="rule-symbol">Símbolo (ex.: !@#$)</li>
+          <li id="rule-match">Confirmação igual à senha</li>
+        </ul>
+        <div id="password-feedback" class="small text-muted" aria-live="polite"></div>
       </div>
       <div class="mb-3">
         <label for="password_confirmation" class="form-label">Confirmar senha</label>
         <div class="input-group">
           <span class="input-group-text"><i class="fas fa-lock"></i></span>
-          <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Confirme sua senha" required>
+          <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Confirme sua senha" autocomplete="new-password" required>
+          <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('password_confirmation', this)" aria-label="Mostrar ou ocultar confirmação"><i class="fas fa-eye"></i></button>
         </div>
       </div>
 
-     <button type="submit" class="btn btn-primary">Alterar senha</button>
+     <button id="submit-password" type="submit" class="btn btn-primary">Alterar senha</button>
     </form>
 
     <!-- <div class="social-login">
