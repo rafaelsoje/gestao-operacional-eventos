@@ -1,0 +1,38 @@
+{
+  "name": "audiovisual",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Frontend build pipeline for the Audiovisual CodeIgniter app",
+  "scripts": {
+    "dev": "webpack --mode development --watch",
+    "build": "webpack --mode production"
+  },
+  "devDependencies": {
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "@fullcalendar/core": "^6.1.20",
+    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/interaction": "^6.1.20",
+    "@fullcalendar/list": "^6.1.20",
+    "@fullcalendar/multimonth": "^6.1.20",
+    "@fullcalendar/timegrid": "^6.1.20",
+    "@srexi/purecounterjs": "^1.5.0",
+    "aos": "^2.3.4",
+    "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
+    "css-loader": "^7.1.2",
+    "datatables.net-dt": "^2.3.7",
+    "glightbox": "^3.3.1",
+    "imagesloaded": "^5.0.0",
+    "isotope-layout": "^3.0.6",
+    "jquery": "^4.0.0",
+    "jquery-mask-plugin": "^1.14.16",
+    "mini-css-extract-plugin": "^2.9.4",
+    "sass": "^1.93.2",
+    "sass-loader": "^16.0.5",
+    "swiper": "^12.1.0",
+    "typed.js": "^3.0.0",
+    "waypoints": "^4.0.1",
+    "webpack": "^5.102.1",
+    "webpack-cli": "^6.0.1"
+  }
+}

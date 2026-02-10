@@ -161,6 +161,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const evMes = filtrarEventosPorMes(events, ano, mes);
     const cal = new FullCalendar.Calendar(el, {
+      plugins: [FullCalendar.dayGridPlugin],
+      locales: FullCalendar.globalLocales || [],
       locale: 'pt-br',
       initialView: 'dayGridMonth',
       initialDate: `${ano}-${String(mes).padStart(2,'0')}-01`,

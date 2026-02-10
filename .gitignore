@@ -85,6 +85,7 @@ phpunit
 # Composer
 #-------------------------
 vendor/
+node_modules/
 
 #-------------------------
 # IDE / Development Files
@@ -130,3 +131,4 @@ _modules/*
 /app/Config/App.php
 public/uploads/
 /public/uploads/
+public/assets/build/

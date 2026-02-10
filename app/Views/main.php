@@ -2,6 +2,10 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
+    <?php $webpackReady = is_file(FCPATH . 'assets/build/app.css') && is_file(FCPATH . 'assets/build/app.js'); ?>
+    <?php $uriPath = trim(service('uri')->getPath(), '/'); ?>
+    <?php $calendarBundleReady = is_file(FCPATH . 'assets/build/calendar.js'); ?>
+    <?php $isCalendarPage = str_contains($uriPath, 'calendario'); ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="#">
     <meta name="author" content="Rafael Soje - rafaelsoje@gmail.com">
@@ -19,30 +23,8 @@
     <link rel="icon" href="<?= base_url('/assets/images/logo.png'); ?>" sizes="16x16" type="image/png">
     <link rel="icon" href="<?= base_url('/assets/images/logo.png'); ?>">
 
-    <!-- jQuery-->
-    <script src="<?= base_url('assets/vendor/jquery/jquery.min.js')?>"></script>
-    <!-- jQuery Mask Plugin -->
-    <script src="<?= base_url('assets/vendor/jquery-mask/jquery.mask.min.js')?>"></script>
-
-    <!-- Bootstrap -->
-     <link href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css');?>" rel="stylesheet">
-
-    <!-- Bootstrap Icons -->
-    <link href="<?=base_url('assets/vendor/bootstrap-icons/bootstrap-icons.css')?>" rel="stylesheet">  
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="<?=base_url('assets/vendor/font-awesome/css/all.min.css')?>">
-
-    <!-- DataTables CSS E JS -->
-    <link rel="stylesheet" href="<?= base_url('assets/vendor/datatables/css/jquery.dataTables.min.css')?>">
-    <script src="<?= base_url('assets/vendor/datatables/js/jquery.dataTables.min.js')?>"></script>
-    
     <!-- Google charts -->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript" src="<?= base_url('assets/js/googleCharts.js')?>"></script>
-
-    <!-- FullCalendar JS -->    
-    <script src="<?= base_url('assets/vendor/fullcalendar/dist/index.global.min.js')?>"></script>
 
     <!-- Pré-conexões para otimizar carregamento de fontes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,9 +33,25 @@
     <!-- Fontes -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- CSS Principal -->
+    <?php if ($webpackReady): ?>
+    <link rel="stylesheet" href="<?= base_url('assets/build/app.css') ?>" />
+    <script src="<?= base_url('assets/build/app.js') ?>"></script>
+    <?php if ($isCalendarPage && $calendarBundleReady): ?>
+    <script src="<?= base_url('assets/build/calendar.js') ?>"></script>
+    <?php endif; ?>
+    <?php else: ?>
+    <!-- Fallback sem bundle -->
+    <script src="<?= base_url('assets/vendor/jquery/jquery.min.js')?>"></script>
+    <script src="<?= base_url('assets/vendor/jquery-mask/jquery.mask.min.js')?>"></script>
+    <script src="<?= base_url('assets/vendor/datatables/js/jquery.dataTables.min.js')?>"></script>
+    <script src="<?= base_url('assets/vendor/fullcalendar/dist/index.global.min.js')?>"></script>
+    <link href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css');?>" rel="stylesheet">
+    <link href="<?=base_url('assets/vendor/bootstrap-icons/bootstrap-icons.css')?>" rel="stylesheet">
+    <link rel="stylesheet" href="<?=base_url('assets/vendor/font-awesome/css/all.min.css')?>">
+    <link rel="stylesheet" href="<?= base_url('assets/vendor/datatables/css/jquery.dataTables.min.css')?>">
     <link href=<?= base_url('assets/css/main.css')?> rel="stylesheet">
     <link rel="stylesheet" href="<?= base_url('./assets/css/style.css')?>" />
+    <?php endif; ?>
 
   <title>Operacional</title>
 </head>
@@ -145,10 +143,10 @@
 <!-- Preloader -->
 <div id="preloader"></div>
 
-<!-- Vendor JS Files -->
+<?php if (!$webpackReady): ?>
 <script src="<?=base_url('assets/vendor/bootstrap/js/bootstrap.bundle.min.js')?>"></script>
 <script src="<?=base_url('assets/vendor/imagesloaded/imagesloaded.pkgd.min.js')?>"></script>
-<!-- Main JS File -->
 <script src="<?=base_url('assets/js/main.js')?>"></script>
+<?php endif; ?>
 </body>
 </html>
