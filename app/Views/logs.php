@@ -35,7 +35,7 @@
     </table>
     </div>
   <?php else:?>
-
+    <div class="alert alert-info mb-0">Nenhum log registrado ainda.</div>
   <?php endif;?>  
 </div>
 

@@ -52,6 +52,8 @@ $routes->group('', ['filter' => 'auth'], function($routes){
     $routes->get('/avatar/(:segment)', 'Home::avatar/$1', ['as' => 'avatar.show']);
     $routes->get('/admin/notifications', 'Home::notifications', ['as' => 'admin.notifications', 'filter' => 'role:superuser']);
     $routes->post('/admin/notifications', 'Home::notificationsUpdate', ['as' => 'admin.notifications.update', 'filter' => ['csrf', 'role:superuser']]);
+    $routes->get('/admin/logs/cleanup/preview', 'Home::logsCleanupPreview', ['as' => 'admin.logs.cleanup.preview', 'filter' => 'role:superuser']);
+    $routes->post('/admin/logs/cleanup', 'Home::logsCleanupDelete', ['as' => 'admin.logs.cleanup.delete', 'filter' => ['csrf', 'role:superuser']]);
     $routes->get('/password/force', 'Login::forcePasswordForm', ['as' => 'password.force']);
     $routes->post('/password/force', 'Login::forcePasswordStore', ['as' => 'password.force.store', 'filter' => ['csrf']]);
     $routes->get('/perfil', 'Home::perfil', ['as' => 'perfil']);

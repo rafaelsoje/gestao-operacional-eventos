@@ -1140,9 +1140,7 @@ class Home extends BaseController
 
     public function notifications()
     {
-        $user = session()->get('user');
-        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
-        if (!$user || $user->email !== $superEmail) {
+        if (!$this->canManageNotifications()) {
             return redirect()->route('home')->with('error', 'Acesso negado.');
         }
 
@@ -1158,9 +1156,7 @@ class Home extends BaseController
 
     public function notificationsUpdate()
     {
-        $user = session()->get('user');
-        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
-        if (!$user || $user->email !== $superEmail) {
+        if (!$this->canManageNotifications()) {
             return redirect()->route('home')->with('error', 'Acesso negado.');
         }
 
@@ -1168,6 +1164,152 @@ class Home extends BaseController
         (new \App\Models\Settings())->setValue('telegram_enabled', $enabled);
 
         return redirect()->route('admin.notifications')->with('success', 'Configuração atualizada.');
+    }
+
+    public function logsCleanupPreview(): ResponseInterface
+    {
+        if (!$this->canManageNotifications()) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Acesso negado.']);
+        }
+
+        $range = $this->getCleanupRange($this->request->getGet('days'));
+        if ($range === null) {
+            return $this->response->setStatusCode(422)->setJSON(['error' => 'Período inválido.']);
+        }
+
+        if (!db_connect()->fieldExists('created_at', 'logs')) {
+            return $this->response->setStatusCode(500)->setJSON(['error' => 'A tabela de logs não possui coluna created_at.']);
+        }
+
+        $count = $range === 'all'
+            ? $this->countAllLogs()
+            : $this->countLogsOlderThanDays((int) $range);
+
+        return $this->response->setJSON([
+            'days' => $range,
+            'count' => $count,
+        ]);
+    }
+
+    public function logsCleanupDelete()
+    {
+        if (!$this->canManageNotifications()) {
+            return redirect()->route('home')->with('error', 'Acesso negado.');
+        }
+
+        $range = $this->getCleanupRange($this->request->getPost('days'));
+        if ($range === null) {
+            return redirect()->route('admin.notifications')->with('error', 'Período inválido para remoção de logs.');
+        }
+
+        if (!db_connect()->fieldExists('created_at', 'logs')) {
+            return redirect()->route('admin.notifications')->with('error', 'A tabela de logs não possui coluna created_at.');
+        }
+
+        $count = $range === 'all'
+            ? $this->countAllLogs()
+            : $this->countLogsOlderThanDays((int) $range);
+
+        if ($count < 1) {
+            return redirect()->route('admin.notifications')->with('success', 'Nenhum log encontrado para remoção.');
+        }
+
+        if ($range === 'all') {
+            $deletedAll = (new Logs())->where('id >', 0)->delete();
+            if ($deletedAll === false) {
+                return redirect()->route('admin.notifications')->with('error', 'Falha ao remover todos os logs.');
+            }
+
+            return redirect()->route('admin.notifications')->with('success', "Foram removidos {$count} registros de logs.");
+        }
+
+        $days = (int) $range;
+        $limitDate = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+        $logsModel = new Logs();
+        $deletedByCreatedAt = $logsModel->where('created_at <', $limitDate)->delete();
+        if ($deletedByCreatedAt === false) {
+            return redirect()->route('admin.notifications')->with('error', 'Falha ao remover logs por created_at.');
+        }
+
+        $legacyIds = $this->getLegacyLogIdsOlderThanDays($days);
+        if (!empty($legacyIds)) {
+            $deletedLegacy = (new Logs())->whereIn('id', $legacyIds)->delete();
+            if ($deletedLegacy === false) {
+                return redirect()->route('admin.notifications')->with('error', 'Falha ao remover logs legados.');
+            }
+        }
+
+        $user = session()->get('user');
+        (new Logs())->insert([
+            'title' => 'LIMPEZA DE LOGS',
+            'description' => "O usuário {$user->name} removeu {$count} logs com mais de {$days} dias em " . date('Y-m-d H:i:s'),
+        ]);
+
+        return redirect()->route('admin.notifications')->with('success', "Foram removidos {$count} registros de logs com mais de {$days} dias.");
+    }
+
+    private function canManageNotifications(): bool
+    {
+        $user = session()->get('user');
+        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+        return $user && $user->email === $superEmail;
+    }
+
+    private function getCleanupRange($rawValue): ?string
+    {
+        $value = trim((string) $rawValue);
+        if ($value === 'all') {
+            return 'all';
+        }
+
+        return in_array($value, ['30', '60', '90'], true) ? $value : null;
+    }
+
+    private function countLogsOlderThanDays(int $days): int
+    {
+        $limitDate = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+        $countByCreatedAt = (int) (new Logs())
+            ->where('created_at <', $limitDate)
+            ->countAllResults();
+
+        $legacyIds = $this->getLegacyLogIdsOlderThanDays($days);
+
+        return $countByCreatedAt + count($legacyIds);
+    }
+
+    private function getLegacyLogIdsOlderThanDays(int $days): array
+    {
+        $limitTimestamp = strtotime("-{$days} days");
+        $legacyLogs = (new Logs())
+            ->select('id, description')
+            ->where('created_at', null)
+            ->findAll();
+
+        $ids = [];
+        foreach ($legacyLogs as $log) {
+            $description = (string) ($log->description ?? '');
+            $descriptionTimestamp = $this->extractTimestampFromLogDescription($description);
+            if ($descriptionTimestamp !== null && $descriptionTimestamp < $limitTimestamp) {
+                $ids[] = (int) $log->id;
+            }
+        }
+
+        return $ids;
+    }
+
+    private function countAllLogs(): int
+    {
+        return (int) (new Logs())->countAllResults();
+    }
+
+    private function extractTimestampFromLogDescription(string $description): ?int
+    {
+        if (preg_match('/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $description, $matches) !== 1) {
+            return null;
+        }
+
+        $parsed = strtotime((string) ($matches[1] ?? ''));
+        return $parsed !== false ? (int) $parsed : null;
     }
 
     private function notifyTelegram(string $message): void
@@ -1364,6 +1506,8 @@ class Home extends BaseController
             $log->user_name = $this->extractLogUserName($description);
             $log->clean_description = $this->stripUserFromDescription($description);
         }
+
+        
 
         return view('logs', ['logs' => $data]);
     }
