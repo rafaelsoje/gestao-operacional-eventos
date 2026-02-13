@@ -52,14 +52,12 @@
     <?php endif; ?>
     <style>
       .site-credit {
-        position: fixed;
-        right: 64px;
-        bottom: 18px;
-        z-index: 998;
-        font-size: 12px;
+        margin-top: auto;
+        padding: 10px 8px 14px;
+        font-size: 11px;
         line-height: 1.2;
-        color: rgba(33, 37, 41, 0.55);
-        text-align: right;
+        color: rgba(168, 169, 180, 0.78);
+        text-align: center;
       }
 
       .site-credit a {
@@ -68,13 +66,14 @@
       }
 
       .site-credit a:hover {
-        color: rgba(33, 37, 41, 0.9);
+        color: rgba(255, 255, 255, 0.9);
         text-decoration: underline;
       }
 
       @media (max-width: 768px) {
         .site-credit {
-          display: none;
+          font-size: 10px;
+          padding-bottom: 10px;
         }
       }
     </style>
@@ -148,6 +147,9 @@
         <!-- <li><a href="http://blog.rafaelsoje.com" target="_blank"><i class="bi bi-bookmarks navicon"></i> Blog</a></li> -->
         </ul>
     </nav>
+    <small class="site-credit">
+      Desenvolvido por <a href="https://rafaelsoje.com" target="_blank" rel="noopener noreferrer">Rafael Soje</a>
+    </small>
     <!-- <div class="container ">        
         <div class="credits navicon">Com ❤️ e ☕, Rafael Soje</div>
     </div> -->
@@ -160,9 +162,6 @@
     <!-- Content page -->
     <?= $this->renderSection('content');?>
   </main>
-  <small class="site-credit">
-    Desenvolvido por <a href="https://rafaelsoje.com" target="_blank" rel="noopener noreferrer">Rafael Soje</a>
-  </small>
 <!-- <footer id="footer" class="footer position-absolute dark-background">
   <div class="container">
     <div class="copyright text-center "><a href="https://rafaelsoje.com" target="_blank">
