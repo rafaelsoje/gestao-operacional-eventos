@@ -242,11 +242,11 @@
         </div>
         <div class="col-md-4">
             <label class="form-label">Água Cedae saída</label>
-            <input type="number" class="form-control" name="cedae_fim" value="<?= $item->temp_fim;?>">            
+            <input type="number" class="form-control" name="cedae_fim" value="<?= $item->cedae_fim;?>">            
         </div>               
         <div class="col-md-4">
             <label class="form-label">Consumo</label>
-            <input type="numcenterber" class="form-control" name="cedae_consumo" value="<?= $item->cedae_consumo;?>">
+            <input type="number" class="form-control" name="cedae_consumo" value="<?= $item->cedae_consumo;?>">
         </div>
         <div class="col-md-4">
             <label class="form-label">Água poço entrada</label>
@@ -254,11 +254,11 @@
         </div>
         <div class="col-md-4">
             <label class="form-label">Água poço saída</label>
-            <input type="number" class="form-control" name="poco_fim" value="<?= $item->temp_fim;?>">            
+            <input type="number" class="form-control" name="poco_fim" value="<?= $item->poco_fim;?>">            
         </div>               
         <div class="col-md-4">
             <label class="form-label">Consumo</label>
-            <input type="numcenterber" class="form-control" name="poco_consumo" value="<?= $item->poco_consumo;?>">
+            <input type="number" class="form-control" name="poco_consumo" value="<?= $item->poco_consumo;?>" readonly>
         </div>
         <div class="mb-12">
             <label for="exampleFormControlTextarea1" class="form-label">Observação</label>
@@ -341,7 +341,7 @@
             // Água Poço
             let pocoInicio = parseFloat($("input[name='poco_inicio']").val()) || 0;
             let pocoFim = parseFloat($("input[name='poco_fim']").val()) || 0;
-            let pocoConsumo = pocoInicio - pocoFim;
+            let pocoConsumo = pocoFim - pocoInicio;
             $("input[name='poco_consumo']").val(pocoConsumo);
         }   
 

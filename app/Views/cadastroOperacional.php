@@ -319,6 +319,18 @@
             <label class="form-label">Light Total</label>
             <input type="text" class="form-control money" name="light_total" <?= isset($item) ? 'value="' . $item->light_total . '"' : ''; ?>>
         </div>
+        <div class="col-md-4">
+            <label class="form-label">Água poço entrada</label>
+            <input type="number" class="form-control" name="poco_inicio" <?= isset($item) ? 'value="' . $item->poco_inicio . '"' : ''; ?>>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Água poço saída</label>
+            <input type="number" class="form-control" name="poco_fim" <?= isset($item) ? 'value="' . $item->poco_fim . '"' : ''; ?>>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Consumo</label>
+            <input type="number" class="form-control" name="poco_consumo" readonly <?= isset($item) ? 'value="' . $item->poco_consumo . '"' : ''; ?>>
+        </div>
         <div class="col-md-12 text-end">
             <label class="form-label">Total Consumo</label>
             <input type="text" class="form-control text-end money" name="total_consumo" <?= isset($item) ? 'value="' . $item->total_consumo . '"' : ''; ?>>
@@ -405,6 +417,12 @@
             $("input[name=light_consumo]").val(lightConsumo);
             let lightTotal = lightvalor * lightConsumo;
             $("input[name=light_total]").val(lightTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
+
+            // Água Poço
+            let pocoInicio = parseFloat($("input[name='poco_inicio']").val()) || 0;
+            let pocoFim = parseFloat($("input[name='poco_fim']").val()) || 0;
+            let pocoConsumo = pocoFim - pocoInicio;
+            $("input[name='poco_consumo']").val(pocoConsumo);
 
             // operacional
 
