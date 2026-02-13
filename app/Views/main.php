@@ -90,7 +90,12 @@
     <div class="profile-img">
         <?php $user = session()->get('user');?>
         <?php $logged = explode(' ', $user->name);?>
-      <img src="<?= url_to('avatar.show', $user->avatar ?? 'avatar.svg');?>" alt="avatar" class="img-fluid rounded-circle">
+      <img
+        src="<?= url_to('avatar.show', $user->avatar ?? 'avatar.svg');?>"
+        alt="avatar"
+        class="img-fluid rounded-circle"
+        style="width:120px;height:120px;object-fit:cover;object-position:center;"
+      >
     </div>
     <a href="<?= base_url();?>" class="logo d-flex align-items-center justify-content-center">
       <!-- Uncomment the line below if you also wish to use an image logo -->
