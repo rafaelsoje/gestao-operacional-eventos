@@ -91,19 +91,28 @@
             <label for="inputAddress2" class="form-label">Tempo gerador 1</label>
             <input type="time" class="form-control" name="tempo_g1" <?= isset($item) ? 'value="' . $item->tempo_g1 . '"' : ''; ?>>
         </div>
-        <div class="col-12 col-md-3">
-            <label class="form-label">Leitura Kwh G1 (hora)</label>
-            <input type="time" class="form-control" name="leitura_g1" <?= isset($item) ? 'value="' . $item->leitura_g1 . '"' : ''; ?>>
+        <div class="col-12 col-md-4">
+            <label class="form-label">Hora gerador entrada G1</label>
+            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_g1" placeholder="0000:00" <?= isset($item) ? 'value="' . $item->leitura_g1 . '"' : ''; ?>>
         </div>
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
+            <label class="form-label">Hora gerador saída G1</label>
+            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_saida_g1" placeholder="0000:00" <?= isset($item) ? 'value="' . ($item->leitura_saida_g1 ?? '') . '"' : ''; ?>>
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label">Horas de uso G1</label>
+            <input type="text" class="form-control" name="diferenca_horas_g1" readonly>
+        </div>
+        <div class="w-100"></div>
+        <div class="col-12 col-md-4">
             <label class="form-label">KWH entrada G1</label>
             <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_entrada_g1" <?= isset($item) ? 'value="' . (int)$item->kwh_entrada_g1 . '"' : ''; ?>>
         </div>
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
             <label class="form-label">KWH saída G1</label>
             <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_saida_g1" <?= isset($item) ? 'value="' . (int)$item->kwh_saida_g1 . '"' : ''; ?>>
         </div>
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
             <label class="form-label">Consumo KWH G1</label>
             <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_consumo_g1" readonly>
         </div>
@@ -120,19 +129,28 @@
             <label for="inputAddress2" class="form-label">Tempo gerador 2</label>
             <input type="time" class="form-control" name="tempo_g2" <?= isset($item) ? 'value="' . $item->tempo_g2 . '"' : ''; ?>>
         </div>
-        <div class="col-12 col-md-3">
-            <label class="form-label">Leitura Kwh G2 (hora)</label>
-            <input type="time" class="form-control" name="leitura_g2" <?= isset($item) ? 'value="' . $item->leitura_g2 . '"' : ''; ?>>
+        <div class="col-12 col-md-4">
+            <label class="form-label">Hora gerador entrada G2</label>
+            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_g2" placeholder="0000:00" <?= isset($item) ? 'value="' . $item->leitura_g2 . '"' : ''; ?>>
         </div>
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
+            <label class="form-label">Hora gerador saída G2</label>
+            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_saida_g2" placeholder="0000:00" <?= isset($item) ? 'value="' . ($item->leitura_saida_g2 ?? '') . '"' : ''; ?>>
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label">Horas de uso G2</label>
+            <input type="text" class="form-control" name="diferenca_horas_g2" readonly>
+        </div>
+        <div class="w-100"></div>
+        <div class="col-12 col-md-4">
             <label class="form-label">KWH entrada G2</label>
             <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_entrada_g2" <?= isset($item) ? 'value="' . (int)$item->kwh_entrada_g2 . '"' : ''; ?>>
         </div>
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
             <label class="form-label">KWH saída G2</label>
             <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_saida_g2" <?= isset($item) ? 'value="' . (int)$item->kwh_saida_g2 . '"' : ''; ?>>
         </div>
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
             <label class="form-label">Consumo KWH G2</label>
             <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_consumo_g2" readonly>
         </div>
@@ -150,33 +168,66 @@
             <input type="number" class="form-control" name="publico_saida" <?= isset($item) ? 'value="' . $item->publico_saida . '"' : ''; ?>>
         </div>
         <div class="p-1 fs-5">Equipe operacional</div>        
-        <div class="col-12 col-md-4 col-lg-2">
+        <div class="col-12 col-md-4">
             <label for="inputAddress2" class="form-label">Segurança</label>
             <input type="number" class="form-control" name="seguranca" <?= isset($item) ? 'value="' . $item->seguranca . '"' : ''; ?>>
         </div>
-        <div class="col-12 col-md-4 col-lg-2">
+        <div class="col-12 col-md-4">
             <label class="form-label">Bombeiro</label>
             <input type="number" class="form-control" name="bombeiro" <?= isset($item) ? 'value="' . $item->bombeiro . '"' : ''; ?>>
         </div>
-        <div class="col-12 col-md-4 col-lg-2">
+        <div class="col-12 col-md-4">
             <label for="inputAddress2" class="form-label">Limpeza</label>
             <input type="number" class="form-control" name="limpeza" <?= isset($item) ? 'value="' . $item->limpeza . '"' : ''; ?>>
         </div> 
-        <div class="col-12 col-md-6 col-lg-3">
+        <div class="w-100"></div>
+        <div class="col-12 col-md-6">
             <label class="form-label">Equipe manhã</label>
-            <?php $equipeManha = isset($item) ? ($item->equipe_manha ?? 0) : 0; ?>
-            <select class="form-select" name="equipe_manha">
-                <option value="0" <?= empty($equipeManha) ? 'selected' : ''; ?>>Não</option>
-                <option value="1" <?= (int)$equipeManha === 1 ? 'selected' : ''; ?>>Sim</option>
-            </select>
+            <?php
+                $equipeManhaRaw = isset($item) ? (string)($item->equipe_manha ?? '') : '';
+                $equipeManhaArr = array_filter(array_map('trim', explode(',', $equipeManhaRaw)));
+            ?>
+            <div class="border rounded bg-white p-2">
+                <small class="text-muted d-block mb-1">Selecione quem participou</small>
+                <div class="d-flex flex-wrap gap-3">
+                    <div class="form-check form-check-inline m-0">
+                        <input class="form-check-input" type="checkbox" name="equipe_manha[]" value="Helder" id="manhaHelder" <?= in_array('Helder', $equipeManhaArr, true) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="manhaHelder">Helder</label>
+                    </div>
+                    <div class="form-check form-check-inline m-0">
+                        <input class="form-check-input" type="checkbox" name="equipe_manha[]" value="Nathan" id="manhaNathan" <?= in_array('Nathan', $equipeManhaArr, true) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="manhaNathan">Nathan</label>
+                    </div>
+                    <div class="form-check form-check-inline m-0">
+                        <input class="form-check-input" type="checkbox" name="equipe_manha[]" value="Anderson" id="manhaAnderson" <?= in_array('Anderson', $equipeManhaArr, true) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="manhaAnderson">Anderson</label>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-12 col-md-6 col-lg-3">
+        <div class="col-12 col-md-6">
             <label class="form-label">Equipe noite</label>
-            <?php $equipeNoite = isset($item) ? ($item->equipe_noite ?? 0) : 0; ?>
-            <select class="form-select" name="equipe_noite">
-                <option value="0" <?= empty($equipeNoite) ? 'selected' : ''; ?>>Não</option>
-                <option value="1" <?= (int)$equipeNoite === 1 ? 'selected' : ''; ?>>Sim</option>
-            </select>
+            <?php
+                $equipeNoiteRaw = isset($item) ? (string)($item->equipe_noite ?? '') : '';
+                $equipeNoiteArr = array_filter(array_map('trim', explode(',', $equipeNoiteRaw)));
+            ?>
+            <div class="border rounded bg-white p-2">
+                <small class="text-muted d-block mb-1">Selecione quem participou</small>
+                <div class="d-flex flex-wrap gap-3">
+                    <div class="form-check form-check-inline m-0">
+                        <input class="form-check-input" type="checkbox" name="equipe_noite[]" value="Helder" id="noiteHelder" <?= in_array('Helder', $equipeNoiteArr, true) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="noiteHelder">Helder</label>
+                    </div>
+                    <div class="form-check form-check-inline m-0">
+                        <input class="form-check-input" type="checkbox" name="equipe_noite[]" value="Nathan" id="noiteNathan" <?= in_array('Nathan', $equipeNoiteArr, true) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="noiteNathan">Nathan</label>
+                    </div>
+                    <div class="form-check form-check-inline m-0">
+                        <input class="form-check-input" type="checkbox" name="equipe_noite[]" value="Anderson" id="noiteAnderson" <?= in_array('Anderson', $equipeNoiteArr, true) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="noiteAnderson">Anderson</label>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="col-md-1">
             <label class="form-label">Montagem</label>
@@ -394,6 +445,61 @@
 
         $("input[name='kwh_entrada_g1'], input[name='kwh_saida_g1'], input[name='kwh_entrada_g2'], input[name='kwh_saida_g2']").on("input", calcularKwh);
         calcularKwh();
+
+        function formatarHoraGerador(valor) {
+            const digitos = (valor || "").replace(/\D/g, "").slice(0, 6);
+            if (!digitos) return "";
+            if (digitos.length <= 2) return digitos;
+            const horas = digitos.slice(0, -2);
+            const minutos = digitos.slice(-2);
+            return `${horas}:${minutos}`;
+        }
+
+        function parseHoraGeradorParaMinutos(valor) {
+            if (!valor || !/^\d{1,4}:\d{2}$/.test(valor)) return null;
+            const partes = valor.split(":");
+            const horas = parseInt(partes[0], 10);
+            const minutos = parseInt(partes[1], 10);
+            if (Number.isNaN(horas) || Number.isNaN(minutos) || minutos > 59) return null;
+            return (horas * 60) + minutos;
+        }
+
+        function formatarMinutosEmHora(minutos) {
+            const horas = Math.floor(minutos / 60);
+            const restoMinutos = minutos % 60;
+            return `${String(horas).padStart(2, "0")}:${String(restoMinutos).padStart(2, "0")}`;
+        }
+
+        function atualizarDiferencaGerador(campoEntrada, campoSaida, campoDiferenca) {
+            const entrada = $("input[name='" + campoEntrada + "']").val();
+            const saida = $("input[name='" + campoSaida + "']").val();
+            const $campoDiferenca = $("input[name='" + campoDiferenca + "']");
+
+            const minutosEntrada = parseHoraGeradorParaMinutos(entrada);
+            const minutosSaida = parseHoraGeradorParaMinutos(saida);
+
+            if (minutosEntrada === null || minutosSaida === null || minutosSaida < minutosEntrada) {
+                $campoDiferenca.val("");
+                $campoDiferenca.css("background-color", "");
+                return;
+            }
+
+            const diferenca = minutosSaida - minutosEntrada;
+            $campoDiferenca.val(formatarMinutosEmHora(diferenca));
+            $campoDiferenca.css("background-color", diferenca >= (200 * 60) ? "#f8d7da" : "");
+        }
+
+        $("input.campo-hora-gerador").on("input", function () {
+            $(this).val(formatarHoraGerador($(this).val()));
+            atualizarDiferencaGerador("leitura_g1", "leitura_saida_g1", "diferenca_horas_g1");
+            atualizarDiferencaGerador("leitura_g2", "leitura_saida_g2", "diferenca_horas_g2");
+        });
+
+        $("input.campo-hora-gerador").each(function () {
+            $(this).val(formatarHoraGerador($(this).val()));
+        });
+        atualizarDiferencaGerador("leitura_g1", "leitura_saida_g1", "diferenca_horas_g1");
+        atualizarDiferencaGerador("leitura_g2", "leitura_saida_g2", "diferenca_horas_g2");
 
         function calcularTempo(entrada, saida, resultado) {
             let inicio = $("input[name='" + entrada + "']").val();

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\Logs;
 use App\Models\Operacional;
+use App\Models\GeradorManutencao;
 use App\Models\Propostas;
 use App\Models\Users;
 use App\Services\DashboardService;
@@ -487,20 +488,35 @@ class Home extends BaseController
 
 
         $line = $service->monthlyComparison($year);
+        $generatorAccumLine = $this->buildGeneratorAccumulatedLine($data ?? []);
 
         
 
         $eventCount = (int)($sum->event_count ?? 0);
         $avgEventCost = $eventCount > 0 ? ((float)$sum->total_consumo / $eventCount) : 0;
+        $generatorUsage = $service->getGeneratorUsageStatus();
+        $previousFilters = $this->buildPreviousPeriodFilters($filters ?? []);
+        $prevSum = null;
+        $prevAvgEventCost = null;
+        if (!empty($previousFilters)) {
+            $prevResult = $service->buildAggregates($previousFilters);
+            $prevSum = $prevResult['sum'] ?? null;
+            $prevEventCount = (int)($prevSum->event_count ?? 0);
+            $prevAvgEventCost = $prevEventCount > 0 ? ((float)$prevSum->total_consumo / $prevEventCount) : 0;
+        }
+        $trendCards = $this->buildTrendCards($sum, $prevSum, $avgEventCost, $prevAvgEventCost);
 
         $payload = [
             'sum' => $sum,
             'avg_event_cost' => $avgEventCost,
+            'trend_cards' => $trendCards,
             'data' => $data,
+            'generator_usage' => $generatorUsage,
             'donut' => json_encode($donutChart),
             'bar' => json_encode($bar),
             'barChart' => json_encode($barchart),
             'line' => json_encode($line),
+            'lineGenerator' => json_encode($generatorAccumLine),
         ];
 
         if(isset($post)){
@@ -599,6 +615,10 @@ class Home extends BaseController
         $valor_premontagem = money_to_decimal($post['valor_premontagem'] ?? null);
         $super_op = money_to_decimal($post['super_op'] ?? null);
         $total_operacional = money_to_decimal($post['total_operacional'] ?? null);
+        $usoMinG1 = $this->calculateGeneratorUsageMinutesFromPost($post, 'leitura_g1', 'leitura_saida_g1');
+        $usoMinG2 = $this->calculateGeneratorUsageMinutesFromPost($post, 'leitura_g2', 'leitura_saida_g2');
+        $equipeManha = $this->normalizeEquipeNames($post['equipe_manha'] ?? []);
+        $equipeNoite = $this->normalizeEquipeNames($post['equipe_noite'] ?? []);
 
 
         $data = [
@@ -616,12 +636,16 @@ class Home extends BaseController
             'desliga_g1' => isset($post['desliga_g1']) ? $post['desliga_g1'] : null,
             'tempo_g1' => isset($post['tempo_g1']) ? $post['tempo_g1'] : null,
             'leitura_g1' => isset($post['leitura_g1']) ? $post['leitura_g1'] : null,
+            'leitura_saida_g1' => isset($post['leitura_saida_g1']) ? $post['leitura_saida_g1'] : null,
+            'uso_min_g1' => $usoMinG1,
             'kwh_entrada_g1' => isset($post['kwh_entrada_g1']) ? $post['kwh_entrada_g1'] : null,
             'kwh_saida_g1' => isset($post['kwh_saida_g1']) ? $post['kwh_saida_g1'] : null,
             'liga_g2' => isset($post['liga_g2']) ? $post['liga_g2'] : null,
             'desliga_g2' => isset($post['desliga_g2']) ? $post['desliga_g2'] : null,
             'tempo_g2' => isset($post['tempo_g2']) ? $post['tempo_g2'] : null,
             'leitura_g2' => isset($post['leitura_g2']) ? $post['leitura_g2'] : null,
+            'leitura_saida_g2' => isset($post['leitura_saida_g2']) ? $post['leitura_saida_g2'] : null,
+            'uso_min_g2' => $usoMinG2,
             'kwh_entrada_g2' => isset($post['kwh_entrada_g2']) ? $post['kwh_entrada_g2'] : null,
             'kwh_saida_g2' => isset($post['kwh_saida_g2']) ? $post['kwh_saida_g2'] : null,
             'premontagem' => intval($post['premontagem']),
@@ -634,8 +658,8 @@ class Home extends BaseController
             'seguranca' => intval(isset($post['seguranca']) ? $post['seguranca'] : null),
             'bombeiro' => intval(isset($post['bombeiro']) ? $post['bombeiro'] : null),
             'limpeza' => intval(isset($post['limpeza']) ? $post['limpeza'] : null),
-            'equipe_manha' => isset($post['equipe_manha']) ? 1 : 0,
-            'equipe_noite' => isset($post['equipe_noite']) ? 1 : 0,
+            'equipe_manha' => $equipeManha,
+            'equipe_noite' => $equipeNoite,
             'publico_final' => intval(isset($post['publico_final']) ? $post['publico_final'] : null),
             'publico_tribuna' => intval(isset($post['publico_tribuna'])? $post['publico_tribuna'] : null),
             'publico_saida' => intval(isset($post['publico_saida']) ? $post['publico_saida'] : null),
@@ -699,6 +723,230 @@ class Home extends BaseController
         }
 
         return redirect()->route('operacional.lista')->with('error', "Erro ao fazer cadastro!");
+    }
+
+    public function registrarManutencaoGerador()
+    {
+        $post = $this->request->getPost();
+        $gerador = strtoupper(trim((string)($post['gerador'] ?? '')));
+        $dataManutencao = trim((string)($post['data_manutencao'] ?? ''));
+        $observacao = trim((string)($post['observacao'] ?? ''));
+
+        if (!in_array($gerador, ['G1', 'G2'], true)) {
+            return redirect()->back()->with('error', 'Gerador inválido para manutenção.');
+        }
+
+        if ($dataManutencao === '' || preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataManutencao) !== 1) {
+            return redirect()->back()->with('error', 'Data de manutenção inválida.');
+        }
+
+        $user = session()->get('user');
+        $saved = (new GeradorManutencao())->insert([
+            'gerador' => $gerador,
+            'data_manutencao' => $dataManutencao,
+            'observacao' => $observacao !== '' ? $observacao : null,
+            'created_by' => isset($user->id) ? (int)$user->id : null,
+        ]);
+
+        if (!$saved) {
+            return redirect()->back()->with('error', 'Não foi possível registrar a manutenção do gerador.');
+        }
+
+        (new Logs())->insert([
+            'title' => 'MANUTENÇÃO GERADOR',
+            'description' => ($user->name ?? 'Usuário') . " registrou manutenção do {$gerador} em {$dataManutencao}.",
+        ]);
+
+        return redirect()->back()->with('success', "Manutenção do {$gerador} registrada. Contagem reiniciada.");
+    }
+
+    public function geradoresManutencao()
+    {
+        $service = new OperacionalService();
+        $usage = $service->getGeneratorUsageStatus();
+        $db = db_connect();
+        $tableReady = $db->tableExists('gerador_manutencoes');
+        $hasUsoMinG1 = $db->fieldExists('uso_min_g1', 'operacional');
+        $hasUsoMinG2 = $db->fieldExists('uso_min_g2', 'operacional');
+        $hasLeituraG1 = $db->fieldExists('leitura_g1', 'operacional');
+        $hasLeituraSaidaG1 = $db->fieldExists('leitura_saida_g1', 'operacional');
+        $hasLeituraG2 = $db->fieldExists('leitura_g2', 'operacional');
+        $hasLeituraSaidaG2 = $db->fieldExists('leitura_saida_g2', 'operacional');
+        $hasTempoG1 = $db->fieldExists('tempo_g1', 'operacional');
+        $hasTempoG2 = $db->fieldExists('tempo_g2', 'operacional');
+        $manutencoes = [];
+        $historicoUso = [];
+
+        if ($tableReady) {
+            $manutencoes = (new GeradorManutencao())
+                ->orderBy('data_manutencao', 'desc')
+                ->orderBy('id', 'desc')
+                ->findAll();
+        }
+
+        $canReadG1FromLeitura = $hasLeituraG1 && $hasLeituraSaidaG1;
+        $canReadG2FromLeitura = $hasLeituraG2 && $hasLeituraSaidaG2;
+
+        if ($hasUsoMinG1 || $hasUsoMinG2 || $canReadG1FromLeitura || $canReadG2FromLeitura) {
+            $select = ['id', 'data', 'nome'];
+            if ($hasUsoMinG1) {
+                $select[] = 'uso_min_g1';
+            }
+            if ($hasUsoMinG2) {
+                $select[] = 'uso_min_g2';
+            }
+            if ($canReadG1FromLeitura) {
+                $select[] = 'leitura_g1';
+                $select[] = 'leitura_saida_g1';
+            }
+            if ($canReadG2FromLeitura) {
+                $select[] = 'leitura_g2';
+                $select[] = 'leitura_saida_g2';
+            }
+            if ($hasTempoG1) {
+                $select[] = 'tempo_g1';
+            }
+            if ($hasTempoG2) {
+                $select[] = 'tempo_g2';
+            }
+
+            $historicoUso = (new Operacional())
+                ->select(implode(', ', $select))
+                ->where('flag', 1)
+                ->orderBy('data', 'desc')
+                ->orderBy('id', 'desc')
+                ->findAll();
+
+            foreach ($historicoUso as $row) {
+                $usoG1 = $hasUsoMinG1 ? (int)($row->uso_min_g1 ?? 0) : 0;
+                $usoG2 = $hasUsoMinG2 ? (int)($row->uso_min_g2 ?? 0) : 0;
+
+                if ($usoG1 <= 0 && $canReadG1FromLeitura) {
+                    $usoG1 = $this->calculateGeneratorUsageMinutesFromHourValues(
+                        (string)($row->leitura_g1 ?? ''),
+                        (string)($row->leitura_saida_g1 ?? '')
+                    );
+                }
+                if ($usoG1 <= 0 && $hasTempoG1) {
+                    $usoG1 = $this->parseHourMeterToMinutes((string)($row->tempo_g1 ?? '')) ?? 0;
+                }
+                if ($usoG2 <= 0 && $canReadG2FromLeitura) {
+                    $usoG2 = $this->calculateGeneratorUsageMinutesFromHourValues(
+                        (string)($row->leitura_g2 ?? ''),
+                        (string)($row->leitura_saida_g2 ?? '')
+                    );
+                }
+                if ($usoG2 <= 0 && $hasTempoG2) {
+                    $usoG2 = $this->parseHourMeterToMinutes((string)($row->tempo_g2 ?? '')) ?? 0;
+                }
+
+                $row->uso_min_g1_calc = $usoG1;
+                $row->uso_min_g2_calc = $usoG2;
+            }
+        }
+
+        return view('geradoresManutencao', [
+            'geradoresPage' => true,
+            'generator_usage' => $usage,
+            'manutencoes' => $manutencoes,
+            'historico_uso' => $historicoUso,
+            'usage_columns_ready' => ($hasUsoMinG1 || $hasUsoMinG2 || $canReadG1FromLeitura || $canReadG2FromLeitura),
+            'maintenance_table_ready' => $tableReady,
+        ]);
+    }
+
+    public function geradoresManutencaoStore()
+    {
+        $post = $this->request->getPost();
+        $gerador = strtoupper(trim((string)($post['gerador'] ?? '')));
+        $dataManutencao = trim((string)($post['data_manutencao'] ?? ''));
+        $observacao = trim((string)($post['observacao'] ?? ''));
+
+        if (!$this->isValidGerador($gerador) || !$this->isValidDateYmd($dataManutencao)) {
+            return redirect()->route('geradores.index')->with('error', 'Dados inválidos para registrar manutenção.');
+        }
+
+        $user = session()->get('user');
+        $saved = (new GeradorManutencao())->insert([
+            'gerador' => $gerador,
+            'data_manutencao' => $dataManutencao,
+            'observacao' => $observacao !== '' ? $observacao : null,
+            'created_by' => isset($user->id) ? (int)$user->id : null,
+        ]);
+
+        if (!$saved) {
+            return redirect()->route('geradores.index')->with('error', 'Não foi possível registrar a manutenção.');
+        }
+
+        (new Logs())->insert([
+            'title' => 'MANUTENÇÃO GERADOR',
+            'description' => ($user->name ?? 'Usuário') . " registrou manutenção do {$gerador} em {$dataManutencao}.",
+        ]);
+
+        return redirect()->route('geradores.index')->with('success', "Manutenção do {$gerador} registrada com sucesso.");
+    }
+
+    public function geradoresManutencaoUpdate()
+    {
+        $post = $this->request->getPost();
+        $id = (int)($post['id'] ?? 0);
+        $gerador = strtoupper(trim((string)($post['gerador'] ?? '')));
+        $dataManutencao = trim((string)($post['data_manutencao'] ?? ''));
+        $observacao = trim((string)($post['observacao'] ?? ''));
+
+        if ($id <= 0 || !$this->isValidGerador($gerador) || !$this->isValidDateYmd($dataManutencao)) {
+            return redirect()->route('geradores.index')->with('error', 'Dados inválidos para atualizar manutenção.');
+        }
+
+        $model = new GeradorManutencao();
+        $item = $model->find($id);
+        if (!$item) {
+            return redirect()->route('geradores.index')->with('error', 'Registro de manutenção não encontrado.');
+        }
+
+        $updated = $model->update($id, [
+            'gerador' => $gerador,
+            'data_manutencao' => $dataManutencao,
+            'observacao' => $observacao !== '' ? $observacao : null,
+        ]);
+
+        if (!$updated) {
+            return redirect()->route('geradores.index')->with('error', 'Não foi possível atualizar a manutenção.');
+        }
+
+        $user = session()->get('user');
+        (new Logs())->insert([
+            'title' => 'ATUALIZAÇÃO MANUTENÇÃO GERADOR',
+            'description' => ($user->name ?? 'Usuário') . " atualizou manutenção #{$id} ({$gerador}) em {$dataManutencao}.",
+        ]);
+
+        return redirect()->route('geradores.index')->with('success', 'Manutenção atualizada com sucesso.');
+    }
+
+    public function geradoresManutencaoDelete()
+    {
+        $id = (int)($this->request->getPost('id') ?? 0);
+        if ($id <= 0) {
+            return redirect()->route('geradores.index')->with('error', 'Registro inválido para exclusão.');
+        }
+
+        $model = new GeradorManutencao();
+        $item = $model->find($id);
+        if (!$item) {
+            return redirect()->route('geradores.index')->with('error', 'Registro de manutenção não encontrado.');
+        }
+
+        if (!$model->delete($id)) {
+            return redirect()->route('geradores.index')->with('error', 'Não foi possível excluir a manutenção.');
+        }
+
+        $user = session()->get('user');
+        (new Logs())->insert([
+            'title' => 'EXCLUSÃO MANUTENÇÃO GERADOR',
+            'description' => ($user->name ?? 'Usuário') . " excluiu manutenção #{$id} do {$item->gerador}.",
+        ]);
+
+        return redirect()->route('geradores.index')->with('success', 'Manutenção excluída com sucesso.');
     }
 
     public function updateOperacional($id)
@@ -1592,6 +1840,219 @@ class Home extends BaseController
     {
         $message = mb_strtolower($e->getMessage());
         return str_contains($message, 'duplicate') && str_contains($message, 'email');
+    }
+
+    private function isValidGerador(string $gerador): bool
+    {
+        return in_array($gerador, ['G1', 'G2'], true);
+    }
+
+    private function isValidDateYmd(string $date): bool
+    {
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) === 1;
+    }
+
+    private function calculateGeneratorUsageMinutesFromPost(array $post, string $entradaKey, string $saidaKey): int
+    {
+        return $this->calculateGeneratorUsageMinutesFromHourValues(
+            (string)($post[$entradaKey] ?? ''),
+            (string)($post[$saidaKey] ?? '')
+        );
+    }
+
+    private function buildGeneratorAccumulatedLine(array $events): array
+    {
+        $line = [
+            ['Data', 'G1 acumulado (h)', 'G2 acumulado (h)']
+        ];
+
+        if (empty($events)) {
+            return $line;
+        }
+
+        usort($events, static function ($a, $b) {
+            $da = (string)($a->data ?? '');
+            $db = (string)($b->data ?? '');
+            if ($da === $db) {
+                return (int)($a->id ?? 0) <=> (int)($b->id ?? 0);
+            }
+            return $da <=> $db;
+        });
+
+        $accG1 = 0;
+        $accG2 = 0;
+
+        foreach ($events as $event) {
+            $accG1 += $this->resolveEventGeneratorUsageMinutes($event, 'g1');
+            $accG2 += $this->resolveEventGeneratorUsageMinutes($event, 'g2');
+
+            $label = !empty($event->data)
+                ? date('d/m', strtotime((string)$event->data))
+                : ('#' . (int)($event->id ?? 0));
+
+            $line[] = [
+                $label,
+                round($accG1 / 60, 2),
+                round($accG2 / 60, 2),
+            ];
+        }
+
+        return $line;
+    }
+
+    private function resolveEventGeneratorUsageMinutes(object $event, string $generator): int
+    {
+        $suffix = strtolower($generator) === 'g2' ? 'g2' : 'g1';
+        $minField = 'uso_min_' . $suffix;
+        $entradaField = 'leitura_' . $suffix;
+        $saidaField = 'leitura_saida_' . $suffix;
+        $tempoField = 'tempo_' . $suffix;
+
+        $minutes = isset($event->{$minField}) ? (int)$event->{$minField} : 0;
+        if ($minutes > 0) {
+            return $minutes;
+        }
+
+        $minutes = $this->calculateGeneratorUsageMinutesFromHourValues(
+            (string)($event->{$entradaField} ?? ''),
+            (string)($event->{$saidaField} ?? '')
+        );
+        if ($minutes > 0) {
+            return $minutes;
+        }
+
+        return $this->parseHourMeterToMinutes((string)($event->{$tempoField} ?? '')) ?? 0;
+    }
+
+    private function calculateGeneratorUsageMinutesFromHourValues(string $entradaValue, string $saidaValue): int
+    {
+        $entrada = $this->parseHourMeterToMinutes($entradaValue);
+        $saida = $this->parseHourMeterToMinutes($saidaValue);
+
+        if ($entrada === null || $saida === null || $saida < $entrada) {
+            return 0;
+        }
+
+        return $saida - $entrada;
+    }
+
+    private function parseHourMeterToMinutes(string $value): ?int
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^(\d{1,4}):(\d{2})$/', $value, $matches)) {
+            $hours = (int)$matches[1];
+            $minutes = (int)$matches[2];
+            if ($minutes > 59) {
+                return null;
+            }
+            return ($hours * 60) + $minutes;
+        }
+
+        if (preg_match('/^(\d{1,2}):(\d{2})(:\d{2})?$/', $value, $matches)) {
+            $hours = (int)$matches[1];
+            $minutes = (int)$matches[2];
+            if ($minutes > 59) {
+                return null;
+            }
+            return ($hours * 60) + $minutes;
+        }
+
+        return null;
+    }
+
+    private function normalizeEquipeNames($input): ?string
+    {
+        $allowed = ['Helder', 'Nathan', 'Anderson'];
+        $values = is_array($input) ? $input : [$input];
+        $values = array_values(array_unique(array_filter(array_map('trim', $values), static function ($v) {
+            return $v !== '';
+        })));
+        $valid = array_values(array_filter($values, static function ($v) use ($allowed) {
+            return in_array($v, $allowed, true);
+        }));
+
+        return empty($valid) ? null : implode(',', $valid);
+    }
+
+    private function buildPreviousPeriodFilters(array $filters): ?array
+    {
+        if (isset($filters['date_from'], $filters['date_to'])) {
+            try {
+                $start = new \DateTimeImmutable((string)$filters['date_from']);
+                $end = new \DateTimeImmutable((string)$filters['date_to']);
+                if ($end < $start) {
+                    return null;
+                }
+                $days = (int)$start->diff($end)->days + 1;
+                $prevEnd = $start->modify('-1 day');
+                $prevStart = $prevEnd->modify('-' . max(0, $days - 1) . ' days');
+
+                $prev = $filters;
+                $prev['date_from'] = $prevStart->format('Y-m-d');
+                $prev['date_to'] = $prevEnd->format('Y-m-d');
+                unset($prev['month'], $prev['year']);
+                return $prev;
+            } catch (\Throwable $e) {
+                return null;
+            }
+        }
+
+        if (isset($filters['month'], $filters['year'])) {
+            $month = (int)$filters['month'];
+            $year = (int)$filters['year'];
+            $month--;
+            if ($month < 1) {
+                $month = 12;
+                $year--;
+            }
+
+            $prev = $filters;
+            $prev['month'] = $month;
+            $prev['year'] = $year;
+            unset($prev['date_from'], $prev['date_to']);
+            return $prev;
+        }
+
+        return null;
+    }
+
+    private function buildTrendCards(object $sum, ?object $prevSum, float $avgEventCost, ?float $prevAvgEventCost): array
+    {
+        $cards = [
+            'diesel_total' => $this->makeTrendValue((float)($sum->diesel_total ?? 0), (float)($prevSum->diesel_total ?? 0)),
+            'kwh_total' => $this->makeTrendValue((float)($sum->kwh_total ?? 0), (float)($prevSum->kwh_total ?? 0)),
+            'cedae_total' => $this->makeTrendValue((float)($sum->cedae_total ?? 0), (float)($prevSum->cedae_total ?? 0)),
+            'light_total' => $this->makeTrendValue((float)($sum->light_total ?? 0), (float)($prevSum->light_total ?? 0)),
+            'valor_premontagem' => $this->makeTrendValue((float)($sum->valor_premontagem ?? 0), (float)($prevSum->valor_premontagem ?? 0)),
+            'super_op' => $this->makeTrendValue((float)($sum->super_op ?? 0), (float)($prevSum->super_op ?? 0)),
+            'avg_event_cost' => $this->makeTrendValue($avgEventCost, (float)($prevAvgEventCost ?? 0)),
+            'total_consumo' => $this->makeTrendValue((float)($sum->total_consumo ?? 0), (float)($prevSum->total_consumo ?? 0)),
+        ];
+
+        return $cards;
+    }
+
+    private function makeTrendValue(float $current, float $previous): array
+    {
+        if ($previous <= 0) {
+            if ($current <= 0) {
+                return ['text' => '0%', 'class' => 'text-muted'];
+            }
+            return ['text' => 'novo', 'class' => 'text-muted'];
+        }
+
+        $pct = (($current - $previous) / $previous) * 100;
+        $sign = $pct > 0 ? '+' : '';
+        $class = $pct > 0 ? 'text-danger' : ($pct < 0 ? 'text-success' : 'text-muted');
+
+        return [
+            'text' => $sign . number_format($pct, 1, ',', '.') . '%',
+            'class' => $class,
+        ];
     }
 
 }

@@ -9,14 +9,29 @@ $rows = $data ?? [];
 $hasRows = !empty($rows);
 $topEventsRows = json_decode($topEvents ?? '[]', true);
 $hasTopEvents = is_array($topEventsRows) && count($topEventsRows) > 1;
+$generatorUsage = $generator_usage ?? [
+    'g1' => ['total_hhmm' => '00:00', 'progress_percent' => 0, 'is_limit_reached' => false, 'is_warning' => false, 'last_maintenance_date' => null, 'remaining_hhmm' => '200:00'],
+    'g2' => ['total_hhmm' => '00:00', 'progress_percent' => 0, 'is_limit_reached' => false, 'is_warning' => false, 'last_maintenance_date' => null, 'remaining_hhmm' => '200:00'],
+    'has_alert' => false,
+    'has_warning' => false,
+];
+$trendCards = $trend_cards ?? [];
+$trendFor = static function (string $key) use ($trendCards): array {
+    return $trendCards[$key] ?? ['text' => '-', 'class' => 'text-muted'];
+};
 ?>
 
-
+<?php if (session()->has('error')): ?>
+    <div class="alert alert-danger mt-3 mb-0"><?= esc((string)session()->get('error')); ?></div>
+<?php endif; ?>
+<?php if (session()->has('success')): ?>
+    <div class="alert alert-success mt-3 mb-0"><?= esc((string)session()->get('success')); ?></div>
+<?php endif; ?>
 
 <?php if($hasRows || (float)($sum->total_consumo ?? 0) > 0):?>
 
 <?php if($hasRows):?>
-<div class="px-4 mb-3 mt-2 d-flex align-items-center justify-content-end">
+<div class="px-4 mb-3 mt-2 d-flex align-items-center justify-content-end dashboard-filter-wrap">
 
 <!-- <nav class="" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
         <ol class="breadcrumb">
@@ -24,15 +39,15 @@ $hasTopEvents = is_array($topEventsRows) && count($topEventsRows) > 1;
             <li class="breadcrumb-item active" aria-current="page">Library</li>
         </ol>
     </nav> -->
-    <form class="row" method="post" action="<?= url_to('search.operacional');?>" enctype="multipart/form-data">
+    <form class="row g-2 dashboard-filter-form w-100 justify-content-end" method="post" action="<?= url_to('search.operacional');?>" enctype="multipart/form-data">
         <?= csrf_field(); ?>
-        <div class="col">
+        <div class="col-12 col-md-3 col-lg-2">
             <input type="date" id="data_inicial" name="data_inicial" class="form-control"  required>
         </div>
-        <div class="col">
+        <div class="col-12 col-md-3 col-lg-2">
             <input type="date" id="data_final" name="data_final" class="form-control" required>
         </div>
-        <div class="col d-flex align-items-center">
+        <div class="col-12 col-md d-flex align-items-center flex-wrap gap-2">
             <div class="form-check form-check-inline">
                 <input class="form-check-input" type="checkbox" id="inlineCheckbox1" name="social" value="social" checked>
                 <label class="form-check-label" for="inlineCheckbox1">Social</label>
@@ -46,8 +61,8 @@ $hasTopEvents = is_array($topEventsRows) && count($topEventsRows) > 1;
                 <label class="form-check-label" for="inlineCheckbox3">Entretenimento</label>
             </div>
         </div>
-        <div class="col">
-            <button type="submit" class="form-control btn btn-success w-auto" onclick="return validarDatas(this.form)">Pesquisar</button>
+        <div class="col-12 col-md-auto d-grid">
+            <button type="submit" class="btn btn-success" onclick="return validarDatas(this.form)">Pesquisar</button>
         </div>
     </form>
 </div>
@@ -73,57 +88,158 @@ $hasTopEvents = is_array($topEventsRows) && count($topEventsRows) > 1;
 
 
 <div class="px-1 text-center p-2">
-    <div class="row g-3">
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card bg-white text-success rounded shadow-lg">
-                <div class="pt-3">Gerador </br><?= $sum->diesel_litros . " litros" # em " . ($sum->tempo_g1 + $sum->tempo_g2). " horas"?></div>
-                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($sum->diesel_total);?></div>
+    <?php if (!empty($generatorUsage['has_alert'])): ?>
+        <div class="alert alert-danger text-start mb-3">
+            Atenção: um ou mais geradores já atingiram 200:00 horas de uso e precisam de manutenção.
+            <a href="<?= base_url('operacional/geradores'); ?>" class="btn btn-sm btn-danger ms-2">Acessar Geradores</a>
+        </div>
+    <?php elseif (!empty($generatorUsage['has_warning'])): ?>
+        <div class="alert alert-warning text-start mb-3">
+            Alerta: gerador próximo da manutenção (acima de 180:00 horas de uso).
+        </div>
+    <?php endif; ?>
+    <div class="row g-3 align-items-stretch">
+        <?php $kwhTotal = (float)($sum->kwh_total ?? 0); ?>
+        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+                <div class="small text-muted">Custo diesel</div>
+                <div class="small text-muted"><?= (int)($sum->diesel_litros ?? 0); ?> L</div>
+                <div class="fw-bold fs-2 money text-success mt-2"><?= br_money($sum->diesel_total);?></div>
+                <?php $t = $trendFor('diesel_total'); ?>
+                <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card bg-white text-success rounded shadow-lg">
-                <div class="pt-3">Gerador Kwh</div>
-                <?php $kwhTotal = (float)($sum->kwh_total ?? 0); ?>
-                <div class="fw-bold pt-3 pb-3 fs-4"><?= br_number($kwhTotal, 0);?><?= $kwhTotal ? ' kWh' : ''; ?></div>
+        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+                <div class="small text-muted">Consumo gerador</div>
+                <div class="small text-muted">kWh</div>
+                <div class="fw-bold fs-2 text-success mt-2"><?= br_number($kwhTotal, 0); ?> <span class="fs-6">kWh</span></div>
+                <?php $t = $trendFor('kwh_total'); ?>
+                <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card text-success bg-white bg-gradient rounded shadow-lg">
-                <div class="pt-3">Água e esgoto </br><?= $sum->cedae_consumo . " M³";?></div>
-                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($sum->cedae_total);?></div>
+        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+                <div class="small text-muted">Água e esgoto</div>
+                <div class="small text-muted"><?= br_number((float)($sum->cedae_consumo ?? 0), 0); ?> m³</div>
+                <div class="fw-bold fs-2 money text-success mt-2"><?= br_money($sum->cedae_total);?></div>
+                <?php $t = $trendFor('cedae_total'); ?>
+                <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card bg-white bg-gradient rounded text-success shadow-lg">
-                <div class="pt-3">Light </br><?= $sum->light_consumo . " Kwh";?></div>
-                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($sum->light_total);?></div>
+        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+                <div class="small text-muted">Custo light</div>
+                <div class="small text-muted"><?= br_number((float)($sum->light_consumo ?? 0), 0); ?> kWh</div>
+                <div class="fw-bold fs-2 money text-success mt-2"><?= br_money($sum->light_total);?></div>
+                <?php $t = $trendFor('light_total'); ?>
+                <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card bg-white bg-gradient rounded text-success shadow-lg">
-                <div class="pt-3">Operacional </br>Pré-montagem</div>
-                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($sum->valor_premontagem);?></div>
+        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+                <div class="small text-muted">Custo pré-montagem</div>
+                <div class="small text-muted">R$</div>
+                <div class="fw-bold fs-2 money text-success mt-2"><?= br_money($sum->valor_premontagem);?></div>
+                <?php $t = $trendFor('valor_premontagem'); ?>
+                <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card bg-white bg-gradient rounded text-success shadow-lg">
-                <div class="pt-3">Operacional </br> evento</div>
-                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($sum->super_op);?></div>
+        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+                <div class="small text-muted">Custo operacional evento</div>
+                <div class="small text-muted">R$</div>
+                <div class="fw-bold fs-2 money text-success mt-2"><?= br_money($sum->super_op);?></div>
+                <?php $t = $trendFor('super_op'); ?>
+                <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card bg-white bg-gradient rounded text-primary shadow-lg">
-                <div class="pt-3">Custo médio<br>por evento</div>
-                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($avg_event_cost ?? 0);?></div>
+        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+                <div class="small text-muted">Custo médio por evento</div>
+                <div class="small text-muted">R$</div>
+                <div class="fw-bold fs-2 money text-primary mt-2"><?= br_money($avg_event_cost ?? 0);?></div>
+                <?php $t = $trendFor('avg_event_cost'); ?>
+                <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card bg-white bg-gradient rounded text-danger shadow-lg">
-                <div class="pt-3">Custo total <br>no período</div>
-                <div class="fw-bold pt-3 pb-3 fs-4 money"><?= br_money($sum->total_consumo);?></div>
+        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+                <div class="small text-muted">Custo total no período</div>
+                <div class="small text-muted">R$</div>
+                <div class="fw-bold fs-2 money text-danger mt-2"><?= br_money($sum->total_consumo);?></div>
+                <?php $t = $trendFor('total_consumo'); ?>
+                <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 order-1 order-lg-2">
+            <?php $g1 = $generatorUsage['g1']; ?>
+            <?php
+                $g1Progress = (float)($g1['progress_percent'] ?? 0);
+                $g1Tone = $g1Progress >= 90 ? 'danger' : ($g1Progress >= 70 ? 'warning' : 'success');
+            ?>
+            <div class="stat-card bg-white rounded shadow-lg text-start p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="fw-semibold">Uso Gerador G1</div>
+                    <?php if (!empty($g1['is_limit_reached'])): ?>
+                        <span class="badge bg-danger">Manutenção vencida</span>
+                    <?php endif; ?>
+                </div>
+                <div class="fs-5 fw-bold text-<?= $g1Tone; ?>">
+                    <?= esc($g1['total_hhmm']); ?> / 200:00
+                </div>
+                <div class="progress mt-2" style="height: 8px;">
+                    <div class="progress-bar bg-<?= $g1Tone; ?>" role="progressbar" style="width: <?= $g1Progress; ?>%"></div>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    Horas faltantes: <?= esc((string)($g1['remaining_hhmm'] ?? '00:00')); ?>
+                </small>
+                <small class="text-muted d-block mt-2">
+                    Última manutenção:
+                    <span class="<?= !empty($g1['last_maintenance_date']) ? '' : 'text-warning'; ?>">
+                        <?= !empty($g1['last_maintenance_date']) ? br_date($g1['last_maintenance_date']) : 'não registrada'; ?>
+                    </span>
+                </small>
+                <small class="d-block text-<?= $g1Tone; ?>">
+                    Projeção manutenção: <?= isset($g1['days_to_maintenance']) ? ((int)$g1['days_to_maintenance'] . ' dias') : 'sem dados recentes'; ?>
+                </small>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 order-1 order-lg-2">
+            <?php $g2 = $generatorUsage['g2']; ?>
+            <?php
+                $g2Progress = (float)($g2['progress_percent'] ?? 0);
+                $g2Tone = $g2Progress >= 90 ? 'danger' : ($g2Progress >= 70 ? 'warning' : 'success');
+            ?>
+            <div class="stat-card bg-white rounded shadow-lg text-start p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="fw-semibold">Uso Gerador G2</div>
+                    <?php if (!empty($g2['is_limit_reached'])): ?>
+                        <span class="badge bg-danger">Manutenção vencida</span>
+                    <?php endif; ?>
+                </div>
+                <div class="fs-5 fw-bold text-<?= $g2Tone; ?>">
+                    <?= esc($g2['total_hhmm']); ?> / 200:00
+                </div>
+                <div class="progress mt-2" style="height: 8px;">
+                    <div class="progress-bar bg-<?= $g2Tone; ?>" role="progressbar" style="width: <?= $g2Progress; ?>%"></div>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    Horas faltantes: <?= esc((string)($g2['remaining_hhmm'] ?? '00:00')); ?>
+                </small>
+                <small class="text-muted d-block mt-2">
+                    Última manutenção:
+                    <span class="<?= !empty($g2['last_maintenance_date']) ? '' : 'text-warning'; ?>">
+                        <?= !empty($g2['last_maintenance_date']) ? br_date($g2['last_maintenance_date']) : 'não registrada'; ?>
+                    </span>
+                </small>
+                <small class="d-block text-<?= $g2Tone; ?>">
+                    Projeção manutenção: <?= isset($g2['days_to_maintenance']) ? ((int)$g2['days_to_maintenance'] . ' dias') : 'sem dados recentes'; ?>
+                </small>
             </div>
         </div>
     </div>
+
 </div>
 
 <div class="chart row g-3 mt-2 mb-2">
@@ -152,10 +268,11 @@ $hasTopEvents = is_array($topEventsRows) && count($topEventsRows) > 1;
      <!-- <div class="col-12 col-md-6 shadow" id="line_chart"></div> -->
 </div>
 <div class="chart row g-3 mt-2 mb-2">
-    <!-- <div class="col-12 col-md-6 shadow" id="column_chart2" ></div> -->
-    <!-- <div class="col-12 col-md-6 shadow" id="curve_chart" ></div> -->
-     <div class="col-12">
+     <div class="col-12 col-md-6">
         <div class="chart-box shadow" id="line_chart"></div>
+     </div>
+     <div class="col-12 col-md-6">
+        <div class="chart-box shadow" id="line_generator_chart"></div>
      </div>
 </div>
 
@@ -240,26 +357,26 @@ $hasTopEvents = is_array($topEventsRows) && count($topEventsRows) > 1;
 <?php endif;?>
 
 <?php else:?>
-    <div class="px-4 mb-3 mt-2 d-flex align-items-center justify-content-end">
-        <form class="row" method="post" action="<?= url_to('search.operacional');?>" enctype="multipart/form-data">
+    <div class="px-4 mb-3 mt-2 d-flex align-items-center justify-content-end dashboard-filter-wrap">
+        <form class="row g-2 dashboard-filter-form w-100 justify-content-end" method="post" action="<?= url_to('search.operacional');?>" enctype="multipart/form-data">
             <?= csrf_field(); ?>
-             <div class="col">
+             <div class="col-12 col-md-3 col-lg-2">
             <input type="date" id="data_inicial" name="data_inicial" class="form-control"  required>
             </div>
-            <div class="col">
+            <div class="col-12 col-md-3 col-lg-2">
                 <input type="date" id="data_final" name="data_final" class="form-control" required>
             </div>
-            <div class="col d-flex align-items-center justify-content-end">
-                <div class="d-flex align-items-center justify-content-end">
+            <div class="col-12 col-md d-flex align-items-center flex-wrap gap-2 justify-content-md-end">
+                <div class="d-flex align-items-center flex-wrap gap-2">
                     <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="social" value="social" id="flexCheck1" checked>
-                    <label class="form-check-label me-3" for="flexCheck1">
+                    <label class="form-check-label" for="flexCheck1">
                         Social
                     </label>
                     </div>
                     <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="corporativo" value="Corporativo" id="flexCheck2" checked>
-                    <label class="form-check-label me-3" for="flexCheck2">
+                    <label class="form-check-label" for="flexCheck2">
                         Corporativo
                     </label>
                     </div>
@@ -271,7 +388,8 @@ $hasTopEvents = is_array($topEventsRows) && count($topEventsRows) > 1;
                     </div>
                 </div>
             </div>
-                <button type="submit" class="form-control btn btn-success w-auto" onclick="return validarDatas(this.form)">Pesquisar</button>
+            <div class="col-12 col-md-auto d-grid">
+                <button type="submit" class="btn btn-success" onclick="return validarDatas(this.form)">Pesquisar</button>
             </div>
         </form>
     </div>
@@ -333,6 +451,7 @@ function validarDatas(form) {
      drawColumnChart2();
      drawTopEventsChart();
      drawLineChart();
+     drawLineGeneratorChart();
  }
 
 //  GRAFICO COLUNA
@@ -403,6 +522,7 @@ var bar = <?= $bar ?? '[]' ?>;
 
 
 var line = <?= $line ?? '[]' ?>;
+var lineGenerator = <?= $lineGenerator ?? '[]' ?>;
 var topEvents = <?= $topEvents ?? '[]' ?>;
 
 function hasChartRows(arr) {
@@ -417,13 +537,30 @@ function hasChartRows(arr) {
 
      var options = {
          title: 'Custo Anual',
-        //  hAxis: { title: ''   },
          vAxis: { title: 'Custo' },
          legend: { position: 'bottom' },
          colors: ['#999', '#f00']
      };
 
      var chart = new google.visualization.LineChart(document.getElementById('line_chart'));
+     chart.draw(data, options);
+ }
+
+ function drawLineGeneratorChart() {
+     if (!hasChartRows(lineGenerator) || !document.getElementById('line_generator_chart')) {
+         return;
+     }
+     var data = google.visualization.arrayToDataTable(lineGenerator);
+
+     var options = {
+         title: 'Acúmulo de uso dos geradores (horas)',
+         hAxis: { title: 'Data' },
+         vAxis: { title: 'Horas acumuladas' },
+         legend: { position: 'bottom' },
+         colors: ['#198754', '#0d6efd']
+     };
+
+     var chart = new google.visualization.LineChart(document.getElementById('line_generator_chart'));
      chart.draw(data, options);
  }
 

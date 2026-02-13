@@ -30,11 +30,16 @@ $routes->group('', ['filter' => 'auth'], function($routes){
     $routes->get('/', 'Home::operacional', ['as' => 'home']);
     $routes->get('/operacional/lista', 'Home::operacionalLista', ['as' => 'operacional.lista']);
     $routes->get('/operacional/calendario', 'Home::calendarioOperacional', ['as' => 'calendario.operacional']);
+    $routes->get('/operacional/geradores', 'Home::geradoresManutencao', ['as' => 'geradores.index']);
+    $routes->post('/operacional/geradores/store', 'Home::geradoresManutencaoStore', ['as' => 'geradores.store', 'filter' => 'csrf']);
+    $routes->post('/operacional/geradores/update', 'Home::geradoresManutencaoUpdate', ['as' => 'geradores.update', 'filter' => 'csrf']);
+    $routes->post('/operacional/geradores/delete', 'Home::geradoresManutencaoDelete', ['as' => 'geradores.delete', 'filter' => 'csrf']);
     $routes->get('/operacional/planejamento/cadastro', 'Home::cadastroPlanejamento');
     $routes->post('/operacional/planejamento/cadastro', 'Home::cadastroPlanejamentoStore', ['as' => 'cadastro.planejamento.store', 'filter' => 'csrf']);
     $routes->get('/operacional/planejamento/lista', 'Home::planejamentoLista', ['as' => 'planejamento.lista']);
     $routes->get('/cadastro/operacional', 'Home::cadastroOperacional', ['as' => 'cadastro.operacional']);
     $routes->post('/cadastro/operacional', 'Home::cadastroOperacionalStore', ['as' => 'cadastro.operacional.store', 'filter' => 'csrf']);
+    $routes->post('/operacional/gerador/manutencao', 'Home::registrarManutencaoGerador', ['as' => 'gerador.manutencao.store', 'filter' => 'csrf']);
     $routes->post('/update/operacional', 'Home::updateOperacionalStore', ['as' => 'update.operacional.store', 'filter' => 'csrf']);
     $routes->get('/update/operacional/(:num)', 'Home::updateOperacional/$1');
     $routes->post('/delete/operacional', 'Home::deleteOperacional', ['filter' => 'csrf']);

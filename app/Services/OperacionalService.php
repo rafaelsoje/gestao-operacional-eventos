@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\GeradorManutencao;
 use App\Models\Operacional;
 
 class OperacionalService
@@ -178,6 +179,21 @@ class OperacionalService
         return (int)date('m');
     }
 
+    public function getGeneratorUsageStatus(int $limitHours = 200): array
+    {
+        $limitMin = $limitHours * 60;
+
+        $statusG1 = $this->buildGeneratorStatus('G1', 'uso_min_g1', 'leitura_g1', 'leitura_saida_g1', 'tempo_g1', $limitMin);
+        $statusG2 = $this->buildGeneratorStatus('G2', 'uso_min_g2', 'leitura_g2', 'leitura_saida_g2', 'tempo_g2', $limitMin);
+
+        return [
+            'g1' => $statusG1,
+            'g2' => $statusG2,
+            'has_alert' => $statusG1['is_limit_reached'] || $statusG2['is_limit_reached'],
+            'has_warning' => $statusG1['is_warning'] || $statusG2['is_warning'],
+        ];
+    }
+
     private function applyFilters($builder, array $filters)
     {
         if (isset($filters['date_from'])) {
@@ -228,5 +244,223 @@ class OperacionalService
         }
 
         return $bars;
+    }
+
+    private function buildGeneratorStatus(
+        string $gerador,
+        string $minColumn,
+        string $entradaColumn,
+        string $saidaColumn,
+        string $tempoColumn,
+        int $limitMin
+    ): array {
+        $ultimaManutencao = null;
+        if (db_connect()->tableExists('gerador_manutencoes')) {
+            $ultimaManutencao = (new GeradorManutencao())
+                ->where('gerador', $gerador)
+                ->orderBy('data_manutencao', 'desc')
+                ->orderBy('id', 'desc')
+                ->first();
+        }
+
+        $dataBase = $ultimaManutencao->data_manutencao ?? null;
+        $totalMin = $this->sumUsageMinutes($minColumn, $entradaColumn, $saidaColumn, $tempoColumn, $dataBase);
+        $percent = $limitMin > 0 ? min(100, ($totalMin / $limitMin) * 100) : 0;
+        $remainingMin = max(0, $limitMin - $totalMin);
+        $avgDailyRecentMin = $this->recentAverageUsagePerDay($minColumn, $entradaColumn, $saidaColumn, $tempoColumn, 30);
+        $daysToMaintenance = ($avgDailyRecentMin > 0)
+            ? (int)ceil($remainingMin / $avgDailyRecentMin)
+            : null;
+
+        return [
+            'gerador' => $gerador,
+            'total_min' => $totalMin,
+            'total_hhmm' => $this->formatMinutesToHHMM($totalMin),
+            'remaining_min' => $remainingMin,
+            'remaining_hhmm' => $this->formatMinutesToHHMM($remainingMin),
+            'limit_min' => $limitMin,
+            'limit_hhmm' => $this->formatMinutesToHHMM($limitMin),
+            'progress_percent' => round($percent, 1),
+            'is_warning' => $totalMin >= (int)($limitMin * 0.9),
+            'is_limit_reached' => $totalMin >= $limitMin,
+            'last_maintenance_date' => $dataBase,
+            'avg_daily_recent_min' => round($avgDailyRecentMin, 2),
+            'days_to_maintenance' => $daysToMaintenance,
+        ];
+    }
+
+    private function sumUsageMinutes(
+        string $minColumn,
+        string $entradaColumn,
+        string $saidaColumn,
+        string $tempoColumn,
+        ?string $dateFrom
+    ): int {
+        $db = db_connect();
+        $hasMinColumn = $db->fieldExists($minColumn, 'operacional');
+        $hasEntradaColumn = $db->fieldExists($entradaColumn, 'operacional');
+        $hasSaidaColumn = $db->fieldExists($saidaColumn, 'operacional');
+        $hasTempoColumn = $db->fieldExists($tempoColumn, 'operacional');
+
+        if (!$hasMinColumn && (!$hasEntradaColumn || !$hasSaidaColumn) && !$hasTempoColumn) {
+            return 0;
+        }
+
+        $select = [];
+        if ($hasMinColumn) {
+            $select[] = $minColumn;
+        }
+        if ($hasEntradaColumn) {
+            $select[] = $entradaColumn;
+        }
+        if ($hasSaidaColumn) {
+            $select[] = $saidaColumn;
+        }
+        if ($hasTempoColumn) {
+            $select[] = $tempoColumn;
+        }
+
+        $builder = (new Operacional())
+            ->select(implode(', ', $select))
+            ->where('flag', 1);
+
+        if (!empty($dateFrom)) {
+            $builder->where('data >=', $dateFrom);
+        }
+
+        $rows = $builder->findAll();
+        $total = 0;
+
+        foreach ($rows as $row) {
+            $stored = $hasMinColumn && isset($row->{$minColumn}) ? (int)$row->{$minColumn} : 0;
+            if ($stored > 0) {
+                $total += $stored;
+                continue;
+            }
+
+            $fallback = $this->calculateDiffMinutesFromHourMeter(
+                $hasEntradaColumn ? (string)($row->{$entradaColumn} ?? '') : '',
+                $hasSaidaColumn ? (string)($row->{$saidaColumn} ?? '') : ''
+            );
+            if ($fallback > 0) {
+                $total += $fallback;
+                continue;
+            }
+
+            if ($hasTempoColumn) {
+                $tempo = $this->parseHourMeterToMinutes((string)($row->{$tempoColumn} ?? '')) ?? 0;
+                $total += max(0, $tempo);
+            }
+        }
+
+        return $total;
+    }
+
+    private function calculateDiffMinutesFromHourMeter(string $entrada, string $saida): int
+    {
+        $inicio = $this->parseHourMeterToMinutes($entrada);
+        $fim = $this->parseHourMeterToMinutes($saida);
+
+        if ($inicio === null || $fim === null || $fim < $inicio) {
+            return 0;
+        }
+
+        return $fim - $inicio;
+    }
+
+    private function parseHourMeterToMinutes(string $value): ?int
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^(\d{1,4}):(\d{2})$/', $value, $matches)) {
+            $hours = (int)$matches[1];
+            $minutes = (int)$matches[2];
+            if ($minutes > 59) {
+                return null;
+            }
+            return ($hours * 60) + $minutes;
+        }
+
+        if (preg_match('/^(\d{1,2}):(\d{2})(:\d{2})?$/', $value, $matches)) {
+            $hours = (int)$matches[1];
+            $minutes = (int)$matches[2];
+            if ($minutes > 59) {
+                return null;
+            }
+            return ($hours * 60) + $minutes;
+        }
+
+        return null;
+    }
+
+    private function formatMinutesToHHMM(int $minutes): string
+    {
+        $hours = intdiv(max(0, $minutes), 60);
+        $mins = max(0, $minutes) % 60;
+
+        return str_pad((string)$hours, 2, '0', STR_PAD_LEFT) . ':' . str_pad((string)$mins, 2, '0', STR_PAD_LEFT);
+    }
+
+    private function recentAverageUsagePerDay(
+        string $minColumn,
+        string $entradaColumn,
+        string $saidaColumn,
+        string $tempoColumn,
+        int $daysWindow = 30
+    ): float {
+        $db = db_connect();
+        $hasMinColumn = $db->fieldExists($minColumn, 'operacional');
+        $hasEntradaColumn = $db->fieldExists($entradaColumn, 'operacional');
+        $hasSaidaColumn = $db->fieldExists($saidaColumn, 'operacional');
+        $hasTempoColumn = $db->fieldExists($tempoColumn, 'operacional');
+
+        if (!$hasMinColumn && (!$hasEntradaColumn || !$hasSaidaColumn) && !$hasTempoColumn) {
+            return 0.0;
+        }
+
+        $select = ['data'];
+        if ($hasMinColumn) {
+            $select[] = $minColumn;
+        }
+        if ($hasEntradaColumn) {
+            $select[] = $entradaColumn;
+        }
+        if ($hasSaidaColumn) {
+            $select[] = $saidaColumn;
+        }
+        if ($hasTempoColumn) {
+            $select[] = $tempoColumn;
+        }
+
+        $startDate = date('Y-m-d', strtotime('-' . max(1, $daysWindow - 1) . ' days'));
+        $rows = (new Operacional())
+            ->select(implode(', ', $select))
+            ->where('flag', 1)
+            ->where('data >=', $startDate)
+            ->findAll();
+
+        if (empty($rows)) {
+            return 0.0;
+        }
+
+        $totalMin = 0;
+        foreach ($rows as $row) {
+            $minutes = $hasMinColumn ? (int)($row->{$minColumn} ?? 0) : 0;
+            if ($minutes <= 0) {
+                $minutes = $this->calculateDiffMinutesFromHourMeter(
+                    $hasEntradaColumn ? (string)($row->{$entradaColumn} ?? '') : '',
+                    $hasSaidaColumn ? (string)($row->{$saidaColumn} ?? '') : ''
+                );
+            }
+            if ($minutes <= 0 && $hasTempoColumn) {
+                $minutes = $this->parseHourMeterToMinutes((string)($row->{$tempoColumn} ?? '')) ?? 0;
+            }
+            $totalMin += max(0, $minutes);
+        }
+
+        return $totalMin > 0 ? ($totalMin / max(1, $daysWindow)) : 0.0;
     }
 }

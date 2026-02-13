@@ -41,6 +41,14 @@
     <script src="<?= base_url('assets/build/app.js?v=' . $appJsV) ?>"></script>
     <?php if ($isCalendarPage && $calendarBundleReady): ?>
     <script src="<?= base_url('assets/build/calendar.js?v=' . $calendarJsV) ?>"></script>
+    <script>
+      // Fallback: se o bundle local não expor FullCalendar, usa CDN.
+      if (!window.FullCalendar || !window.FullCalendar.Calendar) {
+        document.write('<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"><\/script>');
+      }
+    </script>
+    <?php elseif ($isCalendarPage): ?>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
     <?php endif; ?>
     <style>
       .site-credit {
@@ -66,9 +74,7 @@
 
       @media (max-width: 768px) {
         .site-credit {
-          right: 58px;
-          bottom: 16px;
-          font-size: 11px;
+          display: none;
         }
       }
     </style>
@@ -102,6 +108,7 @@
         <!-- <li><a href="<?=base_url('operacional/planejamento/cadastro')?>" class="<?=(isset($cadastroProj)? "active" : "");?>"><i class="bi bi-check-square navicon"></i>Cadastro Planejamento</a></li> -->
         <li><a href="<?=base_url('operacional/lista')?>" class="<?=(isset($listaOp)? "active" : "");?>"><i class="bi bi-list-ol navicon"></i>Lista de eventos</a></li>        
         <li><a href="<?=base_url('operacional/calendario')?>" class="<?=(isset($calendarioOp)? "active" : "");?>"><i class="bi bi-calendar-date navicon"></i>Calendário Operacional</a></li> 
+        <li><a href="<?=base_url('operacional/geradores')?>" class="<?=(isset($geradoresPage)? "active" : "");?>"><i class="bi bi-tools navicon"></i>Geradores</a></li>
         <!-- <li class="dropdown"><a href="<?= base_url('?id=0');?>" class="<?= (isset($planejado) ? "active" : "");?>"><i class="bi bi-graph-up-arrow navicon "></i> <span>Planejamento futuro</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a> -->
           <!-- <ul> -->
             <!-- <li><a href="<?= base_url('operacional/planejamento/cadastro')?>">Cadastro de custo</a></li> -->

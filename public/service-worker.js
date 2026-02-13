@@ -1,5 +1,5 @@
-const STATIC_CACHE = 'operacional-static-v2';
-const RUNTIME_CACHE = 'operacional-runtime-v2';
+const STATIC_CACHE = 'operacional-static-v3';
+const RUNTIME_CACHE = 'operacional-runtime-v3';
 const BASE_PATH = new URL(self.registration.scope).pathname;
 const OFFLINE_URL = `${BASE_PATH}offline.html`;
 const MANIFEST_URL = `${BASE_PATH}manifest.webmanifest`;
@@ -56,8 +56,25 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Assets estáticos: cache primeiro + atualização em background.
-  if (['style', 'script', 'image', 'font'].includes(req.destination)) {
+  // Scripts/estilos: rede primeiro para evitar bundle antigo quebrando páginas dinâmicas.
+  if (['style', 'script'].includes(req.destination)) {
+    event.respondWith(
+      fetch(req)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => cache.put(req, copy));
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(req);
+          return cached || fetch(req);
+        })
+    );
+    return;
+  }
+
+  // Imagens e fontes: cache primeiro.
+  if (['image', 'font'].includes(req.destination)) {
     event.respondWith(
       caches.match(req).then((cached) => {
         const networkFetch = fetch(req)

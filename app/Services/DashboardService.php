@@ -91,6 +91,7 @@ class DashboardService
         $hasChartData = array_sum($totaisPassado) + array_sum($totaisAtual) > 0;
         $hasFinancialData = $aceita['value'] > 0 || $analise['value'] > 0;
         $hasRecentData = !empty($recent);
+        $generatorUsage = (new OperacionalService())->getGeneratorUsageStatus();
 
         return [
             'aceita' => $aceita,
@@ -102,6 +103,7 @@ class DashboardService
             'hasDashboardData' => $hasChartData || $hasFinancialData || $hasRecentData,
             'hasChartData' => $hasChartData,
             'hasRecentData' => $hasRecentData,
+            'generatorUsage' => $generatorUsage,
         ];
     }
 }

@@ -163,9 +163,28 @@ height: 320px;
 }
 
 @media (max-width: 768px) {
-  .row.g-3 > [class*="col-"] {
-      flex: 0 0 100%;
-      max-width: 100%;
+  .dashboard-filter-wrap {
+      position: sticky;
+      top: 56px;
+      z-index: 40;
+      background: var(--background);
+      border-bottom: 1px solid #dfe3e8;
+      margin-bottom: 0.75rem !important;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+  }
+
+  .dashboard-filter-form {
+      gap: 0.5rem;
+  }
+
+  .dashboard-filter-form .form-check {
+      margin-right: 0.25rem;
+      margin-bottom: 0;
+  }
+
+  .dashboard-filter-form .btn {
+      width: 100%;
   }
 
   .table-responsive {

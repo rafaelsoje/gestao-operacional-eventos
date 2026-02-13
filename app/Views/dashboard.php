@@ -40,6 +40,16 @@
 
 
 <div class="px-1 text-center p-2">
+  <?php $generatorUsage = $generatorUsage ?? null; ?>
+  <?php if (!empty($generatorUsage['has_alert'])): ?>
+    <div class="alert alert-danger text-start mb-3" role="alert">
+      Atenção: um ou mais geradores atingiram 200:00 horas de uso.
+    </div>
+  <?php elseif (!empty($generatorUsage['has_warning'])): ?>
+    <div class="alert alert-warning text-start mb-3" role="alert">
+      Alerta: um ou mais geradores estão acima de 180:00 horas de uso.
+    </div>
+  <?php endif; ?>
   <?php if (empty($hasDashboardData)): ?>
     <div class="alert alert-info mb-3" role="alert">
       Ainda não há dados suficientes para montar a dashboard.
@@ -66,8 +76,13 @@
     </div>
     <div class="col-12 col-md-6 col-lg-3">
       <div class="stat-card bg-white bg-gradient rounded text-warning shadow-lg">
-      <div class="pt-3">sem utilização</div>
-      <div class="fw-bold pt-3 pb-3 fs-4">Sem informação</div>
+      <div class="pt-3">Uso geradores</div>
+      <div class="fw-bold pt-3 pb-3 fs-5">
+        G1: <?= esc($generatorUsage['g1']['total_hhmm'] ?? '00:00'); ?><br>
+        G2: <?= esc($generatorUsage['g2']['total_hhmm'] ?? '00:00'); ?><br>
+        <small class="text-muted">Proj. G1: <?= isset($generatorUsage['g1']['days_to_maintenance']) ? ((int)$generatorUsage['g1']['days_to_maintenance'] . ' dias') : 'sem dados'; ?></small><br>
+        <small class="text-muted">Proj. G2: <?= isset($generatorUsage['g2']['days_to_maintenance']) ? ((int)$generatorUsage['g2']['days_to_maintenance'] . ' dias') : 'sem dados'; ?></small>
+      </div>
       </div>
     </div>
   </div>
