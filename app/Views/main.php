@@ -102,38 +102,16 @@
       <h1 class="sitename"><?=$logged['0'];?></h1>
     </a>
 
-    <?php $logged = session()->get('user');?>
-        <!-- <p class="text-secondary">Seu ip: <?= " " . ($logged->ip ?? '') ;?></p> -->
+    <?php $logged = session()->get('user');?>      
     <nav id="navmenu" class="navmenu">
       <ul>
         <li><a href="<?= base_url()?>" class="<?=(isset($operacional)? "active" : "");?>"><i class="bi bi-house navicon"></i>Dados operaionais</a></li>
-        <!-- <li><a href="<?= base_url()?>" class="<?=(isset($projacao)? "active" : "");?>"><i class="bi bi-graph-up-arrow navicon"></i>Planejamento futuro</a></li> -->
+        
         <li><a href="<?=base_url('cadastro/operacional')?>" class="<?=(isset($cadastroOp)? "active" : "");?>"><i class="bi bi-check-square navicon"></i>Cadastro operacional</a></li>
-        <!-- <li><a href="<?=base_url('operacional/planejamento/cadastro')?>" class="<?=(isset($cadastroProj)? "active" : "");?>"><i class="bi bi-check-square navicon"></i>Cadastro Planejamento</a></li> -->
+        
         <li><a href="<?=base_url('operacional/lista')?>" class="<?=(isset($listaOp)? "active" : "");?>"><i class="bi bi-list-ol navicon"></i>Lista de eventos</a></li>        
         <li><a href="<?=base_url('operacional/calendario')?>" class="<?=(isset($calendarioOp)? "active" : "");?>"><i class="bi bi-calendar-date navicon"></i>Calendário Operacional</a></li> 
         <li><a href="<?=base_url('operacional/geradores')?>" class="<?=(isset($geradoresPage)? "active" : "");?>"><i class="bi bi-tools navicon"></i>Geradores</a></li>
-        <!-- <li class="dropdown"><a href="<?= base_url('?id=0');?>" class="<?= (isset($planejado) ? "active" : "");?>"><i class="bi bi-graph-up-arrow navicon "></i> <span>Planejamento futuro</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a> -->
-          <!-- <ul> -->
-            <!-- <li><a href="<?= base_url('operacional/planejamento/cadastro')?>">Cadastro de custo</a></li> -->
-            <!-- <li class="dropdown"><a href="#"><span>Deep Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
-              <ul>
-                <li><a href="#">Deep Dropdown 1</a></li>
-                <li><a href="#">Deep Dropdown 2</a></li>
-                <li><a href="#">Deep Dropdown 3</a></li>
-                <li><a href="#">Deep Dropdown 4</a></li>
-                <li><a href="#">Deep Dropdown 5</a></li>
-              </ul>
-            </li> -->
-            <!-- <li><a href="<?= base_url('operacional/planejamento/lista')?>">Lista de eventos futuros</a></li> -->
-            <!-- <li><a href="#">Dropdown</a></li>
-            <li><a href="#">Dropdown 4</a></li> -->
-          <!-- </ul> -->
-        <!-- </li> -->
-        <!-- <li><a href="<?=base_url('audiovisual')?>" class="<?=(isset($botanic)? "active" : "");?>"><i class="bi bi-play-btn navicon"></i>Audiovisual / Botanic B</a></li> -->
-        <!-- <li><a href="<?=base_url('cadastro/proposta')?>" class="<?=(isset($botanicCad)? "active" : "");?>"><i class="bi bi-file-check navicon"></i>Cadastro proposta</a></li> -->
-        <!-- <li><a href="<?=base_url('proposta')?>" class="<?=(isset($botanicProp)? "active" : "");?>"><i class="bi bi-person-lines-fill navicon"></i>Lista de propostas</a></li> -->
-        <!-- <li><a href="<?=base_url('calendario')?>"class="<?=(isset($calendario)? "active" : "");?>"><i class="bi bi-calendar-check navicon"></i>Calendário audiovisual</a></li> -->
         <?php $navRole = $logged->role ?? (($logged->admin ?? 0) == 1 ? 'admin' : 'user'); ?>
         <?php if($navRole === 'admin' || $navRole === 'superuser'):?>
             <li><a href="<?=base_url('usuarios')?>"class="<?=(isset($botanicUser)? "active" : "");?>"><i class="bi bi-person-fill-check navicon"></i>Usuarios cadastrados</a></li>
@@ -144,33 +122,18 @@
             <li><a href="<?=base_url('logs')?>"><i class="bi bi-envelope navicon"></i>Log</a></li>
         <?php endif;?>
         <li><a href="<?=base_url('logout')?>"><i class="bi bi-box-arrow-left navicon"></i>Sair</a></li>
-        <!-- <li><a href="http://blog.rafaelsoje.com" target="_blank"><i class="bi bi-bookmarks navicon"></i> Blog</a></li> -->
+        
         </ul>
     </nav>
     <small class="site-credit">
       Desenvolvido por <a href="https://rafaelsoje.com" target="_blank" rel="noopener noreferrer">Rafael Soje</a>
     </small>
-    <!-- <div class="container ">        
-        <div class="credits navicon">Com ❤️ e ☕, Rafael Soje</div>
-    </div> -->
-    <!-- <div style="position: fixed; bottom: 0; left: 0; width: 270px; background: #333; color: white; text-align: center; padding: 10px;">
-    Com ❤️ e ☕, Rafael Soje
-  </div> -->
-
+   
   </header>
 <main class="main">
     <!-- Content page -->
     <?= $this->renderSection('content');?>
   </main>
-<!-- <footer id="footer" class="footer position-absolute dark-background">
-  <div class="container">
-    <div class="copyright text-center "><a href="https://rafaelsoje.com" target="_blank">
-      <p>© <span><?= date('Y');?></span> <strong class="px-1 sitename">Rafael Soje</strong> - feito com ❤️ e ☕</p>
-      </a>
-    </div>
-    <div class="credits">Feito com ❤️ e ☕</div>
-  </div>
-</footer> -->
 
 <!-- Scroll Top -->
 <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>

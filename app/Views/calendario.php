@@ -73,7 +73,7 @@ button{
         <p><strong>Status:</strong> <span id="modal-status" class="badge"></span></p>
         <p><strong>Tipo:</strong> <span id="modal-type"></span></p>
         <p><strong>Descrição:</strong> <span id="modal-descricao"></span></p>
-        <p><strong>Visualizar proposta: </strong><span id="modal-id"></span></p>
+        <p><strong>ID da proposta:</strong> <span id="modal-id"></span></p>
       </div>
     </div>
   </div>
@@ -158,11 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const ext  = ev.extendedProps || {};
 
     // Preenche modal
-    const id = ev.id;
-    const url = `update/proposta/${id}`;
-
-    document.getElementById('modal-id').innerHTML = `<a href="${url}"> #${ev.title}</a>`;
-    // document.getElementById('modal-id').textContent = ev.id;
+    document.getElementById('modal-id').textContent = ev.id ?? '---';
     document.getElementById('modal-title').textContent = ev.title;
     document.getElementById('modal-start').textContent = formatarData(ev.start);
     document.getElementById('modal-end').textContent   = ev.end ? formatarData(ev.end) : '---';

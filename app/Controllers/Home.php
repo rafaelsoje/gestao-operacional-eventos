@@ -7,10 +7,8 @@ use App\Models\Operacional;
 use App\Models\GeradorManutencao;
 use App\Models\Propostas;
 use App\Models\Users;
-use App\Services\DashboardService;
 use App\Services\OperacionalService;
 use App\Services\TelegramService;
-use App\Services\UploadService;
 use App\Services\AvatarService;
 use CodeIgniter\Database\Query;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -20,323 +18,6 @@ use stdClass;
 
 class Home extends BaseController
 {
-    public function index()
-    {
-        $service = new DashboardService();
-        $payload = $service->getDashboardData();
-
-        return view('dashboard', $payload + ['botanic' => true]);
-
-    }
-
-    public function proposta(): string
-    {
-        $anoPassado = date('Y')-1;
-        $propostas = (new Propostas())->select()->where('YEAR(start_date) >=', date('Y'))->findAll() ;
-
-        return view('proposta', ['propostas' => $propostas, 'botanicProp' => true]);
-    }
-
-    public function cadastroProposta(): string
-    {
-        return view('cadastroProposta',['botanicCad' => true]);
-    }
-
-    public function cadastroPropostaStore()
-    {
-        helper('money');
-
-        $validate = $this->validate([
-            'excolab_id' => 'required',
-            'type' => 'required',
-            'start_date' => 'required',
-            'event_name' => 'required',
-            'value' => 'required',
-            'status' => 'required',
-        ]);
-
-        if (!$validate) {
-            return redirect()->route('cadastro.proposta')->with('error', 'Preencha o formulário corretamente!');
-        }
-
-        $data = $this->request->getPost();
-
-        $uploadService = new UploadService();
-        $path = WRITEPATH . 'uploads/';
-
-        $directoryName = $uploadService->sanitizeDir($data['start_date']); // ex: "2024-11-06"
-        $fullPath = $path . $directoryName;
-
-        $file = $this->request->getFile('file');
-        $fileResult = $uploadService->handle($file, $fullPath);
-        if ($fileResult['error']) {
-            return redirect()->back()->with('error', $fileResult['error']);
-        }
-        $newName = $fileResult['name'];
-
-        // $temp = explode('.', $data['value']);
-        // $value = implode('',$temp);
-
-        // $temp = explode(',', $value);
-        // $value = implode('.',$temp);
-
-        $value = money_to_decimal($data['value']);
-        $charge = money_to_decimal($data['charge'] ?? null);
-        $rent = money_to_decimal($data['rent'] ?? null);
-        $third = money_to_decimal($data['third'] ?? null);
-        $saldo = money_to_decimal($data['saldo'] ?? null);
-
-
-        $items = [
-            'excolab_id' => $data['excolab_id'],
-            'type' => $data['type'],
-            'start_date' => $data['start_date'],
-            'end_date' => $data['end_date'],
-            'event_name' => $data['event_name'],
-            'client_name' => $data['client_name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'value' => $value,
-            'charge' => $charge,
-            'rent' => $rent,
-            'third'=> $third,
-            'saldo'=> $saldo,
-            'status' => $data['status'],
-            'description' => $data['description'],
-            'file' => $newName
-        ];
-
-        $prop = new Propostas();
-        $result = $prop->insert($items);
-
-        $rider = $this->request->getFile('rider');
-        $riderResult = $uploadService->handle($rider, $fullPath);
-        if ($riderResult['error']) {
-            return redirect()->back()->with('error', $riderResult['error']);
-        }
-        if ($riderResult['name']) {
-            $item = [
-                'rider' => $riderResult['name']
-            ];
-            $prop->update($result, $item);
-        }
-
-
-        if($result){
-
-            $user = session()->get('user');
-            $data = [
-                'title' => 'CADASTROU PROPOSTA',
-                'description' => "O usuário " . $user->name  . " cadastrou " . $data['event_name'] . " " .date('Y-m-d H:i:s')
-            ];
-
-            $log = (new Logs())->insert($data);
-            $this->notifyTelegram($user->name . " cadastrou " . $items['event_name']);
-            return redirect()->route('proposta')->with('success', "Proposta cadastrada com sucesso!");
-        }
-
-        return redirect()->route('proposta')->with('error', 'Não foi possível gravar os dados.');
-    }
-
-    public function UpdateProposta($id){
-
-        if(is_int(intval($id))){
-
-            if($proposta = (new Propostas())->select()->where('id', $id)->first()){
-
-                return view('updateProposta',['proposta' => $proposta]);
-            }
-
-            return redirect('proposta')->with('error', 'Proposta não encontrada.');
-        }
-
-        return redirect('proposta')->with('error', 'ID da proposta inválido.');
-
-    }
-
-    public function UpdatePropostaStore()
-    {
-        helper('money');
-
-        $validate = $this->validate([
-            'id' => 'required',
-            'excolab_id' => 'required',
-            'type' => 'required',
-            'start_date' => 'required',
-            'event_name' => 'required',
-            'value' => 'required',
-            'status' => 'required',
-        ]);
-
-        if (!$validate) {
-            return redirect()->route('proposta')->with('error', 'Preencha o formulário corretamente!');
-        }
-
-        $data = $this->request->getPost();
-
-        $uploadService = new UploadService();
-        $path = WRITEPATH . 'uploads/';
-
-        $directoryName = $uploadService->sanitizeDir($data['start_date']); // ex: "2024-11-06"
-        $fullPath = $path . $directoryName;
-
-        $file = $this->request->getFile('file');
-        $rider = $this->request->getFile('rider');
-
-
-        $safeOldDate = $uploadService->sanitizeDir($data['start_date_old']);
-        $safeOldFile = basename($data['file_old']);
-        $fileOld = $path . $safeOldDate . "/" . $safeOldFile;
-        $fileNew = $fullPath . "/" . $safeOldFile;
-
-        if($file){
-            $fileResult = $uploadService->handle($file, $fullPath);
-            if ($fileResult['error']) {
-                return redirect()->back()->with('error', $fileResult['error']);
-            }
-
-            if ($fileResult['name']) {
-                $item = [
-                    'file' => $fileResult['name']
-                ];
-
-                $prop = new Propostas();
-                $prop->update($data['id'], $item);
-
-                if (is_file($fileOld)) {
-                    unlink($fileOld);
-                }
-            } else {
-                if($data['start_date'] != $data['start_date_old']){
-                    if (!is_dir($fullPath)) {
-                        mkdir($fullPath, 0755, true);
-                    }
-                    if (is_file($fileOld)) {
-                        rename($fileOld, $fileNew);
-                    }
-                }
-            }
-        }
-
-
-        if($rider){
-            $riderResult = $uploadService->handle($rider, $fullPath);
-            if ($riderResult['error']) {
-                return redirect()->back()->with('error', $riderResult['error']);
-            }
-
-            if ($riderResult['name']) {
-                $item = [
-                    'rider' => $riderResult['name']
-                ];
-
-                $prop = new Propostas();
-                $prop->update($data['id'], $item);
-            }
-        }
-
-        if(isset($data['removeRider']) && $data['removeRider'] == "on"){
-            $item = [
-                'rider' => ''
-            ];
-
-            $prop = new Propostas();
-            $temp = $prop->update($data['id'], $item);
-        }
-
-
-
-        // $temp = explode('.', $data['value']);
-        // $value = implode('',$temp);
-
-        // $temp = explode(',', $value);
-        // $value = implode('.',$temp);
-
-        $value = money_to_decimal($data['value']);
-        $charge = money_to_decimal($data['charge'] ?? null);
-        $rent = money_to_decimal($data['rent'] ?? null);
-        $third = money_to_decimal($data['third'] ?? null);
-        $saldo = money_to_decimal($data['saldo'] ?? null);
-
-        $items = [
-            'excolab_id' => $data['excolab_id'],
-            'type' => $data['type'],
-            'start_date' => $data['start_date'],
-            'end_date' => $data['end_date'],
-            'event_name' => $data['event_name'],
-            'client_name' => $data['client_name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'value' => $value,
-            'charge' => $charge,
-            'rent' => $rent,
-            'third'=> $third,
-            'saldo'=> $saldo,
-            'status' => $data['status'],
-            'description' => $data['description'],
-        ];
-
-
-
-
-        $prop = new Propostas();
-        $result = $prop->update($data['id'], $items);
-
-        if($result){
-
-            $user = session()->get('user');
-            $data = [
-                'title' => 'ATUALIZOU PROPOSTA',
-                'description' => "O usuário " . $user->name  . " atualizou proposta " . $data['event_name'] . " ". date('Y-m-d H:i:s')
-            ];
-
-            $log = (new Logs())->insert($data);
-            $this->notifyTelegram($user->name . " atualizou a proposta " . $items["event_name"]);
-            return redirect()->route('proposta')->with('success', "Proposta atualizada com sucesso!");
-        }
-
-        return redirect()->route('proposta')->with('error', 'Não foi possível gravar os dados.');
-
-    }
-
-    public function removeProposta()
-    {
-        $id = $this->request->getPost('id');
-        $file = $this->request->getPost('file');
-        $date = $this->request->getPost('date');
-
-        $safeDate = preg_replace('/[^0-9\-]/', '', $date);
-        $safeFile = basename($file);
-        $path = WRITEPATH . 'uploads/' . $safeDate . "/" . $safeFile;
-
-        if(is_int(intval($id))){
-
-            if($prop = (new Propostas())->where('id',$id)->first()){
-                $user = session()->get('user');
-                $data = [
-                    'title' => 'REMOVEU PROPOSTA',
-                    'description' => "O usuário " . $user->name  . " removeu " . $prop->event_name . " " . date('Y-m-d H:i:s')
-                ];
-
-                $log = (new Logs())->insert($data);
-                $this->notifyTelegram($user->name . " removeu " . $prop->event_name);
-            }
-
-            if($user = (new Propostas())->delete($id)){
-                if (file_exists($path) && $file != "") {
-                    unlink($path);
-                }
-
-                return redirect('proposta')->with('success', 'Proposta removida com sucesso!');
-            }
-
-            return redirect('proposta')->with('error', 'Não foi possível remover proposta');
-        }
-
-        return redirect()->route('proposta')->with('error', 'Parametro incorreto.');
-    }
-
-
     ##############################################
     #               Operacional                  #
     ###############################################
@@ -1144,7 +825,7 @@ class Home extends BaseController
         $data = $this->request->getPost();
         $data['name'] = trim((string)($data['name'] ?? ''));
         $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
-        $target = (new Users())->select('id,email,admin,role')->where('id', $data['id'])->first();
+        $target = (new Users())->select('id,email,admin,role,avatar')->where('id', $data['id'])->first();
         if (!$target) {
             return redirect()->route('usuarios')->with('error', 'Usuário não encontrado.');
         }
@@ -1180,7 +861,13 @@ class Home extends BaseController
                     return redirect()->route('usuarios')->with('error', 'Não foi possível salvar o avatar.');
                 }
 
-                (new Users())->update($data['id'], ['avatar' => $name]);
+                $oldAvatar = (string)($target->avatar ?? '');
+                $avatarUpdated = (new Users())->update($data['id'], ['avatar' => $name]);
+                if (!$avatarUpdated) {
+                    return redirect()->route('usuarios')->with('error', 'Não foi possível atualizar o avatar.');
+                }
+
+                $this->cleanupUnusedAvatar($oldAvatar, $name);
             }
 
             if (!empty($data['password'])) {
@@ -1278,8 +965,14 @@ class Home extends BaseController
             return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
         }
 
+        $dbUser = (new Users())->find($user->id);
+        if (!$dbUser) {
+            return redirect()->route('perfil')->with('error', 'Usuário não encontrado.');
+        }
+
         $data = $this->request->getPost();
         $items = [];
+        $oldAvatar = (string)($dbUser->avatar ?? '');
 
         $img = $this->request->getFile('avatar');
         if ($img && $img->isValid() && !$img->hasMoved()) {
@@ -1315,8 +1008,7 @@ class Home extends BaseController
                 return redirect()->route('perfil')->with('error', 'As senhas não conferem.');
             }
             $currentPassword = (string)($data['current_password'] ?? '');
-            $dbUser = (new Users())->find($user->id);
-            if (!$dbUser || !password_verify($currentPassword, $dbUser->password)) {
+            if (!password_verify($currentPassword, $dbUser->password)) {
                 return redirect()->route('perfil')->with('error', 'Senha atual incorreta.');
             }
 
@@ -1343,9 +1035,35 @@ class Home extends BaseController
             $userInfo = session()->get('user');
             $userInfo->avatar = $items['avatar'];
             session()->set('user', $userInfo);
+            $this->cleanupUnusedAvatar($oldAvatar, $items['avatar']);
         }
 
         return redirect()->route('perfil')->with('success', 'Perfil atualizado com sucesso!');
+    }
+
+    private function cleanupUnusedAvatar(?string $oldAvatar, ?string $newAvatar = null): void
+    {
+        $old = trim((string)$oldAvatar);
+        $new = trim((string)$newAvatar);
+
+        if ($old === '' || $old === 'avatar.svg' || $old === $new) {
+            return;
+        }
+
+        $safe = basename($old);
+        if ($safe === '' || $safe !== $old) {
+            return;
+        }
+
+        $stillUsed = (new Users())->where('avatar', $old)->countAllResults();
+        if ($stillUsed > 0) {
+            return;
+        }
+
+        $path = WRITEPATH . 'uploads/avatars' . DIRECTORY_SEPARATOR . $safe;
+        if (is_file($path)) {
+            @unlink($path);
+        }
     }
 
     public function avatar(string $file): ResponseInterface
@@ -1373,11 +1091,12 @@ class Home extends BaseController
 
         if(is_int(intval($id))){
             $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
-            $target = (new Users())->select('id,email')->where('id', $id)->first();
+            $target = (new Users())->select('id,email,avatar')->where('id', $id)->first();
             if ($target && $target->email === $superEmail) {
                 return redirect('usuarios')->with('error', 'Superusuário não pode ser removido.');
             }
             if((new Users())->delete($id)){
+                $this->cleanupUnusedAvatar((string)($target->avatar ?? ''), null);
                 $user = session()->get('user');
                 #$this->telegran($user->name . " removeu usuario");
                 return redirect('usuarios')->with('success', 'Usuário removido com sucesso!');
