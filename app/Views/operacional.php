@@ -534,14 +534,31 @@ function hasChartRows(arr) {
      if (!hasChartRows(line) || !document.getElementById('line_chart')) {
          return;
      }
-     var data = google.visualization.arrayToDataTable(line);
      var lineSeriesCount = Array.isArray(line) && line[0] ? Math.max(0, line[0].length - 1) : 0;
+     var hasSinglePoint = lineSeriesCount === 1 && line.length === 2;
+     var data = null;
+
+     if (hasSinglePoint) {
+         var periodLabel = line[1][0];
+         var costValue = Number(line[1][1] || 0);
+         var formatted = costValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+         data = google.visualization.arrayToDataTable([
+             ['Período', 'Custo', { role: 'annotation' }],
+             [periodLabel, costValue, 'R$ ' + formatted]
+         ]);
+     } else {
+         data = google.visualization.arrayToDataTable(line);
+     }
 
      var options = {
          title: lineTitle,
          vAxis: { title: 'Custo' },
          legend: { position: 'bottom' },
-         colors: lineSeriesCount > 1 ? ['#999', '#f00'] : ['#0d6efd']
+         colors: lineSeriesCount > 1 ? ['#999', '#f00'] : ['#0d6efd'],
+         pointSize: hasSinglePoint ? 8 : 4,
+         annotations: {
+             textStyle: { color: '#212529', fontSize: 12, bold: true }
+         }
      };
 
      var chart = new google.visualization.LineChart(document.getElementById('line_chart'));
@@ -559,7 +576,8 @@ function hasChartRows(arr) {
          hAxis: { title: 'Data' },
          vAxis: { title: 'Horas acumuladas' },
          legend: { position: 'bottom' },
-         colors: ['#198754', '#0d6efd']
+         colors: ['#198754', '#0d6efd'],
+         pointSize: 5
      };
 
      var chart = new google.visualization.LineChart(document.getElementById('line_generator_chart'));
@@ -605,9 +623,9 @@ var barChart = <?= $barChart ?? '[]' ?>;
       
      var options = {
          //colors: ['#00f'],
-         title: 'Comparação por tipo de evento',
+         title: 'Custo médio por evento por tipo',
          hAxis: { title: '' },
-         vAxis: { title: 'Total'},
+         vAxis: { title: 'Valor médio (R$)'},
          //backgroundColor: '#cccccc', // Cor de fundo
          legend: { position: 'bottom' },
          seriesType: 'bars'

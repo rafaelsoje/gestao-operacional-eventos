@@ -41,7 +41,7 @@ class OperacionalService
             ->first();
 
         $barRows = $this->applyFilters((new Operacional()), $filters)
-            ->select('tipo, SUM(total_operacional) AS total_operacional, SUM(diesel_total) AS diesel_total, SUM(cedae_total) AS cedae_total, SUM(light_total) AS light_total, SUM(total_consumo) AS total_consumo')
+            ->select('tipo, COUNT(id) AS event_count, SUM(total_operacional) AS total_operacional, SUM(diesel_total) AS diesel_total, SUM(cedae_total) AS cedae_total, SUM(light_total) AS light_total, SUM(total_consumo) AS total_consumo')
             ->groupBy('tipo')
             ->findAll();
 
@@ -248,6 +248,7 @@ class OperacionalService
     {
         $init = function () {
             return (object)[
+                'event_count' => 0,
                 'total_operacional' => 0,
                 'diesel_total' => 0,
                 'cedae_total' => 0,

@@ -169,10 +169,25 @@ class Home extends BaseController
         ];
 
         $barchart = [
-            ['tipo', 'valor Total'],
-            ['Entretenimento', (float)$barEntretenimento->total_consumo],
-            ['Social', (float)$barSocial->total_consumo],
-            ['Corporativo', (float)$barCorporativo->total_consumo],
+            ['tipo', 'Custo médio por evento'],
+            [
+                'Entretenimento',
+                ((int)($barEntretenimento->event_count ?? 0) > 0)
+                    ? ((float)$barEntretenimento->total_consumo / (int)$barEntretenimento->event_count)
+                    : 0
+            ],
+            [
+                'Social',
+                ((int)($barSocial->event_count ?? 0) > 0)
+                    ? ((float)$barSocial->total_consumo / (int)$barSocial->event_count)
+                    : 0
+            ],
+            [
+                'Corporativo',
+                ((int)($barCorporativo->event_count ?? 0) > 0)
+                    ? ((float)$barCorporativo->total_consumo / (int)$barCorporativo->event_count)
+                    : 0
+            ],
         ];
         $generatorAccumLine = $this->buildGeneratorAccumulatedLine($data ?? []);
 
