@@ -133,6 +133,32 @@ class OperacionalService
         ];
     }
 
+    public function monthlySeriesByFilters(array $filters): array
+    {
+        $rows = $this->applyFilters((new Operacional()), $filters)
+            ->select('YEAR(data) AS ano, MONTH(data) AS mes, SUM(total_consumo) AS total_consumo')
+            ->groupBy('ano, mes')
+            ->orderBy('ano', 'asc')
+            ->orderBy('mes', 'asc')
+            ->findAll();
+
+        $chart = [['Período', 'Custo']];
+        foreach ($rows as $row) {
+            $mes = (int)($row->mes ?? 0);
+            $ano = (int)($row->ano ?? 0);
+            if ($mes < 1 || $mes > 12 || $ano <= 0) {
+                continue;
+            }
+
+            $chart[] = [
+                $this->monthNamePt($mes) . '/' . $ano,
+                (float)($row->total_consumo ?? 0),
+            ];
+        }
+
+        return $chart;
+    }
+
     public function topEventsByCost(array $filters, int $limit = 10): array
     {
         $rows = $this->applyFilters((new Operacional()), $filters)
@@ -244,6 +270,26 @@ class OperacionalService
         }
 
         return $bars;
+    }
+
+    private function monthNamePt(int $month): string
+    {
+        $months = [
+            1 => 'Jan',
+            2 => 'Fev',
+            3 => 'Mar',
+            4 => 'Abr',
+            5 => 'Mai',
+            6 => 'Jun',
+            7 => 'Jul',
+            8 => 'Ago',
+            9 => 'Set',
+            10 => 'Out',
+            11 => 'Nov',
+            12 => 'Dez',
+        ];
+
+        return $months[$month] ?? (string)$month;
     }
 
     private function buildGeneratorStatus(

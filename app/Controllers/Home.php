@@ -130,6 +130,14 @@ class Home extends BaseController
 
         }
         
+        $lineTitle = 'Custo anual';
+        if (isset($post)) {
+            $line = $service->monthlySeriesByFilters($filters ?? []);
+            $lineTitle = 'Custo no período pesquisado';
+        } else {
+            $line = $service->monthlyComparison($year);
+        }
+
         $donutChart = [
             ['Categorria', 'valor'],
             ['Equipe Operacional', (float)$chart->total_operacional],
@@ -166,9 +174,6 @@ class Home extends BaseController
             ['Social', (float)$barSocial->total_consumo],
             ['Corporativo', (float)$barCorporativo->total_consumo],
         ];
-
-
-        $line = $service->monthlyComparison($year);
         $generatorAccumLine = $this->buildGeneratorAccumulatedLine($data ?? []);
 
         
@@ -197,6 +202,7 @@ class Home extends BaseController
             'bar' => json_encode($bar),
             'barChart' => json_encode($barchart),
             'line' => json_encode($line),
+            'lineTitle' => $lineTitle,
             'lineGenerator' => json_encode($generatorAccumLine),
         ];
 

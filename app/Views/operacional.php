@@ -104,7 +104,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
             <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
                 <div class="small text-muted">Custo diesel</div>
                 <div class="small text-muted"><?= (int)($sum->diesel_litros ?? 0); ?> L</div>
-                <div class="fw-bold fs-2 money text-success mt-2"><?= br_money($sum->diesel_total);?></div>
+                <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($sum->diesel_total);?></div>
                 <?php $t = $trendFor('diesel_total'); ?>
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
@@ -113,7 +113,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
             <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
                 <div class="small text-muted">Consumo gerador</div>
                 <div class="small text-muted">kWh</div>
-                <div class="fw-bold fs-2 text-success mt-2"><?= br_number($kwhTotal, 0); ?> <span class="fs-6">kWh</span></div>
+                <div class="fw-bold fs-2 text-dark mt-2"><?= br_number($kwhTotal, 0); ?> <span class="fs-6">kWh</span></div>
                 <?php $t = $trendFor('kwh_total'); ?>
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
@@ -122,7 +122,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
             <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
                 <div class="small text-muted">Água e esgoto</div>
                 <div class="small text-muted"><?= br_number((float)($sum->cedae_consumo ?? 0), 0); ?> m³</div>
-                <div class="fw-bold fs-2 money text-success mt-2"><?= br_money($sum->cedae_total);?></div>
+                <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($sum->cedae_total);?></div>
                 <?php $t = $trendFor('cedae_total'); ?>
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
@@ -131,7 +131,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
             <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
                 <div class="small text-muted">Custo light</div>
                 <div class="small text-muted"><?= br_number((float)($sum->light_consumo ?? 0), 0); ?> kWh</div>
-                <div class="fw-bold fs-2 money text-success mt-2"><?= br_money($sum->light_total);?></div>
+                <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($sum->light_total);?></div>
                 <?php $t = $trendFor('light_total'); ?>
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
@@ -140,7 +140,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
             <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
                 <div class="small text-muted">Custo pré-montagem</div>
                 <div class="small text-muted">R$</div>
-                <div class="fw-bold fs-2 money text-success mt-2"><?= br_money($sum->valor_premontagem);?></div>
+                <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($sum->valor_premontagem);?></div>
                 <?php $t = $trendFor('valor_premontagem'); ?>
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
@@ -149,7 +149,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
             <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
                 <div class="small text-muted">Custo operacional evento</div>
                 <div class="small text-muted">R$</div>
-                <div class="fw-bold fs-2 money text-success mt-2"><?= br_money($sum->super_op);?></div>
+                <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($sum->super_op);?></div>
                 <?php $t = $trendFor('super_op'); ?>
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
@@ -158,7 +158,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
             <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
                 <div class="small text-muted">Custo médio por evento</div>
                 <div class="small text-muted">R$</div>
-                <div class="fw-bold fs-2 money text-primary mt-2"><?= br_money($avg_event_cost ?? 0);?></div>
+                <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($avg_event_cost ?? 0);?></div>
                 <?php $t = $trendFor('avg_event_cost'); ?>
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
@@ -167,7 +167,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
             <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
                 <div class="small text-muted">Custo total no período</div>
                 <div class="small text-muted">R$</div>
-                <div class="fw-bold fs-2 money text-danger mt-2"><?= br_money($sum->total_consumo);?></div>
+                <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($sum->total_consumo);?></div>
                 <?php $t = $trendFor('total_consumo'); ?>
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
@@ -522,6 +522,7 @@ var bar = <?= $bar ?? '[]' ?>;
 
 
 var line = <?= $line ?? '[]' ?>;
+var lineTitle = <?= json_encode($lineTitle ?? 'Custo anual') ?>;
 var lineGenerator = <?= $lineGenerator ?? '[]' ?>;
 var topEvents = <?= $topEvents ?? '[]' ?>;
 
@@ -534,12 +535,13 @@ function hasChartRows(arr) {
          return;
      }
      var data = google.visualization.arrayToDataTable(line);
+     var lineSeriesCount = Array.isArray(line) && line[0] ? Math.max(0, line[0].length - 1) : 0;
 
      var options = {
-         title: 'Custo Anual',
+         title: lineTitle,
          vAxis: { title: 'Custo' },
          legend: { position: 'bottom' },
-         colors: ['#999', '#f00']
+         colors: lineSeriesCount > 1 ? ['#999', '#f00'] : ['#0d6efd']
      };
 
      var chart = new google.visualization.LineChart(document.getElementById('line_chart'));
