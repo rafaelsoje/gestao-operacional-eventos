@@ -19,6 +19,10 @@ $trendCards = $trend_cards ?? [];
 $trendFor = static function (string $key) use ($trendCards): array {
     return $trendCards[$key] ?? ['text' => '-', 'class' => 'text-muted'];
 };
+$selectedTipos = $tipo ?? ['social', 'corporativo', 'entretenimento'];
+$isTipoChecked = static function (string $value) use ($selectedTipos): bool {
+    return in_array($value, $selectedTipos, true);
+};
 ?>
 
 <?php if (session()->has('error')): ?>
@@ -39,8 +43,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
             <li class="breadcrumb-item active" aria-current="page">Library</li>
         </ol>
     </nav> -->
-    <form class="row g-2 dashboard-filter-form w-100 justify-content-end" method="post" action="<?= url_to('search.operacional');?>" enctype="multipart/form-data">
-        <?= csrf_field(); ?>
+    <form class="row g-2 dashboard-filter-form w-100 justify-content-end" method="get" action="<?= url_to('search.operacional.get');?>">
         <div class="col-12 col-md-3 col-lg-2">
             <input type="date" id="data_inicial" name="data_inicial" class="form-control"  required>
         </div>
@@ -49,15 +52,15 @@ $trendFor = static function (string $key) use ($trendCards): array {
         </div>
         <div class="col-12 col-md d-flex align-items-center flex-wrap gap-2">
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="inlineCheckbox1" name="social" value="social" checked>
+                <input class="form-check-input" type="checkbox" id="inlineCheckbox1" name="tipos[]" value="social" <?= $isTipoChecked('social') ? 'checked' : ''; ?>>
                 <label class="form-check-label" for="inlineCheckbox1">Social</label>
                 </div>
                 <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="inlineCheckbox2" name="corporativo" value="corporativo" checked>
+                <input class="form-check-input" type="checkbox" id="inlineCheckbox2" name="tipos[]" value="corporativo" <?= $isTipoChecked('corporativo') ? 'checked' : ''; ?>>
                 <label class="form-check-label" for="inlineCheckbox2">Corporativo</label>
                 </div>
                 <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="inlineCheckbox3" name="entretenimento" value="entretenimento" checked>
+                <input class="form-check-input" type="checkbox" id="inlineCheckbox3" name="tipos[]" value="entretenimento" <?= $isTipoChecked('entretenimento') ? 'checked' : ''; ?>>
                 <label class="form-check-label" for="inlineCheckbox3">Entretenimento</label>
             </div>
         </div>
@@ -306,8 +309,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
         <div class="px-4 mb-3 mt-2 d-flex align-items-center justify-content-between">
 
             <h4 class="mt-4"><?= "Sua pesquisa por " . "<span class='text-danger'>" . $inicio ." a ". $fim . "</span>" . " não retornou nenhum resultado.";?></h4>
-            <form class="row" method="post" action="<?= url_to('search.operacional');?>" enctype="multipart/form-data">
-                <?= csrf_field(); ?>
+            <form class="row" method="get" action="<?= url_to('search.operacional.get');?>">
                 <div class="col">
                     <input type="date" id="data_inicial" name="data_inicial" class="form-control"  required>
                 </div>
@@ -375,8 +377,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
 
 <?php else:?>
     <div class="px-4 mb-3 mt-2 d-flex align-items-center justify-content-end dashboard-filter-wrap">
-        <form class="row g-2 dashboard-filter-form w-100 justify-content-end" method="post" action="<?= url_to('search.operacional');?>" enctype="multipart/form-data">
-            <?= csrf_field(); ?>
+        <form class="row g-2 dashboard-filter-form w-100 justify-content-end" method="get" action="<?= url_to('search.operacional.get');?>">
              <div class="col-12 col-md-3 col-lg-2">
             <input type="date" id="data_inicial" name="data_inicial" class="form-control"  required>
             </div>
@@ -386,19 +387,19 @@ $trendFor = static function (string $key) use ($trendCards): array {
             <div class="col-12 col-md d-flex align-items-center flex-wrap gap-2 justify-content-md-end">
                 <div class="d-flex align-items-center flex-wrap gap-2">
                     <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="social" value="social" id="flexCheck1" checked>
+                    <input class="form-check-input" type="checkbox" name="tipos[]" value="social" id="flexCheck1" <?= $isTipoChecked('social') ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="flexCheck1">
                         Social
                     </label>
                     </div>
                     <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="corporativo" value="Corporativo" id="flexCheck2" checked>
+                    <input class="form-check-input" type="checkbox" name="tipos[]" value="corporativo" id="flexCheck2" <?= $isTipoChecked('corporativo') ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="flexCheck2">
                         Corporativo
                     </label>
                     </div>
                     <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="entretenimento" value="Entretenimento" id="flexCheck3" checked>
+                    <input class="form-check-input" type="checkbox" name="tipos[]" value="entretenimento" id="flexCheck3" <?= $isTipoChecked('entretenimento') ? 'checked' : ''; ?>>
                     <label class="form-check-label" for="flexCheck3">
                         Entretenimento
                     </label>

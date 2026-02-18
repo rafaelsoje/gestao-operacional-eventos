@@ -27,6 +27,8 @@ class Home extends BaseController
         $year = (int)date('Y');
 
         $get = '';
+        $search = null;
+        $tipo = [];
 
         # caso receba ?id=0 no GET direciona para lançamentos futuros
         if($this->request->getGet()){
@@ -44,50 +46,90 @@ class Home extends BaseController
         $barSocial = clone $chart;
         $barCorporativo = clone $chart;
 
-        if($this->request->getPost()){
-
-           # dd('post');
-
+        if ($this->request->getMethod() === 'post') {
             $post = $this->request->getPost();
-            $filters = [];
+            $dataInicialRaw = $post['data_inicial'] ?? null;
+            $dataFinalRaw = $post['data_final'] ?? null;
+            if (!is_string($dataInicialRaw) || !is_string($dataFinalRaw)) {
+                return redirect()->back()->with('error', 'Formato de dados inválido para pesquisa.');
+            }
 
-            if($post['data_inicial'] && $post['data_final'])
-            {
+            $dataInicial = trim($dataInicialRaw);
+            $dataFinal = trim($dataFinalRaw);
 
-                if(isset($post['social']) || isset($post['corporativo']) || isset($post['entretenimento']))
-                {
-
-                    if(isset($post['social'])){
-                        $array['social'] = $post['social'];
-                    }
-                    if(isset($post['corporativo'])){
-                        $array['corporativo'] = $post['corporativo'];
-                    }
-                    if(isset($post['entretenimento'])){
-                        $array['entretenimento'] = $post['entretenimento'];
-                    }
-
-                    $filters = [
-                        'date_from' => $post['data_inicial'],
-                        'date_to' => $post['data_final'],
-                        'flag' => 1,
-                        'tipos' => $array,
-                    ];
-
-                    $result = $service->buildAggregates($filters);
-                    $data = $result['data'];
-                    $sum = $result['sum'];
-                    $chart = $result['chart'];
-                    $barSocial = $result['bars']['social'];
-                    $barCorporativo = $result['bars']['corporativo'];
-                    $barEntretenimento = $result['bars']['entretenimento'];
-                }else{
-                    return redirect()->back()->with('error', 'Nenhum tipo de evento selecionado!');
-                }
-            }else{
+            if ($dataInicial === '' || $dataFinal === '') {
                 return redirect()->back()->with('error', 'Data da pesquisa incorreta');
             }
-        }else if($get == 0){
+
+            if (!$this->isValidDateYmd($dataInicial) || !$this->isValidDateYmd($dataFinal)) {
+                return redirect()->back()->with('error', 'Formato de data inválido. Use AAAA-MM-DD.');
+            }
+
+            if ($dataInicial > $dataFinal) {
+                return redirect()->back()->with('error', 'A data inicial deve ser anterior à data final.');
+            }
+
+            $selectedTipos = $this->sanitizeSearchTipos($post['tipos'] ?? null);
+            if ($selectedTipos === null) {
+                return redirect()->back()->with('error', 'Tipo de dado inválido em tipos de evento.');
+            }
+
+            if (empty($selectedTipos)) {
+                return redirect()->back()->with('error', 'Nenhum tipo de evento selecionado!');
+            }
+
+            return redirect()->to(url_to('search.operacional.get') . '?' . http_build_query([
+                'data_inicial' => $dataInicial,
+                'data_final' => $dataFinal,
+                'tipos' => $selectedTipos,
+            ]), 303);
+        }
+
+        $dataInicialGetRaw = $this->request->getGet('data_inicial');
+        $dataFinalGetRaw = $this->request->getGet('data_final');
+        if (($dataInicialGetRaw !== null && !is_string($dataInicialGetRaw)) || ($dataFinalGetRaw !== null && !is_string($dataFinalGetRaw))) {
+            return redirect()->route('home')->with('error', 'Formato de dados inválido para pesquisa.');
+        }
+
+        $dataInicialGet = trim((string)($dataInicialGetRaw ?? ''));
+        $dataFinalGet = trim((string)($dataFinalGetRaw ?? ''));
+        if ($dataInicialGet !== '' && $dataFinalGet !== '') {
+            if (!$this->isValidDateYmd($dataInicialGet) || !$this->isValidDateYmd($dataFinalGet)) {
+                return redirect()->route('home')->with('error', 'Formato de data inválido. Use AAAA-MM-DD.');
+            }
+
+            if ($dataInicialGet > $dataFinalGet) {
+                return redirect()->route('home')->with('error', 'A data inicial deve ser anterior à data final.');
+            }
+
+            $tipos = $this->sanitizeSearchTipos($this->request->getGet('tipos'));
+            if ($tipos === null) {
+                return redirect()->route('home')->with('error', 'Tipo de dado inválido em tipos de evento.');
+            }
+            if (empty($tipos)) {
+                $tipos = ['social', 'corporativo', 'entretenimento'];
+            }
+
+            $tipo = $tipos;
+            $search = [
+                'data_inicial' => $dataInicialGet,
+                'data_final' => $dataFinalGet,
+            ];
+            $filters = [
+                'date_from' => $dataInicialGet,
+                'date_to' => $dataFinalGet,
+                'flag' => 1,
+                'tipos' => $tipos,
+            ];
+
+            $result = $service->buildAggregates($filters);
+            $data = $result['data'];
+            $sum = $result['sum'];
+            $chart = $result['chart'];
+            $barSocial = $result['bars']['social'];
+            $barCorporativo = $result['bars']['corporativo'];
+            $barEntretenimento = $result['bars']['entretenimento'];
+        } else if($get == 0){
 
            
 
@@ -131,7 +173,7 @@ class Home extends BaseController
         }
         
         $lineTitle = 'Custo anual';
-        if (isset($post)) {
+        if (isset($search)) {
             $line = $service->monthlySeriesByFilters($filters ?? []);
             $lineTitle = 'Custo no período pesquisado';
         } else {
@@ -221,13 +263,13 @@ class Home extends BaseController
             'lineGenerator' => json_encode($generatorAccumLine),
         ];
 
-        if(isset($post)){
+        if(isset($search)){
             $topEvents = $service->topEventsByCost($filters ?? []);
             return view('operacional', $payload + [
                 'operacional' => true,
                 'topEvents' => json_encode($topEvents),
-                'search' => $post,
-                'tipo' => $array ?? [],
+                'search' => $search,
+                'tipo' => $tipo,
             ]);
         }else{
             if($get == 0){
@@ -1592,7 +1634,48 @@ class Home extends BaseController
 
     private function isValidDateYmd(string $date): bool
     {
-        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) === 1;
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
+            return false;
+        }
+
+        [$year, $month, $day] = array_map('intval', explode('-', $date));
+        return checkdate($month, $day, $year);
+    }
+
+    private function sanitizeSearchTipos($rawTipos): ?array
+    {
+        if ($rawTipos === null || $rawTipos === '') {
+            return [];
+        }
+
+        if (is_string($rawTipos)) {
+            $rawTipos = [$rawTipos];
+        }
+
+        if (!is_array($rawTipos)) {
+            return null;
+        }
+
+        $allowed = ['social', 'corporativo', 'entretenimento'];
+        $tipos = [];
+        foreach ($rawTipos as $tipo) {
+            if (!is_string($tipo)) {
+                return null;
+            }
+
+            $tipo = mb_strtolower(trim($tipo));
+            if ($tipo === '') {
+                continue;
+            }
+
+            if (!in_array($tipo, $allowed, true)) {
+                continue;
+            }
+
+            $tipos[] = $tipo;
+        }
+
+        return array_values(array_unique($tipos));
     }
 
     private function calculateGeneratorUsageMinutesFromPost(array $post, string $entradaKey, string $saidaKey): int

@@ -45,6 +45,7 @@ $routes->group('', ['filter' => 'auth'], function($routes){
     
     $routes->post('/delete/usuario', 'Home::removeUsuario', ['filter' => ['csrf', 'role:admin']]);
 
+    $routes->get('/search/operacional', 'Home::operacional', ['as' => 'search.operacional.get']);
     $routes->post('/search/operacional', 'Home::operacional', ['as' => 'search.operacional', 'filter' => 'csrf']);
     $routes->get('/uploads/(:segment)/(:segment)', 'Home::downloadUpload/$1/$2', ['as' => 'uploads.download']);
     $routes->get('/avatar/(:segment)', 'Home::avatar/$1', ['as' => 'avatar.show']);
