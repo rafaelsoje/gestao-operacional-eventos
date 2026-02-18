@@ -328,7 +328,7 @@ class OperacionalService
             'limit_min' => $limitMin,
             'limit_hhmm' => $this->formatMinutesToHHMM($limitMin),
             'progress_percent' => round($percent, 1),
-            'is_warning' => $totalMin >= (int)($limitMin * 0.9),
+            'is_warning' => $totalMin >= (int)($limitMin * 0.9) && $totalMin < $limitMin,
             'is_limit_reached' => $totalMin >= $limitMin,
             'last_maintenance_date' => $dataBase,
             'avg_daily_recent_min' => round($avgDailyRecentMin, 2),

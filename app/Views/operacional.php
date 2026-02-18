@@ -93,11 +93,20 @@ $trendFor = static function (string $key) use ($trendCards): array {
             Atenção: um ou mais geradores já atingiram 200:00 horas de uso e precisam de manutenção.
             <a href="<?= base_url('operacional/geradores'); ?>" class="btn btn-sm btn-danger ms-2">Acessar Geradores</a>
         </div>
-    <?php elseif (!empty($generatorUsage['has_warning'])): ?>
+    <?php endif; ?>
+    <?php if (!empty($generatorUsage['has_warning'])): ?>
         <div class="alert alert-warning text-start mb-3">
             Alerta: gerador próximo da manutenção (acima de 180:00 horas de uso).
         </div>
     <?php endif; ?>
+    <style>
+        .generator-warning-strong {
+            color: #d89a1a !important;
+        }
+        .progress-bar.generator-warning-strong {
+            background-color: #d89a1a !important;
+        }
+    </style>
     <div class="row g-3 align-items-stretch">
         <?php $kwhTotal = (float)($sum->kwh_total ?? 0); ?>
         <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
@@ -176,20 +185,24 @@ $trendFor = static function (string $key) use ($trendCards): array {
             <?php $g1 = $generatorUsage['g1']; ?>
             <?php
                 $g1Progress = (float)($g1['progress_percent'] ?? 0);
-                $g1Tone = $g1Progress >= 90 ? 'danger' : ($g1Progress >= 70 ? 'warning' : 'success');
+                $g1Tone = !empty($g1['is_limit_reached']) ? 'danger' : (!empty($g1['is_warning']) ? 'warning' : 'success');
+                $g1ToneClass = $g1Tone === 'warning' ? 'generator-warning-strong' : 'text-' . $g1Tone;
+                $g1BarClass = $g1Tone === 'warning' ? 'generator-warning-strong' : 'bg-' . $g1Tone;
             ?>
             <div class="stat-card bg-white rounded shadow-lg text-start p-3 h-100">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="fw-semibold">Uso Gerador G1</div>
                     <?php if (!empty($g1['is_limit_reached'])): ?>
                         <span class="badge bg-danger">Manutenção vencida</span>
+                    <?php elseif (!empty($g1['is_warning'])): ?>
+                        <span class="badge bg-warning text-dark">Próximo da manutenção</span>
                     <?php endif; ?>
                 </div>
-                <div class="fs-5 fw-bold text-<?= $g1Tone; ?>">
+                <div class="fs-5 fw-bold <?= $g1ToneClass; ?>">
                     <?= esc($g1['total_hhmm']); ?> / 200:00
                 </div>
                 <div class="progress mt-2" style="height: 8px;">
-                    <div class="progress-bar bg-<?= $g1Tone; ?>" role="progressbar" style="width: <?= $g1Progress; ?>%"></div>
+                    <div class="progress-bar <?= $g1BarClass; ?>" role="progressbar" style="width: <?= $g1Progress; ?>%"></div>
                 </div>
                 <small class="text-muted d-block mt-2">
                     Horas faltantes: <?= esc((string)($g1['remaining_hhmm'] ?? '00:00')); ?>
@@ -200,7 +213,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
                         <?= !empty($g1['last_maintenance_date']) ? br_date($g1['last_maintenance_date']) : 'não registrada'; ?>
                     </span>
                 </small>
-                <small class="d-block text-<?= $g1Tone; ?>">
+                <small class="d-block <?= $g1ToneClass; ?>">
                     Projeção manutenção: <?= isset($g1['days_to_maintenance']) ? ((int)$g1['days_to_maintenance'] . ' dias') : 'sem dados recentes'; ?>
                 </small>
             </div>
@@ -209,20 +222,24 @@ $trendFor = static function (string $key) use ($trendCards): array {
             <?php $g2 = $generatorUsage['g2']; ?>
             <?php
                 $g2Progress = (float)($g2['progress_percent'] ?? 0);
-                $g2Tone = $g2Progress >= 90 ? 'danger' : ($g2Progress >= 70 ? 'warning' : 'success');
+                $g2Tone = !empty($g2['is_limit_reached']) ? 'danger' : (!empty($g2['is_warning']) ? 'warning' : 'success');
+                $g2ToneClass = $g2Tone === 'warning' ? 'generator-warning-strong' : 'text-' . $g2Tone;
+                $g2BarClass = $g2Tone === 'warning' ? 'generator-warning-strong' : 'bg-' . $g2Tone;
             ?>
             <div class="stat-card bg-white rounded shadow-lg text-start p-3 h-100">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="fw-semibold">Uso Gerador G2</div>
                     <?php if (!empty($g2['is_limit_reached'])): ?>
                         <span class="badge bg-danger">Manutenção vencida</span>
+                    <?php elseif (!empty($g2['is_warning'])): ?>
+                        <span class="badge bg-warning text-dark">Próximo da manutenção</span>
                     <?php endif; ?>
                 </div>
-                <div class="fs-5 fw-bold text-<?= $g2Tone; ?>">
+                <div class="fs-5 fw-bold <?= $g2ToneClass; ?>">
                     <?= esc($g2['total_hhmm']); ?> / 200:00
                 </div>
                 <div class="progress mt-2" style="height: 8px;">
-                    <div class="progress-bar bg-<?= $g2Tone; ?>" role="progressbar" style="width: <?= $g2Progress; ?>%"></div>
+                    <div class="progress-bar <?= $g2BarClass; ?>" role="progressbar" style="width: <?= $g2Progress; ?>%"></div>
                 </div>
                 <small class="text-muted d-block mt-2">
                     Horas faltantes: <?= esc((string)($g2['remaining_hhmm'] ?? '00:00')); ?>
@@ -233,7 +250,7 @@ $trendFor = static function (string $key) use ($trendCards): array {
                         <?= !empty($g2['last_maintenance_date']) ? br_date($g2['last_maintenance_date']) : 'não registrada'; ?>
                     </span>
                 </small>
-                <small class="d-block text-<?= $g2Tone; ?>">
+                <small class="d-block <?= $g2ToneClass; ?>">
                     Projeção manutenção: <?= isset($g2['days_to_maintenance']) ? ((int)$g2['days_to_maintenance'] . ' dias') : 'sem dados recentes'; ?>
                 </small>
             </div>

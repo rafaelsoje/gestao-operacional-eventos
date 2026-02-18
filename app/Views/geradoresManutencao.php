@@ -49,19 +49,35 @@ if (session()->has('error')) {
     ];
 }
 ?>
+<style>
+    .generator-warning-soft {
+        color: #d89a1a !important;
+    }
+    .progress-bar.generator-warning-soft {
+        background-color: #d89a1a !important;
+    }
+</style>
 
 <div class="container-fluid mt-3">
     <div class="row g-3 mb-3">
         <?php $g1 = $usage['g1']; ?>
+        <?php
+            $g1ValueClass = !empty($g1['is_limit_reached'])
+                ? 'text-danger'
+                : (!empty($g1['is_warning']) ? 'generator-warning-soft' : 'text-success');
+            $g1BarClass = !empty($g1['is_limit_reached'])
+                ? 'bg-danger'
+                : (!empty($g1['is_warning']) ? 'generator-warning-soft' : 'bg-success');
+        ?>
         <div class="col-12 col-md-6">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title mb-1">Gerador G1</h5>
-                    <div class="fs-4 fw-bold <?= !empty($g1['is_limit_reached']) ? 'text-danger' : (!empty($g1['is_warning']) ? 'text-warning' : 'text-success'); ?>">
+                    <div class="fs-4 fw-bold <?= $g1ValueClass; ?>">
                         <?= esc((string)($g1['total_hhmm'] ?? '00:00')); ?> / 200:00
                     </div>
                     <div class="progress mt-2" style="height: 10px;">
-                        <div class="progress-bar <?= !empty($g1['is_limit_reached']) ? 'bg-danger' : (!empty($g1['is_warning']) ? 'bg-warning' : 'bg-success'); ?>" role="progressbar" style="width: <?= (float)($g1['progress_percent'] ?? 0); ?>%"></div>
+                        <div class="progress-bar <?= $g1BarClass; ?>" role="progressbar" style="width: <?= (float)($g1['progress_percent'] ?? 0); ?>%"></div>
                     </div>
                     <small class="text-muted mt-2 d-block">
                         Última manutenção: <?= !empty($g1['last_maintenance_date']) ? br_date((string)$g1['last_maintenance_date']) : 'não registrada'; ?>
@@ -73,15 +89,23 @@ if (session()->has('error')) {
             </div>
         </div>
         <?php $g2 = $usage['g2']; ?>
+        <?php
+            $g2ValueClass = !empty($g2['is_limit_reached'])
+                ? 'text-danger'
+                : (!empty($g2['is_warning']) ? 'generator-warning-soft' : 'text-success');
+            $g2BarClass = !empty($g2['is_limit_reached'])
+                ? 'bg-danger'
+                : (!empty($g2['is_warning']) ? 'generator-warning-soft' : 'bg-success');
+        ?>
         <div class="col-12 col-md-6">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title mb-1">Gerador G2</h5>
-                    <div class="fs-4 fw-bold <?= !empty($g2['is_limit_reached']) ? 'text-danger' : (!empty($g2['is_warning']) ? 'text-warning' : 'text-success'); ?>">
+                    <div class="fs-4 fw-bold <?= $g2ValueClass; ?>">
                         <?= esc((string)($g2['total_hhmm'] ?? '00:00')); ?> / 200:00
                     </div>
                     <div class="progress mt-2" style="height: 10px;">
-                        <div class="progress-bar <?= !empty($g2['is_limit_reached']) ? 'bg-danger' : (!empty($g2['is_warning']) ? 'bg-warning' : 'bg-success'); ?>" role="progressbar" style="width: <?= (float)($g2['progress_percent'] ?? 0); ?>%"></div>
+                        <div class="progress-bar <?= $g2BarClass; ?>" role="progressbar" style="width: <?= (float)($g2['progress_percent'] ?? 0); ?>%"></div>
                     </div>
                     <small class="text-muted mt-2 d-block">
                         Última manutenção: <?= !empty($g2['last_maintenance_date']) ? br_date((string)$g2['last_maintenance_date']) : 'não registrada'; ?>
