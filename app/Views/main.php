@@ -61,7 +61,7 @@
       }
 
       .site-credit a {
-        color: inherit;
+        color: rgba(220, 234, 255, 0.96);
         text-decoration: none;
       }
 
