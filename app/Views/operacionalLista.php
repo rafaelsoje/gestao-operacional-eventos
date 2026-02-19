@@ -119,18 +119,18 @@
             $kwhG1 = (float)$item->kwh_saida_g1 - (float)$item->kwh_entrada_g1;
             $kwhG2 = (float)$item->kwh_saida_g2 - (float)$item->kwh_entrada_g2;
           ?>          
-        <tr>        
-          <td><?= $data;?></td>          
-          <td><?= $item->nome;?></td>
-          <td><?= $item->tipo;?></td>          
-          <td class=""><?= br_money($operacional);?></td>
-          <td class=""><?= br_money($item->diesel_total);?></td>
-          <td class=""><?= br_money($item->cedae_total);?></td>
-          <td class=""><?= br_money($item->light_total);?></td>
+        <tr>
+          <td data-label="Data"><?= $data;?></td>
+          <td data-label="Nome"><?= $item->nome;?></td>
+          <td data-label="Tipo de evento"><?= $item->tipo;?></td>
+          <td data-label="Operacional" class=""><?= br_money($operacional);?></td>
+          <td data-label="Gerador" class=""><?= br_money($item->diesel_total);?></td>
+          <td data-label="Cedae" class=""><?= br_money($item->cedae_total);?></td>
+          <td data-label="Light" class=""><?= br_money($item->light_total);?></td>
           <!-- <td class=""><?= br_number($kwhG1, 0);?><?= $kwhG1 ? ' kWh' : ''; ?></td> -->
           <!-- <td class=""><?= br_number($kwhG2, 0);?><?= $kwhG2 ? ' kWh' : ''; ?></td> -->
-          <td class=""><?= br_money($item->total_consumo);?></td>
-          <td class="d-flex justify-content-center" >
+          <td data-label="Custo do Evento" class=""><?= br_money($item->total_consumo);?></td>
+          <td data-label="Ação" class="d-flex justify-content-center" >
             <?php if(!empty($item->descricao)):?>
               <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#i<?= $item->id;?>"><i class="bi bi-chat-left-text"></i></a>
               <?php else:?>
@@ -267,9 +267,7 @@
 
 
     $(document).ready(function() {
-      $('#propostas').DataTable();
-    });
-    $('#propostas').DataTable({
+      $('#propostas').DataTable({
 
       "columnDefs": [
         {
@@ -308,6 +306,7 @@
             }
     }
     
+      });
     });
 
 
