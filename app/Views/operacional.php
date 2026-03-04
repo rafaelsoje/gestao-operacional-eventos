@@ -587,15 +587,40 @@ function hasChartRows(arr) {
      if (!hasChartRows(lineGenerator) || !document.getElementById('line_generator_chart')) {
          return;
      }
-     var data = google.visualization.arrayToDataTable(lineGenerator);
+     var header = lineGenerator[0] || [];
+     var rows = lineGenerator.slice(1);
+     var data = new google.visualization.DataTable();
+     data.addColumn('string', String(header[0] || 'Data'));
+     for (var c = 1; c < header.length; c++) {
+         data.addColumn('number', String(header[c] || ('Série ' + c)));
+     }
+     data.addRows(rows.map(function (row) {
+         var out = [String(row[0] || '')];
+         for (var i = 1; i < header.length; i++) {
+             var raw = row[i];
+             if (raw === null || raw === undefined || raw === '') {
+                 out.push(null);
+                 continue;
+             }
+             var n = Number(raw);
+             out.push(Number.isFinite(n) ? n : null);
+         }
+         return out;
+     }));
 
      var options = {
          title: 'Acúmulo de uso dos geradores (horas)',
          hAxis: { title: 'Data' },
          vAxis: { title: 'Horas acumuladas' },
          legend: { position: 'bottom' },
-         colors: ['#198754', '#0d6efd'],
-         pointSize: 5
+         colors: ['#198754', '#0d6efd', '#dc3545', '#fd7e14'],
+         pointSize: 5,
+         series: {
+             0: { lineWidth: 2, pointSize: 5 },
+             1: { lineWidth: 2, pointSize: 5 },
+             2: { lineWidth: 0, pointSize: 8, pointShape: 'diamond' },
+             3: { lineWidth: 0, pointSize: 8, pointShape: 'diamond' }
+         }
      };
 
      var chart = new google.visualization.LineChart(document.getElementById('line_generator_chart'));

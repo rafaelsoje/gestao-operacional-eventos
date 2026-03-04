@@ -231,7 +231,8 @@ class Home extends BaseController
                     : 0
             ],
         ];
-        $generatorAccumLine = $this->buildGeneratorAccumulatedLine($data ?? []);
+        $generatorMaintenances = $this->loadGeneratorMaintenanceTimeline($data ?? []);
+        $generatorAccumLine = $this->buildGeneratorAccumulatedLine($data ?? [], $generatorMaintenances);
 
         
 
@@ -1686,10 +1687,10 @@ class Home extends BaseController
         );
     }
 
-    private function buildGeneratorAccumulatedLine(array $events): array
+    private function buildGeneratorAccumulatedLine(array $events, array $maintenances = []): array
     {
         $line = [
-            ['Data', 'G1 acumulado (h)', 'G2 acumulado (h)']
+            ['Data', 'G1 acumulado (h)', 'G2 acumulado (h)', 'Manutenção G1', 'Manutenção G2']
         ];
 
         if (empty($events)) {
@@ -1705,25 +1706,103 @@ class Home extends BaseController
             return $da <=> $db;
         });
 
+        $dailyUsage = [];
+        foreach ($events as $event) {
+            $date = !empty($event->data) ? date('Y-m-d', strtotime((string)$event->data)) : null;
+            if ($date === null) {
+                continue;
+            }
+            if (!isset($dailyUsage[$date])) {
+                $dailyUsage[$date] = ['g1' => 0, 'g2' => 0];
+            }
+            $dailyUsage[$date]['g1'] += $this->resolveEventGeneratorUsageMinutes($event, 'g1');
+            $dailyUsage[$date]['g2'] += $this->resolveEventGeneratorUsageMinutes($event, 'g2');
+        }
+
+        if (empty($dailyUsage)) {
+            return $line;
+        }
+
+        ksort($dailyUsage);
+
+        $g1Maint = $maintenances['g1'] ?? [];
+        $g2Maint = $maintenances['g2'] ?? [];
+        $g1MaintSet = array_fill_keys($g1Maint, true);
+        $g2MaintSet = array_fill_keys($g2Maint, true);
+        sort($g1Maint);
+        sort($g2Maint);
+        $g1MaintIdx = 0;
+        $g2MaintIdx = 0;
+
         $accG1 = 0;
         $accG2 = 0;
+        foreach ($dailyUsage as $date => $usage) {
+            while ($g1MaintIdx < count($g1Maint) && $g1Maint[$g1MaintIdx] <= $date) {
+                $accG1 = 0;
+                $g1MaintIdx++;
+            }
+            while ($g2MaintIdx < count($g2Maint) && $g2Maint[$g2MaintIdx] <= $date) {
+                $accG2 = 0;
+                $g2MaintIdx++;
+            }
 
-        foreach ($events as $event) {
-            $accG1 += $this->resolveEventGeneratorUsageMinutes($event, 'g1');
-            $accG2 += $this->resolveEventGeneratorUsageMinutes($event, 'g2');
-
-            $label = !empty($event->data)
-                ? date('d/m', strtotime((string)$event->data))
-                : ('#' . (int)($event->id ?? 0));
+            $accG1 += (int)($usage['g1'] ?? 0);
+            $accG2 += (int)($usage['g2'] ?? 0);
 
             $line[] = [
-                $label,
+                date('d/m', strtotime($date)),
                 round($accG1 / 60, 2),
                 round($accG2 / 60, 2),
+                isset($g1MaintSet[$date]) ? round($accG1 / 60, 2) : null,
+                isset($g2MaintSet[$date]) ? round($accG2 / 60, 2) : null,
             ];
         }
 
         return $line;
+    }
+
+    private function loadGeneratorMaintenanceTimeline(array $events): array
+    {
+        $timeline = ['g1' => [], 'g2' => []];
+        if (empty($events) || !db_connect()->tableExists('gerador_manutencoes')) {
+            return $timeline;
+        }
+
+        $maxDate = null;
+        foreach ($events as $event) {
+            $date = !empty($event->data) ? date('Y-m-d', strtotime((string)$event->data)) : null;
+            if ($date === null) {
+                continue;
+            }
+            if ($maxDate === null || $date > $maxDate) {
+                $maxDate = $date;
+            }
+        }
+
+        if ($maxDate === null) {
+            return $timeline;
+        }
+
+        $rows = (new GeradorManutencao())
+            ->select('gerador, data_manutencao')
+            ->where('data_manutencao <=', $maxDate)
+            ->whereIn('gerador', ['G1', 'G2'])
+            ->orderBy('data_manutencao', 'asc')
+            ->findAll();
+
+        foreach ($rows as $row) {
+            $date = !empty($row->data_manutencao) ? date('Y-m-d', strtotime((string)$row->data_manutencao)) : null;
+            if ($date === null) {
+                continue;
+            }
+            if (strtoupper((string)$row->gerador) === 'G2') {
+                $timeline['g2'][] = $date;
+            } else {
+                $timeline['g1'][] = $date;
+            }
+        }
+
+        return $timeline;
     }
 
     private function resolveEventGeneratorUsageMinutes(object $event, string $generator): int
