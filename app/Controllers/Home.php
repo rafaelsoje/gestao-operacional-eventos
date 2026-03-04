@@ -231,8 +231,28 @@ class Home extends BaseController
                     : 0
             ],
         ];
-        $generatorMaintenances = $this->loadGeneratorMaintenanceTimeline($data ?? []);
-        $generatorAccumLine = $this->buildGeneratorAccumulatedLine($data ?? [], $generatorMaintenances);
+        $generatorSourceData = $data ?? [];
+        $generatorHistoryData = $generatorSourceData;
+        if (!isset($search)) {
+            $generatorMaxDate = $this->maxEventDate($generatorSourceData);
+            if ($generatorMaxDate !== null) {
+                $generatorHistoryFilters = [
+                    'date_to' => $generatorMaxDate,
+                    'flag' => (int)($filters['flag'] ?? 1),
+                ];
+                if (!empty($filters['tipos'])) {
+                    $generatorHistoryFilters['tipos'] = $filters['tipos'];
+                }
+                $generatorHistoryData = $service->buildAggregates($generatorHistoryFilters)['data'] ?? $generatorSourceData;
+            }
+        }
+
+        $generatorMaintenances = $this->loadGeneratorMaintenanceTimeline($generatorHistoryData);
+        $generatorAccumLine = $this->buildGeneratorAccumulatedLine(
+            $generatorSourceData,
+            $generatorMaintenances,
+            $generatorHistoryData
+        );
 
         
 
@@ -1687,7 +1707,11 @@ class Home extends BaseController
         );
     }
 
-    private function buildGeneratorAccumulatedLine(array $events, array $maintenances = []): array
+    private function buildGeneratorAccumulatedLine(
+        array $events,
+        array $maintenances = [],
+        array $historyEvents = []
+    ): array
     {
         $line = [
             ['Data', 'G1 acumulado (h)', 'G2 acumulado (h)', 'Manutenção G1', 'Manutenção G2']
@@ -1695,6 +1719,67 @@ class Home extends BaseController
 
         if (empty($events)) {
             return $line;
+        }
+
+        $dailyVisibleUsage = $this->aggregateGeneratorDailyUsage($events);
+        if (empty($dailyVisibleUsage)) {
+            return $line;
+        }
+
+        $dailyHistoryUsage = !empty($historyEvents)
+            ? $this->aggregateGeneratorDailyUsage($historyEvents)
+            : $dailyVisibleUsage;
+        if (empty($dailyHistoryUsage)) {
+            return $line;
+        }
+
+        ksort($dailyHistoryUsage);
+        $visibleDateSet = array_fill_keys(array_keys($dailyVisibleUsage), true);
+
+        $g1Maint = $maintenances['g1'] ?? [];
+        $g2Maint = $maintenances['g2'] ?? [];
+        $g1MaintSet = array_fill_keys($g1Maint, true);
+        $g2MaintSet = array_fill_keys($g2Maint, true);
+        sort($g1Maint);
+        sort($g2Maint);
+        $g1MaintIdx = 0;
+        $g2MaintIdx = 0;
+
+        $accG1 = 0;
+        $accG2 = 0;
+        foreach ($dailyHistoryUsage as $date => $usage) {
+            while ($g1MaintIdx < count($g1Maint) && $g1Maint[$g1MaintIdx] <= $date) {
+                $accG1 = 0;
+                $g1MaintIdx++;
+            }
+            while ($g2MaintIdx < count($g2Maint) && $g2Maint[$g2MaintIdx] <= $date) {
+                $accG2 = 0;
+                $g2MaintIdx++;
+            }
+
+            $accG1 += (int)($usage['g1'] ?? 0);
+            $accG2 += (int)($usage['g2'] ?? 0);
+
+            if (!isset($visibleDateSet[$date])) {
+                continue;
+            }
+
+            $line[] = [
+                date('d/m', strtotime($date)),
+                round($accG1 / 60, 2),
+                round($accG2 / 60, 2),
+                isset($g1MaintSet[$date]) ? round($accG1 / 60, 2) : null,
+                isset($g2MaintSet[$date]) ? round($accG2 / 60, 2) : null,
+            ];
+        }
+
+        return $line;
+    }
+
+    private function aggregateGeneratorDailyUsage(array $events): array
+    {
+        if (empty($events)) {
+            return [];
         }
 
         usort($events, static function ($a, $b) {
@@ -1719,46 +1804,23 @@ class Home extends BaseController
             $dailyUsage[$date]['g2'] += $this->resolveEventGeneratorUsageMinutes($event, 'g2');
         }
 
-        if (empty($dailyUsage)) {
-            return $line;
+        return $dailyUsage;
+    }
+
+    private function maxEventDate(array $events): ?string
+    {
+        $maxDate = null;
+        foreach ($events as $event) {
+            $date = !empty($event->data) ? date('Y-m-d', strtotime((string)$event->data)) : null;
+            if ($date === null) {
+                continue;
+            }
+            if ($maxDate === null || $date > $maxDate) {
+                $maxDate = $date;
+            }
         }
 
-        ksort($dailyUsage);
-
-        $g1Maint = $maintenances['g1'] ?? [];
-        $g2Maint = $maintenances['g2'] ?? [];
-        $g1MaintSet = array_fill_keys($g1Maint, true);
-        $g2MaintSet = array_fill_keys($g2Maint, true);
-        sort($g1Maint);
-        sort($g2Maint);
-        $g1MaintIdx = 0;
-        $g2MaintIdx = 0;
-
-        $accG1 = 0;
-        $accG2 = 0;
-        foreach ($dailyUsage as $date => $usage) {
-            while ($g1MaintIdx < count($g1Maint) && $g1Maint[$g1MaintIdx] <= $date) {
-                $accG1 = 0;
-                $g1MaintIdx++;
-            }
-            while ($g2MaintIdx < count($g2Maint) && $g2Maint[$g2MaintIdx] <= $date) {
-                $accG2 = 0;
-                $g2MaintIdx++;
-            }
-
-            $accG1 += (int)($usage['g1'] ?? 0);
-            $accG2 += (int)($usage['g2'] ?? 0);
-
-            $line[] = [
-                date('d/m', strtotime($date)),
-                round($accG1 / 60, 2),
-                round($accG2 / 60, 2),
-                isset($g1MaintSet[$date]) ? round($accG1 / 60, 2) : null,
-                isset($g2MaintSet[$date]) ? round($accG2 / 60, 2) : null,
-            ];
-        }
-
-        return $line;
+        return $maxDate;
     }
 
     private function loadGeneratorMaintenanceTimeline(array $events): array
