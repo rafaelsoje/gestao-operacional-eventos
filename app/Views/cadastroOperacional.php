@@ -177,19 +177,19 @@
             <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_consumo_g2" readonly>
         </div>
         <div class="p-1 fs-5">Público</div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label">Público final</label>
             <input type="number" class="form-control" name="publico_final" <?= isset($item) ? 'value="' . $item->publico_final . '"' : ''; ?>>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label">Público final tribuna</label>
             <input type="number" class="form-control" name="publico_tribuna" <?= isset($item) ? 'value="' . $item->publico_tribuna . '"' : ''; ?>>            
         </div>               
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label">Público final saída</label>
             <input type="number" class="form-control" name="publico_saida" <?= isset($item) ? 'value="' . $item->publico_saida . '"' : ''; ?>>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label">Público total</label>
             <?php
                 $publicoTotalInicial = (int)($item->publico_final ?? 0) + (int)($item->publico_tribuna ?? 0) + (int)($item->publico_saida ?? 0);
