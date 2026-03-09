@@ -25,6 +25,12 @@ $cedaeAlert = $cedae_alert ?? [
     'count' => 0,
     'is_alert' => false,
 ];
+$pocoAlert = $poco_alert ?? [
+    'limit' => 6.0,
+    'events' => [],
+    'count' => 0,
+    'is_alert' => false,
+];
 $selectedTipos = $tipo ?? ['social', 'corporativo', 'entretenimento'];
 $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
     return in_array($value, $selectedTipos, true);
@@ -151,6 +157,38 @@ $hourOnly = static function (?string $hhmm): string {
             ?>
             Atenção CEDAE: variação de consumo acima de <?= br_number((float)$cedaeAlert['limit'], 0); ?> m³.
             <?= $cedaeEventList !== '' ? (' ' . $cedaeEventList . '.') : ''; ?>
+            Possível vazamento ou consumo anormal de água.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    <?php endif; ?>
+    <?php if (!empty($pocoAlert['is_alert'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show text-start mb-3" role="alert">
+            <?php
+                $pocoEvents = is_array($pocoAlert['events'] ?? null) ? $pocoAlert['events'] : [];
+                $pocoLabels = [];
+                foreach ($pocoEvents as $evt) {
+                    if (is_array($evt)) {
+                        $id = isset($evt['id']) ? (int)$evt['id'] : 0;
+                        $name = trim((string)($evt['name'] ?? ''));
+                        $consumo = (float)($evt['consumo'] ?? 0);
+                        if ($name !== '') {
+                            $label = esc($name) . ' (' . br_number($consumo, 0) . ' m³)';
+                            if ($id > 0) {
+                                $label = '<a href="' . esc(base_url('/update/operacional/' . $id)) . '" class="alert-link">' . $label . '</a>';
+                            }
+                            $pocoLabels[] = $label;
+                        }
+                        continue;
+                    }
+                    $name = trim((string)$evt);
+                    if ($name !== '') {
+                        $pocoLabels[] = esc($name);
+                    }
+                }
+                $pocoEventList = implode(', ', $pocoLabels);
+            ?>
+            Atenção Água do Poço: variação de consumo acima de <?= br_number((float)$pocoAlert['limit'], 0); ?> m³.
+            <?= $pocoEventList !== '' ? (' ' . $pocoEventList . '.') : ''; ?>
             Possível vazamento ou consumo anormal de água.
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>

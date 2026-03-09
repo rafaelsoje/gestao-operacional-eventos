@@ -276,6 +276,7 @@ class Home extends BaseController
         }
         $trendCards = $this->buildTrendCards($sum, $prevSum, $avgEventCost, $prevAvgEventCost);
         $cedaeAlert = $this->buildCedaeConsumptionAlert($data);
+        $pocoAlert = $this->buildPocoConsumptionAlert($data);
 
         $payload = [
             'sum' => $sum,
@@ -291,6 +292,7 @@ class Home extends BaseController
             'lineTitle' => $lineTitle,
             'lineGenerator' => json_encode($generatorAccumLine),
             'cedae_alert' => $cedaeAlert,
+            'poco_alert' => $pocoAlert,
         ];
 
         if(isset($search)){
@@ -2082,6 +2084,45 @@ class Home extends BaseController
 
         foreach ($events as $event) {
             $consumo = (float)($event->cedae_consumo ?? 0);
+            if ($consumo <= $limit) {
+                continue;
+            }
+
+            $eventName = trim((string)($event->nome ?? ''));
+            $eventId = (int)($event->id ?? 0);
+            if ($eventName === '') {
+                $eventName = $eventId > 0 ? ('Evento #' . $eventId) : 'Evento sem nome';
+            }
+
+            $overLimitEvents[] = [
+                'id' => $eventId > 0 ? $eventId : null,
+                'name' => $eventName,
+                'consumo' => $consumo,
+            ];
+        }
+
+        $dedup = [];
+        foreach ($overLimitEvents as $row) {
+            $key = mb_strtolower(trim((string)$row['name'])) . '|' . number_format((float)$row['consumo'], 3, '.', '');
+            $dedup[$key] = $row;
+        }
+        $overLimitEvents = array_values($dedup);
+
+        return [
+            'limit' => $limit,
+            'events' => $overLimitEvents,
+            'count' => count($overLimitEvents),
+            'is_alert' => !empty($overLimitEvents),
+        ];
+    }
+
+    private function buildPocoConsumptionAlert(array $events): array
+    {
+        $limit = 6.0;
+        $overLimitEvents = [];
+
+        foreach ($events as $event) {
+            $consumo = (float)($event->poco_consumo ?? 0);
             if ($consumo <= $limit) {
                 continue;
             }
