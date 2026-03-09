@@ -555,6 +555,8 @@ class Home extends BaseController
         $hasTempoG2 = $db->fieldExists('tempo_g2', 'operacional');
         $manutencoes = [];
         $historicoUso = [];
+        $usageLimit = 100;
+        $usageTotalRows = 0;
 
         if ($tableReady) {
             $manutencoes = (new GeradorManutencao())
@@ -589,11 +591,16 @@ class Home extends BaseController
                 $select[] = 'tempo_g2';
             }
 
+            $usageTotalRows = (new Operacional())
+                ->where('flag', 1)
+                ->countAllResults();
+
             $historicoUso = (new Operacional())
                 ->select(implode(', ', $select))
                 ->where('flag', 1)
                 ->orderBy('data', 'desc')
                 ->orderBy('id', 'desc')
+                ->limit($usageLimit)
                 ->findAll();
 
             foreach ($historicoUso as $row) {
@@ -629,6 +636,8 @@ class Home extends BaseController
             'generator_usage' => $usage,
             'manutencoes' => $manutencoes,
             'historico_uso' => $historicoUso,
+            'usage_limit' => $usageLimit,
+            'usage_total_rows' => $usageTotalRows,
             'usage_columns_ready' => ($hasUsoMinG1 || $hasUsoMinG2 || $canReadG1FromLeitura || $canReadG2FromLeitura),
             'maintenance_table_ready' => $tableReady,
         ]);
