@@ -185,7 +185,7 @@ class Home extends BaseController
             ['Equipe Operacional', (float)$chart->total_operacional],
             ['Diesel', (float)$chart->diesel_total],
             ['Cedae', (float)$chart->cedae_total],
-            ['light', (float)$chart->light_total]
+            ['light', (float)$chart->light_total],
         ];
 
         $bar = [
@@ -194,19 +194,19 @@ class Home extends BaseController
                 (float)$barEntretenimento->total_operacional,
                 (float)$barEntretenimento->diesel_total,
                 (float)$barEntretenimento->cedae_total,
-                (float)$barEntretenimento->light_total
+                (float)$barEntretenimento->light_total,
             ],
             ['Social',
                 (float)$barSocial->total_operacional,
                 (float)$barSocial->diesel_total,
                 (float)$barSocial->cedae_total,
-                (float)$barSocial->light_total
+                (float)$barSocial->light_total,
             ],
             ['Corporativo',
                 (float)$barCorporativo->total_operacional,
                 (float)$barCorporativo->diesel_total,
                 (float)$barCorporativo->cedae_total,
-                (float)$barCorporativo->light_total
+                (float)$barCorporativo->light_total,
             ],
         ];
 
@@ -230,6 +230,12 @@ class Home extends BaseController
                     ? ((float)$barCorporativo->total_consumo / (int)$barCorporativo->event_count)
                     : 0
             ],
+        ];
+        $publicByCategory = [
+            ['Categoria', 'Público total'],
+            ['Entretenimento', (float)($barEntretenimento->publico_total ?? 0)],
+            ['Social', (float)($barSocial->publico_total ?? 0)],
+            ['Corporativo', (float)($barCorporativo->publico_total ?? 0)],
         ];
         $generatorSourceData = $data ?? [];
         $generatorHistoryData = $generatorSourceData;
@@ -269,6 +275,7 @@ class Home extends BaseController
             $prevAvgEventCost = $prevEventCount > 0 ? ((float)$prevSum->total_consumo / $prevEventCount) : 0;
         }
         $trendCards = $this->buildTrendCards($sum, $prevSum, $avgEventCost, $prevAvgEventCost);
+        $cedaeAlert = $this->buildCedaeConsumptionAlert($data);
 
         $payload = [
             'sum' => $sum,
@@ -279,9 +286,11 @@ class Home extends BaseController
             'donut' => json_encode($donutChart),
             'bar' => json_encode($bar),
             'barChart' => json_encode($barchart),
+            'publicByCategory' => json_encode($publicByCategory),
             'line' => json_encode($line),
             'lineTitle' => $lineTitle,
             'lineGenerator' => json_encode($generatorAccumLine),
+            'cedae_alert' => $cedaeAlert,
         ];
 
         if(isset($search)){
@@ -384,6 +393,7 @@ class Home extends BaseController
         $usoMinG2 = $this->calculateGeneratorUsageMinutesFromPost($post, 'leitura_g2', 'leitura_saida_g2');
         $equipeManha = $this->normalizeEquipeNames($post['equipe_manha'] ?? []);
         $equipeNoite = $this->normalizeEquipeNames($post['equipe_noite'] ?? []);
+        $noiseAverage = $this->parseNoiseReading($post['ruido_media'] ?? ($post['monitor_sonoro'] ?? null));
 
 
         $data = [
@@ -396,7 +406,7 @@ class Home extends BaseController
             'temp_inicio' => isset($post['temp_inicio']) ? $post['temp_inicio'] : null,
             'temp_fim' => isset($post['temp_fim'])? $post['temp_fim'] : null,
             'qtd_fornecedor' =>  intval(isset($post['qtd_fornecedor'])? $post['qtd_fornecedor']: null),
-            'monitor_sonoro' => isset($post['monitor_sonoro']) ? $post['monitor_sonoro'] : null,
+            'monitor_sonoro' => $noiseAverage,
             'liga_g1' => isset($post['liga_g1']) ? $post['liga_g1'] : null,
             'desliga_g1' => isset($post['desliga_g1']) ? $post['desliga_g1'] : null,
             'tempo_g1' => isset($post['tempo_g1']) ? $post['tempo_g1'] : null,
@@ -450,6 +460,7 @@ class Home extends BaseController
             'descricao' => $post['descricao'],
             'flag' => intval($post['flag']),
         ];
+        $this->appendNoiseMonitoringData($data, $post);
 
         $user = session()->get('user');
 
@@ -1527,6 +1538,11 @@ class Home extends BaseController
                         'total'    => $e->light_total,
                         'valor'    => $e->light_valor,
                     ],
+                    'poco' => [
+                        'inicio'   => $e->poco_inicio,
+                        'fim'      => $e->poco_fim,
+                        'consumo'  => $e->poco_consumo,
+                    ],
                 ],
                 'custos' => [
                     'premontagem'      => $e->valor_premontagem,
@@ -1535,6 +1551,12 @@ class Home extends BaseController
                     'seguranca'        => $e->seguranca,
                     'bombeiro'         => $e->bombeiro,
                     'limpeza'          => $e->limpeza,
+                ],
+                'ruido' => [
+                    'tribuna_c' => $e->ruido_tribuna_c ?? null,
+                    'pista_cavalo' => $e->ruido_pista_cavalo ?? null,
+                    'corredor_jb' => $e->ruido_corredor_jb ?? null,
+                    'media' => $e->ruido_media ?? ($e->monitor_sonoro ?? null),
                 ],
                 'publico' => [
                     'final'   => $e->publico_final,
@@ -1994,6 +2016,8 @@ class Home extends BaseController
             'kwh_total' => $this->makeTrendValue((float)($sum->kwh_total ?? 0), (float)($prevSum->kwh_total ?? 0)),
             'cedae_total' => $this->makeTrendValue((float)($sum->cedae_total ?? 0), (float)($prevSum->cedae_total ?? 0)),
             'light_total' => $this->makeTrendValue((float)($sum->light_total ?? 0), (float)($prevSum->light_total ?? 0)),
+            'poco_consumo' => $this->makeTrendValue((float)($sum->poco_consumo ?? 0), (float)($prevSum->poco_consumo ?? 0)),
+            'cedae_consumo' => $this->makeTrendValue((float)($sum->cedae_consumo ?? 0), (float)($prevSum->cedae_consumo ?? 0)),
             'valor_premontagem' => $this->makeTrendValue((float)($sum->valor_premontagem ?? 0), (float)($prevSum->valor_premontagem ?? 0)),
             'super_op' => $this->makeTrendValue((float)($sum->super_op ?? 0), (float)($prevSum->super_op ?? 0)),
             'avg_event_cost' => $this->makeTrendValue($avgEventCost, (float)($prevAvgEventCost ?? 0)),
@@ -2001,6 +2025,84 @@ class Home extends BaseController
         ];
 
         return $cards;
+    }
+
+    private function appendNoiseMonitoringData(array &$data, array $post): void
+    {
+        $db = db_connect();
+        if (!$db->fieldExists('ruido_tribuna_c', 'operacional')) {
+            return;
+        }
+
+        $tribuna = $this->parseNoiseReading($post['ruido_tribuna_c'] ?? null);
+        $pista = $this->parseNoiseReading($post['ruido_pista_cavalo'] ?? null);
+        $corredor = $this->parseNoiseReading($post['ruido_corredor_jb'] ?? null);
+        $media = $this->parseNoiseReading($post['ruido_media'] ?? null);
+
+        if ($media === null) {
+            $values = array_values(array_filter([$tribuna, $pista, $corredor], static fn ($v) => $v !== null));
+            $media = !empty($values) ? round(array_sum($values) / count($values), 2) : null;
+        }
+
+        $data['ruido_tribuna_c'] = $tribuna;
+        $data['ruido_pista_cavalo'] = $pista;
+        $data['ruido_corredor_jb'] = $corredor;
+        $data['ruido_media'] = $media;
+        $data['monitor_sonoro'] = $media;
+    }
+
+    private function parseNoiseReading($value): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+        $normalized = str_replace(',', '.', trim((string)$value));
+        if ($normalized === '') {
+            return null;
+        }
+        if (!is_numeric($normalized)) {
+            return null;
+        }
+        return round((float)$normalized, 2);
+    }
+
+    private function buildCedaeConsumptionAlert(array $events): array
+    {
+        $limit = 6.0;
+        $overLimitEvents = [];
+
+        foreach ($events as $event) {
+            $consumo = (float)($event->cedae_consumo ?? 0);
+            if ($consumo <= $limit) {
+                continue;
+            }
+
+            $eventName = trim((string)($event->nome ?? ''));
+            $eventId = (int)($event->id ?? 0);
+            if ($eventName === '') {
+                $eventName = $eventId > 0 ? ('Evento #' . $eventId) : 'Evento sem nome';
+            }
+
+            $overLimitEvents[] = [
+                'id' => $eventId > 0 ? $eventId : null,
+                'name' => $eventName,
+                'consumo' => $consumo,
+            ];
+        }
+
+        $dedup = [];
+        foreach ($overLimitEvents as $row) {
+            $key = mb_strtolower(trim((string)$row['name'])) . '|' . number_format((float)$row['consumo'], 3, '.', '');
+            $dedup[$key] = $row;
+        }
+        $overLimitEvents = array_values($dedup);
+
+        return [
+            'limit' => $limit,
+            'events' => $overLimitEvents,
+            'count' => count($overLimitEvents),
+            'is_alert' => !empty($overLimitEvents),
+        ];
     }
 
     private function makeTrendValue(float $current, float $previous): array

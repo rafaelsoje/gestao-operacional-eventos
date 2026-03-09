@@ -19,6 +19,7 @@ class OperacionalService
             ->select('SUM(COALESCE(kwh_saida_g1,0) - COALESCE(kwh_entrada_g1,0)) AS kwh_g1', false)
             ->select('SUM(COALESCE(kwh_saida_g2,0) - COALESCE(kwh_entrada_g2,0)) AS kwh_g2', false)
             ->select('SUM((COALESCE(kwh_saida_g1,0) - COALESCE(kwh_entrada_g1,0)) + (COALESCE(kwh_saida_g2,0) - COALESCE(kwh_entrada_g2,0))) AS kwh_total', false)
+            ->select('SUM(COALESCE(publico_final,0) + COALESCE(publico_tribuna,0) + COALESCE(publico_saida,0)) AS publico_total', false)
             ->selectSum('super_op')
             ->selectSum('diesel_total')
             ->selectSum('tempo_g1')
@@ -30,6 +31,7 @@ class OperacionalService
             ->selectSum('cedae_total')
             ->selectSum('light_consumo')
             ->selectSum('light_total')
+            ->selectSum('poco_consumo')
             ->selectSum('total_consumo')
             ->first();
 
@@ -41,7 +43,7 @@ class OperacionalService
             ->first();
 
         $barRows = $this->applyFilters((new Operacional()), $filters)
-            ->select('tipo, COUNT(id) AS event_count, SUM(total_operacional) AS total_operacional, SUM(diesel_total) AS diesel_total, SUM(cedae_total) AS cedae_total, SUM(light_total) AS light_total, SUM(total_consumo) AS total_consumo')
+            ->select('tipo, COUNT(id) AS event_count, SUM(total_operacional) AS total_operacional, SUM(diesel_total) AS diesel_total, SUM(cedae_total) AS cedae_total, SUM(light_total) AS light_total, SUM(COALESCE(publico_final,0) + COALESCE(publico_tribuna,0) + COALESCE(publico_saida,0)) AS publico_total, SUM(total_consumo) AS total_consumo', false)
             ->groupBy('tipo')
             ->findAll();
 
@@ -253,6 +255,7 @@ class OperacionalService
                 'diesel_total' => 0,
                 'cedae_total' => 0,
                 'light_total' => 0,
+                'publico_total' => 0,
                 'total_consumo' => 0,
             ];
         };

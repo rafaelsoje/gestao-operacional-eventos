@@ -104,6 +104,7 @@
           <th>Operacional</th>
           <th>Gerador</th>
           <th>Cedae</th>
+          <th>Poço</th>
           <th>Light</th>
           <!-- <th>KWH G1</th> -->
           <!-- <th>KWH G2</th> -->
@@ -126,6 +127,7 @@
           <td data-label="Operacional" class=""><?= br_money($operacional);?></td>
           <td data-label="Gerador" class=""><?= br_money($item->diesel_total);?></td>
           <td data-label="Cedae" class=""><?= br_money($item->cedae_total);?></td>
+          <td data-label="Poço" class=""><?= br_number((float)($item->poco_consumo ?? 0), 0); ?> m³</td>
           <td data-label="Light" class=""><?= br_money($item->light_total);?></td>
           <!-- <td class=""><?= br_number($kwhG1, 0);?><?= $kwhG1 ? ' kWh' : ''; ?></td> -->
           <!-- <td class=""><?= br_number($kwhG2, 0);?><?= $kwhG2 ? ' kWh' : ''; ?></td> -->

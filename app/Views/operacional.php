@@ -19,9 +19,28 @@ $trendCards = $trend_cards ?? [];
 $trendFor = static function (string $key) use ($trendCards): array {
     return $trendCards[$key] ?? ['text' => '-', 'class' => 'text-muted'];
 };
+$cedaeAlert = $cedae_alert ?? [
+    'limit' => 6.0,
+    'events' => [],
+    'count' => 0,
+    'is_alert' => false,
+];
 $selectedTipos = $tipo ?? ['social', 'corporativo', 'entretenimento'];
 $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
     return in_array($value, $selectedTipos, true);
+};
+$hourOnly = static function (?string $hhmm): string {
+    $value = trim((string)$hhmm);
+    if ($value === '') {
+        return '0';
+    }
+    if (strpos($value, ':') !== false) {
+        [$hours] = explode(':', $value, 2);
+        $hours = preg_replace('/\D+/', '', (string)$hours);
+        return $hours !== '' ? (string)((int)$hours) : '0';
+    }
+    $digits = preg_replace('/\D+/', '', $value);
+    return $digits !== '' ? (string)((int)$digits) : '0';
 };
 ?>
 
@@ -92,14 +111,48 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
 
 <div class="px-1 text-center p-2">
     <?php if (!empty($generatorUsage['has_alert'])): ?>
-        <div class="alert alert-danger text-start mb-3">
-            Atenção: um ou mais geradores já atingiram 200:00 horas de uso e precisam de manutenção.
+        <div class="alert alert-danger alert-dismissible fade show text-start mb-3" role="alert">
+            Atenção: um ou mais geradores já atingiram 200 horas de uso e precisam de manutenção.
             <a href="<?= base_url('operacional/geradores'); ?>" class="btn btn-sm btn-danger ms-2">Acessar Geradores</a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     <?php endif; ?>
     <?php if (!empty($generatorUsage['has_warning'])): ?>
-        <div class="alert alert-warning text-start mb-3">
-            Alerta: gerador próximo da manutenção (acima de 180:00 horas de uso).
+        <div class="alert alert-warning alert-dismissible fade show text-start mb-3" role="alert">
+            Alerta: gerador próximo da manutenção (acima de 180 horas de uso).
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    <?php endif; ?>
+    <?php if (!empty($cedaeAlert['is_alert'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show text-start mb-3" role="alert">
+            <?php
+                $cedaeEvents = is_array($cedaeAlert['events'] ?? null) ? $cedaeAlert['events'] : [];
+                $cedaeLabels = [];
+                foreach ($cedaeEvents as $evt) {
+                    if (is_array($evt)) {
+                        $id = isset($evt['id']) ? (int)$evt['id'] : 0;
+                        $name = trim((string)($evt['name'] ?? ''));
+                        $consumo = (float)($evt['consumo'] ?? 0);
+                        if ($name !== '') {
+                            $label = esc($name) . ' (' . br_number($consumo, 0) . ' m³)';
+                            if ($id > 0) {
+                                $label = '<a href="' . esc(base_url('/update/operacional/' . $id)) . '" class="alert-link">' . $label . '</a>';
+                            }
+                            $cedaeLabels[] = $label;
+                        }
+                        continue;
+                    }
+                    $name = trim((string)$evt);
+                    if ($name !== '') {
+                        $cedaeLabels[] = esc($name);
+                    }
+                }
+                $cedaeEventList = implode(', ', $cedaeLabels);
+            ?>
+            Atenção CEDAE: variação de consumo acima de <?= br_number((float)$cedaeAlert['limit'], 0); ?> m³.
+            <?= $cedaeEventList !== '' ? (' ' . $cedaeEventList . '.') : ''; ?>
+            Possível vazamento ou consumo anormal de água.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     <?php endif; ?>
     <style>
@@ -109,11 +162,31 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
         .progress-bar.generator-warning-strong {
             background-color: #d89a1a !important;
         }
+        .kpi-card {
+            padding: 0.85rem 0.95rem !important;
+            min-height: 158px;
+        }
+        .kpi-card .fs-2 {
+            font-size: 1.95rem !important;
+            line-height: 1.15;
+        }
+        .kpi-card .fs-6 {
+            font-size: 1.05rem !important;
+        }
+        .kpi-card .small {
+            line-height: 1.2;
+        }
+        @media (min-width: 1200px) {
+            .kpi-col {
+                flex: 0 0 20%;
+                max-width: 20%;
+            }
+        }
     </style>
     <div class="row g-3 align-items-stretch">
         <?php $kwhTotal = (float)($sum->kwh_total ?? 0); ?>
-        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
-            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+        <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
                 <div class="small text-muted">Custo diesel</div>
                 <div class="small text-muted"><?= (int)($sum->diesel_litros ?? 0); ?> L</div>
                 <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($sum->diesel_total);?></div>
@@ -121,8 +194,8 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
-            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+        <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
                 <div class="small text-muted">Consumo gerador</div>
                 <div class="small text-muted">kWh</div>
                 <div class="fw-bold fs-2 text-dark mt-2"><?= br_number($kwhTotal, 0); ?> <span class="fs-6">kWh</span></div>
@@ -130,8 +203,8 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
-            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+        <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
                 <div class="small text-muted">Água e esgoto</div>
                 <div class="small text-muted"><?= br_number((float)($sum->cedae_consumo ?? 0), 0); ?> m³</div>
                 <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($sum->cedae_total);?></div>
@@ -139,8 +212,17 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
-            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+        <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
+                <div class="small text-muted">Consumo água poço</div>
+                <div class="small text-muted">Total no período</div>
+                <div class="fw-bold fs-2 text-dark mt-2"><?= br_number((float)($sum->poco_consumo ?? 0), 0); ?> <span class="fs-6">m³</span></div>
+                <?php $t = $trendFor('poco_consumo'); ?>
+                <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
                 <div class="small text-muted">Custo light</div>
                 <div class="small text-muted"><?= br_number((float)($sum->light_consumo ?? 0), 0); ?> kWh</div>
                 <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($sum->light_total);?></div>
@@ -148,8 +230,17 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
-            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+        <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
+                <div class="small text-muted">Consumo água CEDAE</div>
+                <div class="small text-muted">Total no período</div>
+                <div class="fw-bold fs-2 text-dark mt-2"><?= br_number((float)($sum->cedae_consumo ?? 0), 0); ?> <span class="fs-6">m³</span></div>
+                <?php $t = $trendFor('cedae_consumo'); ?>
+                <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
                 <div class="small text-muted">Custo pré-montagem</div>
                 <div class="small text-muted">R$</div>
                 <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($sum->valor_premontagem);?></div>
@@ -157,8 +248,8 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
-            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+        <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
                 <div class="small text-muted">Custo operacional evento</div>
                 <div class="small text-muted">R$</div>
                 <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($sum->super_op);?></div>
@@ -166,8 +257,8 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
-            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+        <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
                 <div class="small text-muted">Custo médio por evento</div>
                 <div class="small text-muted">R$</div>
                 <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($avg_event_cost ?? 0);?></div>
@@ -175,8 +266,8 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-3 order-2 order-lg-1">
-            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3">
+        <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
+            <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
                 <div class="small text-muted">Custo total no período</div>
                 <div class="small text-muted">R$</div>
                 <div class="fw-bold fs-2 money text-dark mt-2"><?= br_money($sum->total_consumo);?></div>
@@ -202,13 +293,13 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
                     <?php endif; ?>
                 </div>
                 <div class="fs-5 fw-bold <?= $g1ToneClass; ?>">
-                    <?= esc($g1['total_hhmm']); ?> / 200:00
+                    <?= esc($hourOnly((string)($g1['total_hhmm'] ?? '00:00'))); ?> / 200
                 </div>
                 <div class="progress mt-2" style="height: 8px;">
                     <div class="progress-bar <?= $g1BarClass; ?>" role="progressbar" style="width: <?= $g1Progress; ?>%"></div>
                 </div>
                 <small class="text-muted d-block mt-2">
-                    Horas faltantes: <?= esc((string)($g1['remaining_hhmm'] ?? '00:00')); ?>
+                    Horas faltantes: <?= esc($hourOnly((string)($g1['remaining_hhmm'] ?? '00:00'))); ?>
                 </small>
                 <small class="text-muted d-block mt-2">
                     Última manutenção:
@@ -239,13 +330,13 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
                     <?php endif; ?>
                 </div>
                 <div class="fs-5 fw-bold <?= $g2ToneClass; ?>">
-                    <?= esc($g2['total_hhmm']); ?> / 200:00
+                    <?= esc($hourOnly((string)($g2['total_hhmm'] ?? '00:00'))); ?> / 200
                 </div>
                 <div class="progress mt-2" style="height: 8px;">
                     <div class="progress-bar <?= $g2BarClass; ?>" role="progressbar" style="width: <?= $g2Progress; ?>%"></div>
                 </div>
                 <small class="text-muted d-block mt-2">
-                    Horas faltantes: <?= esc((string)($g2['remaining_hhmm'] ?? '00:00')); ?>
+                    Horas faltantes: <?= esc($hourOnly((string)($g2['remaining_hhmm'] ?? '00:00'))); ?>
                 </small>
                 <small class="text-muted d-block mt-2">
                     Última manutenção:
@@ -276,6 +367,12 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
         <div class="chart-box shadow" id="column_chart2" ></div>
     </div>
     <div class="col-12 col-md-6">
+        <div class="chart-box shadow" id="public_category_chart"></div>
+    </div>
+</div>
+
+<div class="chart row g-3 mt-2 mb-2">
+    <div class="col-12 col-md-6">
         <?php if ($hasTopEvents): ?>
             <div class="chart-box shadow" id="top_events_chart"></div>
         <?php else: ?>
@@ -284,16 +381,15 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
             </div>
         <?php endif; ?>
     </div>
-    <!-- <div class="col-12 col-md-6 shadow" id="curve_chart" ></div> -->
-     <!-- <div class="col-12 col-md-6 shadow" id="line_chart"></div> -->
-</div>
-<div class="chart row g-3 mt-2 mb-2">
-     <div class="col-12 col-md-6">
-        <div class="chart-box shadow" id="line_chart"></div>
-     </div>
      <div class="col-12 col-md-6">
         <div class="chart-box shadow" id="line_generator_chart"></div>
      </div>
+</div>
+
+<div class="chart row g-3 mt-2 mb-2">
+    <div class="col-12">
+        <div class="chart-box shadow" id="line_chart"></div>
+    </div>
 </div>
 
 <!-- <div class="chart row d-flex border m-1">
@@ -344,6 +440,7 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
           <th>Gerador</th>
           <th>Gerador Kwh</th>
           <th>Cedae</th>
+          <th>Poço</th>
           <th>Light</th>
           <th>Custo do Evento</th>
         </tr>
@@ -364,6 +461,7 @@ $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
             <td class=""><?= br_money($item->diesel_total);?></td>
             <td class=""><?= br_number($kwhGerador, 0);?><?= $kwhGerador ? ' kWh' : ''; ?></td>
             <td class=""><?= br_money($item->cedae_total);?></td>
+            <td class=""><?= br_number((float)($item->poco_consumo ?? 0), 0); ?> m³</td>
             <td class=""><?= br_money($item->light_total);?></td>
             <td class=""><?= br_money($item->total_consumo);?></td>
 
@@ -467,6 +565,7 @@ function validarDatas(form) {
     drawDonutChart();
      drawColumnChart();
      drawColumnChart2();
+     drawPublicCategoryChart();
      drawTopEventsChart();
      drawLineChart();
      drawLineGeneratorChart();
@@ -543,9 +642,47 @@ var line = <?= $line ?? '[]' ?>;
 var lineTitle = <?= json_encode($lineTitle ?? 'Custo anual') ?>;
 var lineGenerator = <?= $lineGenerator ?? '[]' ?>;
 var topEvents = <?= $topEvents ?? '[]' ?>;
+var publicByCategory = <?= $publicByCategory ?? '[]' ?>;
 
 function hasChartRows(arr) {
     return Array.isArray(arr) && arr.length > 1;
+}
+
+function drawPublicCategoryChart() {
+    if (!hasChartRows(publicByCategory) || !document.getElementById('public_category_chart')) {
+        return;
+    }
+
+    var rawData = google.visualization.arrayToDataTable(publicByCategory);
+    var view = new google.visualization.DataView(rawData);
+    view.setColumns([
+        0,
+        1,
+        {
+            calc: function (dt, row) {
+                return Number(dt.getValue(row, 1) || 0).toLocaleString('pt-BR');
+            },
+            type: 'string',
+            role: 'annotation'
+        }
+    ]);
+
+    var options = {
+        title: 'Público por categoria',
+        legend: { position: 'none' },
+        bars: 'horizontal',
+        height: 320,
+        colors: ['#198754'],
+        chartArea: { left: 130, width: '68%' },
+        hAxis: { title: 'Público total', minValue: 0 },
+        vAxis: { title: '' },
+        annotations: {
+            textStyle: { color: '#1f2937', fontSize: 11, bold: true }
+        }
+    };
+
+    var chart = new google.visualization.BarChart(document.getElementById('public_category_chart'));
+    chart.draw(view, options);
 }
 //  GRAFICO LINHA
  function drawLineChart() {

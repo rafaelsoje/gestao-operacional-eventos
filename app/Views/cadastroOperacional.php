@@ -62,11 +62,11 @@
             <label class="form-label">Hora extra</label>
             <input type="number" class="form-control" name="hora_extra" <?= isset($item) ? 'value="' . $item->hora_extra . '"' : ''; ?>>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-4">
             <label class="form-label">Temperatura entrada</label>
             <input type="number" step="0.1" class="form-control" name="temp_inicio" <?= isset($item) ? 'value="' . $item->temp_inicio . '"' : ''; ?>>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-4">
             <label class="form-label">Temperatura saída</label>
             <input type="number" step="0.1" class="form-control" name="temp_fim" <?= isset($item) ? 'value="' . $item->temp_fim . '"' : ''; ?>>
         </div>
@@ -74,9 +74,31 @@
             <label class="form-label">Numero de fornecedores</label>
             <input type="number" class="form-control" name="qtd_fornecedor" <?= isset($item) ? 'value="' . $item->qtd_fornecedor . '"' : ''; ?>>
         </div>        
-        <div class="col-md-4">
-            <label class="form-label">Monitoramento sonoro</label>
-            <input type="number" class="form-control" name="monitor_sonoro" <?= isset($item) ? 'value="' . $item->monitor_sonoro . '"' : ''; ?>>
+        <div class="col-md-3">
+            <label class="form-label">Ruído Tribuna C</label>
+            <input type="number" step="0.1" class="form-control" name="ruido_tribuna_c" <?= isset($item) ? 'value="' . ($item->ruido_tribuna_c ?? '') . '"' : ''; ?>>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Ruído Pista de Cavalo</label>
+            <input type="number" step="0.1" class="form-control" name="ruido_pista_cavalo" <?= isset($item) ? 'value="' . ($item->ruido_pista_cavalo ?? '') . '"' : ''; ?>>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Ruído Corredor JB</label>
+            <input type="number" step="0.1" class="form-control" name="ruido_corredor_jb" <?= isset($item) ? 'value="' . ($item->ruido_corredor_jb ?? '') . '"' : ''; ?>>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Média ruído</label>
+            <?php
+                $ruidoMediaInicial = '';
+                if (isset($item)) {
+                    if (isset($item->ruido_media) && $item->ruido_media !== null && $item->ruido_media !== '') {
+                        $ruidoMediaInicial = $item->ruido_media;
+                    } elseif (isset($item->monitor_sonoro) && $item->monitor_sonoro !== null && $item->monitor_sonoro !== '') {
+                        $ruidoMediaInicial = $item->monitor_sonoro;
+                    }
+                }
+            ?>
+            <input type="number" step="0.01" class="form-control" name="ruido_media" readonly <?= $ruidoMediaInicial !== '' ? 'value="' . $ruidoMediaInicial . '"' : ''; ?>>
         </div>       
         <div class="p-1 fs-5">Gerador 1</div>
         <div class="col-12 col-md-4">
@@ -166,6 +188,13 @@
         <div class="col-md-4">
             <label class="form-label">Público final saída</label>
             <input type="number" class="form-control" name="publico_saida" <?= isset($item) ? 'value="' . $item->publico_saida . '"' : ''; ?>>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Público total</label>
+            <?php
+                $publicoTotalInicial = (int)($item->publico_final ?? 0) + (int)($item->publico_tribuna ?? 0) + (int)($item->publico_saida ?? 0);
+            ?>
+            <input type="number" class="form-control" name="publico_total_calc" value="<?= isset($item) ? $publicoTotalInicial : ''; ?>" readonly>
         </div>
         <div class="p-1 fs-5">Equipe operacional</div>        
         <div class="col-12 col-md-4">
@@ -447,7 +476,15 @@
             $("input[name=total_consumo]").val(totalCusto.toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
         }   
 
-        $("input").on("input", calcularConsumo);
+        $(
+            "input[name='diesel_inicio'], input[name='diesel_fim'], input[name='valor_diesel'], " +
+            "input[name='cedae_inicio'], input[name='cedae_fim'], input[name='cedae_valor'], " +
+            "input[name='light_inicio'], input[name='light_fim'], input[name='light_valor'], " +
+            "input[name='poco_inicio'], input[name='poco_fim'], " +
+            "input[name='premontagem'], input[name='cache_premontagem'], " +
+            "input[name='operacional'], input[name='valor_operacional']"
+        ).on("input", calcularConsumo);
+        calcularConsumo();
 
         function calcularKwh() {
             const entradaG1 = parseFloat($("input[name='kwh_entrada_g1']").val()) || 0;
@@ -464,13 +501,53 @@
         $("input[name='kwh_entrada_g1'], input[name='kwh_saida_g1'], input[name='kwh_entrada_g2'], input[name='kwh_saida_g2']").on("input", calcularKwh);
         calcularKwh();
 
+        function calcularPublicoTotal() {
+            const publicoFinal = parseInt($("input[name='publico_final']").val(), 10) || 0;
+            const publicoTribuna = parseInt($("input[name='publico_tribuna']").val(), 10) || 0;
+            const publicoSaida = parseInt($("input[name='publico_saida']").val(), 10) || 0;
+            const publicoTotal = publicoFinal + publicoTribuna + publicoSaida;
+            $("input[name='publico_total_calc']").val(publicoTotal);
+        }
+
+        $("input[name='publico_final'], input[name='publico_tribuna'], input[name='publico_saida']").on("input", calcularPublicoTotal);
+        calcularPublicoTotal();
+
+        function calcularMediaRuido() {
+            const fields = ["ruido_tribuna_c", "ruido_pista_cavalo", "ruido_corredor_jb"];
+            const values = fields
+                .map(function (name) {
+                    const raw = $("input[name='" + name + "']").val();
+                    if (raw === undefined || raw === null || raw === "") return null;
+                    const parsed = parseFloat(String(raw).replace(",", "."));
+                    return Number.isFinite(parsed) ? parsed : null;
+                })
+                .filter(function (v) { return v !== null; });
+
+            if (!values.length) {
+                $("input[name='ruido_media']").val("");
+                return;
+            }
+
+            const media = values.reduce(function (acc, n) { return acc + n; }, 0) / values.length;
+            $("input[name='ruido_media']").val(media.toFixed(2));
+        }
+
+        $("input[name='ruido_tribuna_c'], input[name='ruido_pista_cavalo'], input[name='ruido_corredor_jb']").on("input", calcularMediaRuido);
+        calcularMediaRuido();
+
         function formatarHoraGerador(valor) {
             const digitos = (valor || "").replace(/\D/g, "").slice(0, 6);
             if (!digitos) return "";
             if (digitos.length <= 2) return digitos;
-            const horas = digitos.slice(0, -2);
-            const minutos = digitos.slice(-2);
-            return `${horas}:${minutos}`;
+            let horas = parseInt(digitos.slice(0, -2), 10);
+            let minutos = parseInt(digitos.slice(-2), 10);
+            if (Number.isNaN(horas)) horas = 0;
+            if (Number.isNaN(minutos)) minutos = 0;
+            if (minutos > 59) {
+                horas += Math.floor(minutos / 60);
+                minutos = minutos % 60;
+            }
+            return `${String(horas)}:${String(minutos).padStart(2, "0")}`;
         }
 
         function parseHoraGeradorParaMinutos(valor) {
@@ -541,10 +618,12 @@
             }
         }
 
-        $("input").on("input", function () {
+        $("input[name='liga_g1'], input[name='desliga_g1'], input[name='liga_g2'], input[name='desliga_g2']").on("input", function () {
             calcularTempo("liga_g1", "desliga_g1", "tempo_g1");
             calcularTempo("liga_g2", "desliga_g2", "tempo_g2");
         });
+        calcularTempo("liga_g1", "desliga_g1", "tempo_g1");
+        calcularTempo("liga_g2", "desliga_g2", "tempo_g2");
     
         function calcularHoraExtra() {
         let inicio = $("input[name='hora_inicio']").val();
@@ -570,7 +649,8 @@
         }
         }
 
-        $("input").on("input", calcularHoraExtra);
+        $("input[name='hora_inicio'], input[name='hora_fim']").on("input", calcularHoraExtra);
+        calcularHoraExtra();
 
     });
 

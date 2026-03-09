@@ -303,6 +303,10 @@ document.addEventListener('DOMContentLoaded', function () {
       const num = toNumber(cons.light.total);
       if (num !== null) out['Light total'] = fmtBRL.format(num/100);
     }
+    if (cons.poco && cons.poco.consumo !== undefined && cons.poco.consumo !== null) {
+      const num = toNumberFlexible(cons.poco.consumo);
+      if (num !== null) out['Poço consumo'] = num.toFixed(0) + ' m³';
+    }
     return out;
   }
 

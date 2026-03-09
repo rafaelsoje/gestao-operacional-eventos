@@ -15,6 +15,19 @@ $usageRows = $historico_uso ?? [];
 $hasUsageRows = !empty($usageRows);
 $usageColumnsReady = !empty($usage_columns_ready);
 $tableReady = !empty($maintenance_table_ready);
+$hourOnly = static function (?string $hhmm): string {
+    $value = trim((string)$hhmm);
+    if ($value === '') {
+        return '0';
+    }
+    if (strpos($value, ':') !== false) {
+        [$hours] = explode(':', $value, 2);
+        $hours = preg_replace('/\D+/', '', (string)$hours);
+        return $hours !== '' ? (string)((int)$hours) : '0';
+    }
+    $digits = preg_replace('/\D+/', '', $value);
+    return $digits !== '' ? (string)((int)$digits) : '0';
+};
 
 $statusModal = null;
 if (session()->has('error')) {
@@ -38,13 +51,13 @@ if (session()->has('error')) {
 } elseif (!empty($usage['has_alert'])) {
     $statusModal = [
         'title' => 'Atenção',
-        'message' => 'Um ou mais geradores atingiram 200:00 horas de uso.',
+        'message' => 'Um ou mais geradores atingiram 200 horas de uso.',
         'class' => 'text-danger',
     ];
 } elseif (!empty($usage['has_warning'])) {
     $statusModal = [
         'title' => 'Alerta',
-        'message' => 'Um ou mais geradores estão acima de 180:00 horas de uso.',
+        'message' => 'Um ou mais geradores estão acima de 180 horas de uso.',
         'class' => 'text-warning',
     ];
 }
@@ -74,7 +87,7 @@ if (session()->has('error')) {
                 <div class="card-body">
                     <h5 class="card-title mb-1">Gerador G1</h5>
                     <div class="fs-4 fw-bold <?= $g1ValueClass; ?>">
-                        <?= esc((string)($g1['total_hhmm'] ?? '00:00')); ?> / 200:00
+                        <?= esc($hourOnly((string)($g1['total_hhmm'] ?? '00:00'))); ?> / 200
                     </div>
                     <div class="progress mt-2" style="height: 10px;">
                         <div class="progress-bar <?= $g1BarClass; ?>" role="progressbar" style="width: <?= (float)($g1['progress_percent'] ?? 0); ?>%"></div>
@@ -102,7 +115,7 @@ if (session()->has('error')) {
                 <div class="card-body">
                     <h5 class="card-title mb-1">Gerador G2</h5>
                     <div class="fs-4 fw-bold <?= $g2ValueClass; ?>">
-                        <?= esc((string)($g2['total_hhmm'] ?? '00:00')); ?> / 200:00
+                        <?= esc($hourOnly((string)($g2['total_hhmm'] ?? '00:00'))); ?> / 200
                     </div>
                     <div class="progress mt-2" style="height: 10px;">
                         <div class="progress-bar <?= $g2BarClass; ?>" role="progressbar" style="width: <?= (float)($g2['progress_percent'] ?? 0); ?>%"></div>
