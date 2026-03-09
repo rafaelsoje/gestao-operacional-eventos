@@ -416,6 +416,7 @@
 
     
         function calcularConsumo() {
+            // Recalcula todos os blocos de consumo/custo ao digitar para manter o formulário consistente.
             // Diesel
             let dieselInicio = parseFloat($("input[name='diesel_inicio']").val()) || 0;
             let dieselFim = parseFloat($("input[name='diesel_fim']").val()) || 0;
@@ -450,6 +451,7 @@
             // Água Poço
             let pocoInicio = parseFloat($("input[name='poco_inicio']").val()) || 0;
             let pocoFim = parseFloat($("input[name='poco_fim']").val()) || 0;
+            // Poço é monitoramento de volume (m³), sem cálculo monetário.
             let pocoConsumo = pocoFim - pocoInicio;
             $("input[name='poco_consumo']").val(pocoConsumo);
 
@@ -487,6 +489,7 @@
         calcularConsumo();
 
         function calcularKwh() {
+            // Consumo instantâneo = leitura de saída - leitura de entrada.
             const entradaG1 = parseFloat($("input[name='kwh_entrada_g1']").val()) || 0;
             const saidaG1 = parseFloat($("input[name='kwh_saida_g1']").val()) || 0;
             const consumoG1 = saidaG1 - entradaG1;
@@ -502,6 +505,7 @@
         calcularKwh();
 
         function calcularPublicoTotal() {
+            // Campo auxiliar para conferência rápida no cadastro.
             const publicoFinal = parseInt($("input[name='publico_final']").val(), 10) || 0;
             const publicoTribuna = parseInt($("input[name='publico_tribuna']").val(), 10) || 0;
             const publicoSaida = parseInt($("input[name='publico_saida']").val(), 10) || 0;
@@ -513,6 +517,7 @@
         calcularPublicoTotal();
 
         function calcularMediaRuido() {
+            // Média automática das 3 leituras fixas de ruído do evento.
             const fields = ["ruido_tribuna_c", "ruido_pista_cavalo", "ruido_corredor_jb"];
             const values = fields
                 .map(function (name) {
@@ -536,6 +541,7 @@
         calcularMediaRuido();
 
         function formatarHoraGerador(valor) {
+            // Aceita digitação livre numérica e normaliza para formato HHHH:MM.
             const digitos = (valor || "").replace(/\D/g, "").slice(0, 6);
             if (!digitos) return "";
             if (digitos.length <= 2) return digitos;
@@ -581,6 +587,7 @@
 
             const diferenca = minutosSaida - minutosEntrada;
             $campoDiferenca.val(formatarMinutosEmHora(diferenca));
+            // Destaque visual quando atingir limite de manutenção (200h).
             $campoDiferenca.css("background-color", diferenca >= (200 * 60) ? "#f8d7da" : "");
         }
 
@@ -597,6 +604,7 @@
         atualizarDiferencaGerador("leitura_g2", "leitura_saida_g2", "diferenca_horas_g2");
 
         function calcularTempo(entrada, saida, resultado) {
+            // Campo "tempo gerador" usa relógio do dia e trata virada de meia-noite.
             let inicio = $("input[name='" + entrada + "']").val();
             let fim = $("input[name='" + saida + "']").val();
 
@@ -626,6 +634,7 @@
         calcularTempo("liga_g2", "desliga_g2", "tempo_g2");
     
         function calcularHoraExtra() {
+        // Hora extra operacional baseada em jornada acima de 5h no evento.
         let inicio = $("input[name='hora_inicio']").val();
         let fim = $("input[name='hora_fim']").val();
 

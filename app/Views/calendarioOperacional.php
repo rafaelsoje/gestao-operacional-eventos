@@ -130,11 +130,12 @@ document.addEventListener('DOMContentLoaded', function () {
   const events = <?= $fcEvents ?? '[]' ?>;
   const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
+  // Renderiza 12 calendários (1 por mês) para visão anual contínua.
   for (let mes=1; mes<=12; mes++) {
     const el = document.getElementById('cal-m'+mes);
     if (!el) continue;
 
-  // --- (cal.render() dos 12 meses) ---
+  // Auto-scroll para o mês atual quando estiver vendo o ano corrente.
   (function scrollToCurrentMonth() {
     const now = new Date();
     const currentYear  = now.getFullYear();
@@ -278,6 +279,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const out = {};
     if (cons.diesel && cons.diesel.total) {
       const num = toNumber(cons.diesel.total);
+      // Alguns totais chegam em centavos; padroniza para reais no modal.
       if (num !== null) out['Diesel total'] = fmtBRL.format(num/100);
     }
     if (cons.gerador_kwh) {

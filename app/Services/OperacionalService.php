@@ -9,6 +9,7 @@ class OperacionalService
 {
     public function buildAggregates(array $filters, ?int $limit = null): array
     {
+        // `limit` restringe apenas a listagem de eventos exibida; os somatórios continuam no período completo filtrado.
         $dataQuery = $this->applyFilters((new Operacional())->orderBy('data', 'desc'), $filters);
         if ($limit) {
             $dataQuery->limit($limit);
@@ -266,6 +267,7 @@ class OperacionalService
             'entretenimento' => $init(),
         ];
 
+        // Garante presença das 3 categorias no dashboard, mesmo sem eventos no período.
         foreach ($rows as $row) {
             $tipo = strtolower($row->tipo ?? '');
             if (isset($bars[$tipo])) {
@@ -382,6 +384,8 @@ class OperacionalService
         $total = 0;
 
         foreach ($rows as $row) {
+            // Ordem de prioridade:
+            // 1) minutos persistidos; 2) diferença de horímetro (entrada/saída); 3) campo legado `tempo_*`.
             $stored = $hasMinColumn && isset($row->{$minColumn}) ? (int)$row->{$minColumn} : 0;
             if ($stored > 0) {
                 $total += $stored;

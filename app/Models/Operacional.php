@@ -13,10 +13,12 @@ class Operacional extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
+        // Identificação do evento
         'id',
         'nome',
         'data',
         'tipo',
+        // Horários/apoio operacional
         'hora_inicio',
         'hora_fim',
         'hora_extra',
@@ -24,10 +26,12 @@ class Operacional extends Model
         'temp_fim',
         'qtd_fornecedor',
         'monitor_sonoro',
+        // Monitoramento de ruído (novo) + compatibilidade legado
         'ruido_tribuna_c',
         'ruido_pista_cavalo',
         'ruido_corredor_jb',
         'ruido_media',
+        // Geradores (horário, horímetro e consumo elétrico)
         'liga_g1',
         'desliga_g1',
         'tempo_g1',
@@ -44,6 +48,7 @@ class Operacional extends Model
         'uso_min_g2',
         'kwh_entrada_g2',
         'kwh_saida_g2',
+        // Equipe/custos operacionais
         'premontagem',
         'cache_premontagem',
         'valor_premontagem',
@@ -59,6 +64,7 @@ class Operacional extends Model
         'publico_final',
         'publico_tribuna',
         'publico_saida',
+        // Insumos e custos hídricos/energéticos
         'valor_diesel',
         'valor_inicio',
         'diesel_inicio',
@@ -78,6 +84,7 @@ class Operacional extends Model
         'poco_inicio',
         'poco_fim',
         'poco_consumo',
+        // Resultado final e metadados
         'total_consumo',
         'descricao',
         'flag',

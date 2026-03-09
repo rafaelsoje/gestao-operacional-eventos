@@ -223,6 +223,7 @@
 
     
         function calcularConsumo() {
+            // Reaproveita o mesmo motor de cálculo do cadastro operacional para manter consistência dos totais.
             // Diesel
             let dieselInicio = parseFloat($("input[name='diesel_inicio']").val()) || 0;
             let dieselFim = parseFloat($("input[name='diesel_fim']").val()) || 0;
@@ -257,6 +258,7 @@
             // Água poço
             let pocoInicio = parseFloat($("input[name='poco_inicio']").val()) || 0;
             let pocoFim = parseFloat($("input[name='poco_fim']").val()) || 0;
+            // Poço entra só como consumo (m³), sem custo monetário.
             let pocoConsumo = pocoFim - pocoInicio;
             $("input[name='poco_consumo']").val(pocoConsumo);
 
@@ -294,6 +296,7 @@
         calcularConsumo();
     
         function calcularTempo(entrada, saida, resultado) {
+            // Trata virada de dia para eventos que atravessam meia-noite.
             let inicio = $("input[name='" + entrada + "']").val();
             let fim = $("input[name='" + saida + "']").val();
 
@@ -321,6 +324,7 @@
         });
     
         function calcularHoraExtra() {
+        // Hora extra prevista acima de 5h de jornada.
         let inicio = $("input[name='hora_inicio']").val();
         let fim = $("input[name='hora_fim']").val();
 

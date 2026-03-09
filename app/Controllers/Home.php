@@ -395,6 +395,7 @@ class Home extends BaseController
         $usoMinG2 = $this->calculateGeneratorUsageMinutesFromPost($post, 'leitura_g2', 'leitura_saida_g2');
         $equipeManha = $this->normalizeEquipeNames($post['equipe_manha'] ?? []);
         $equipeNoite = $this->normalizeEquipeNames($post['equipe_noite'] ?? []);
+        // Mantém compatibilidade: se o formulário antigo enviar apenas `monitor_sonoro`, ainda persistimos corretamente.
         $noiseAverage = $this->parseNoiseReading($post['ruido_media'] ?? ($post['monitor_sonoro'] ?? null));
 
 
@@ -597,6 +598,7 @@ class Home extends BaseController
                 ->where('flag', 1)
                 ->countAllResults();
 
+            // O histórico é propositalmente limitado aos 100 eventos mais recentes para manter a página responsiva.
             $historicoUso = (new Operacional())
                 ->select(implode(', ', $select))
                 ->where('flag', 1)
@@ -2041,6 +2043,7 @@ class Home extends BaseController
     private function appendNoiseMonitoringData(array &$data, array $post): void
     {
         $db = db_connect();
+        // Ambientes sem migration de ruído não devem quebrar o cadastro.
         if (!$db->fieldExists('ruido_tribuna_c', 'operacional')) {
             return;
         }
@@ -2051,6 +2054,7 @@ class Home extends BaseController
         $media = $this->parseNoiseReading($post['ruido_media'] ?? null);
 
         if ($media === null) {
+            // Calcula média automática quando usuário informar só as três leituras fixas.
             $values = array_values(array_filter([$tribuna, $pista, $corredor], static fn ($v) => $v !== null));
             $media = !empty($values) ? round(array_sum($values) / count($values), 2) : null;
         }
@@ -2059,6 +2063,7 @@ class Home extends BaseController
         $data['ruido_pista_cavalo'] = $pista;
         $data['ruido_corredor_jb'] = $corredor;
         $data['ruido_media'] = $media;
+        // Campo legado usado em telas antigas e exportações.
         $data['monitor_sonoro'] = $media;
     }
 
@@ -2082,6 +2087,7 @@ class Home extends BaseController
         $limit = 6.0;
         $overLimitEvents = [];
 
+        // O alerta é por evento no período corrente filtrado.
         foreach ($events as $event) {
             $consumo = (float)($event->cedae_consumo ?? 0);
             if ($consumo <= $limit) {
@@ -2103,6 +2109,7 @@ class Home extends BaseController
 
         $dedup = [];
         foreach ($overLimitEvents as $row) {
+            // Evita repetição visual quando a consulta retorna entradas duplicadas do mesmo evento/consumo.
             $key = mb_strtolower(trim((string)$row['name'])) . '|' . number_format((float)$row['consumo'], 3, '.', '');
             $dedup[$key] = $row;
         }
@@ -2121,6 +2128,7 @@ class Home extends BaseController
         $limit = 6.0;
         $overLimitEvents = [];
 
+        // Regra espelhada da CEDAE: alerta ao exceder 6 m³ por evento.
         foreach ($events as $event) {
             $consumo = (float)($event->poco_consumo ?? 0);
             if ($consumo <= $limit) {

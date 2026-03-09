@@ -35,6 +35,7 @@ $selectedTipos = $tipo ?? ['social', 'corporativo', 'entretenimento'];
 $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
     return in_array($value, $selectedTipos, true);
 };
+// Exibe somente horas nas telas de uso de gerador (ex.: 61:50 -> 61).
 $hourOnly = static function (?string $hhmm): string {
     $value = trim((string)$hhmm);
     if ($value === '') {
@@ -132,6 +133,7 @@ $hourOnly = static function (?string $hhmm): string {
     <?php if (!empty($cedaeAlert['is_alert'])): ?>
         <div class="alert alert-danger alert-dismissible fade show text-start mb-3" role="alert">
             <?php
+                // Lista de eventos com link direto para edição quando houver ID disponível.
                 $cedaeEvents = is_array($cedaeAlert['events'] ?? null) ? $cedaeAlert['events'] : [];
                 $cedaeLabels = [];
                 foreach ($cedaeEvents as $evt) {
@@ -164,6 +166,7 @@ $hourOnly = static function (?string $hhmm): string {
     <?php if (!empty($pocoAlert['is_alert'])): ?>
         <div class="alert alert-danger alert-dismissible fade show text-start mb-3" role="alert">
             <?php
+                // Mesmo padrão do alerta CEDAE, mas usando consumo da água do poço.
                 $pocoEvents = is_array($pocoAlert['events'] ?? null) ? $pocoAlert['events'] : [];
                 $pocoLabels = [];
                 foreach ($pocoEvents as $evt) {

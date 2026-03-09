@@ -15,6 +15,7 @@ $usageRows = $historico_uso ?? [];
 $hasUsageRows = !empty($usageRows);
 $usageColumnsReady = !empty($usage_columns_ready);
 $tableReady = !empty($maintenance_table_ready);
+// Mantém padrão visual "somente horas" nos cards (ex.: 66:06 -> 66).
 $hourOnly = static function (?string $hhmm): string {
     $value = trim((string)$hhmm);
     if ($value === '') {
@@ -49,6 +50,7 @@ if (session()->has('error')) {
         'class' => 'text-warning',
     ];
 } elseif (!empty($usage['has_alert'])) {
+    // Modal de destaque para manutenção vencida (>= 200h).
     $statusModal = [
         'title' => 'Atenção',
         'message' => 'Um ou mais geradores atingiram 200 horas de uso.',
@@ -324,6 +326,7 @@ if (session()->has('error')) {
     });
 
     function parseDateToTs(iso) {
+      // Normaliza filtro de datas (YYYY-MM-DD) para comparação sem timezone externo.
       if (!iso) return null;
       const parts = iso.split('-');
       if (parts.length !== 3) return null;
@@ -356,6 +359,7 @@ if (session()->has('error')) {
         const rowDateTs = parseDateToTs(rowDateIso);
         const rowGerador = (data[1] || '').trim();
 
+        // Filtro combinado por gerador e intervalo de data.
         if (geradorFiltro && rowGerador !== geradorFiltro) {
           return false;
         }

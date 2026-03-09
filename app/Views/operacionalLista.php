@@ -255,7 +255,7 @@
   <!-- Script para ativar DataTables -->
   <script>
 
-    // Adiciona um método de ordenação para o formato dd/mm/aaaa
+    // DataTables não entende dd/mm/aaaa nativamente; plugin abaixo normaliza para timestamp.
     jQuery.extend(jQuery.fn.dataTable.ext.type.order, {
         "date-dd-mm-yyyy-pre": function(d) {
             if (d === null || d === "") {
@@ -277,6 +277,7 @@
             "targets": 0              // Altere para o índice da coluna de datas
         }
     ],
+    // Mantém os eventos mais recentes no topo por padrão.
     "order": [[0, "desc"]], // Ordenar pela coluna 'Data' (primeira coluna) de forma decrescente
     "paging": true,       // Ativar/desativar paginação
     "searching": true,    // Ativar/desativar o campo de busca

@@ -11,6 +11,7 @@ class GeradorManutencao extends Model
     protected $returnType = 'object';
     protected $protectFields = true;
     protected $allowedFields = [
+        // `gerador` recebe apenas G1/G2 (validado no controller).
         'gerador',
         'data_manutencao',
         'observacao',
