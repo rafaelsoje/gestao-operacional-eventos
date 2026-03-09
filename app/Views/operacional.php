@@ -182,6 +182,19 @@ $hourOnly = static function (?string $hhmm): string {
                 max-width: 20%;
             }
         }
+        table.dt-stack td.dashboard-actions-cell {
+            padding-left: 0 !important;
+            text-align: center !important;
+            justify-content: center !important;
+            gap: 0.5rem;
+        }
+        table.dt-stack td.dashboard-actions-cell::before {
+            position: static !important;
+            display: block;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 0.4rem;
+        }
     </style>
     <div class="row g-3 align-items-stretch">
         <?php $kwhTotal = (float)($sum->kwh_total ?? 0); ?>
@@ -426,9 +439,11 @@ $hourOnly = static function (?string $hhmm): string {
 <?php endif ;?>
 
 <?php if(!empty($data)):?>
-
-<a href="<?= (isset($get))? base_url('operacional/planejamento/lista') : base_url('/operacional/lista');?>" class="shadow-lg text-decoration-none bg-white d-block px-2 pt-1">
-    <h6 class="mt-3">Eventos realizados</h6>
+<div class="shadow-lg bg-white d-block px-2 pt-1">
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <h6 class="mb-0">Eventos realizados</h6>
+        <a href="<?= (isset($get))? base_url('operacional/planejamento/lista') : base_url('/operacional/lista');?>" class="btn btn-sm btn-outline-secondary">Ver lista completa</a>
+    </div>
     <div class="table-responsive">
     <table class="table table-white table-hover mt-2 dt-stack">
     <thead>
@@ -443,6 +458,7 @@ $hourOnly = static function (?string $hhmm): string {
           <th>Poço</th>
           <th>Light</th>
           <th>Custo do Evento</th>
+          <th>Ação</th>
         </tr>
     </thead>
     <tbody>
@@ -453,24 +469,70 @@ $hourOnly = static function (?string $hhmm): string {
                 $kwhGerador += (float)$item->kwh_saida_g2 - (float)$item->kwh_entrada_g2;
             ?>
         <tr>
-            <th scope="row"><?= $rowDate;?></th>
-            <td><?= $item->nome;?></td>
-            <td><?= $item->tipo;?></td>
+            <td data-label="Data"><?= $rowDate;?></td>
+            <td data-label="Nome"><?= esc((string)$item->nome);?></td>
+            <td data-label="Tipo de evento"><?= esc((string)$item->tipo);?></td>
             <?php $operacional = $item->super_op + $item->valor_premontagem; ?>
-            <td class=""><?= br_money($operacional);?></td>
-            <td class=""><?= br_money($item->diesel_total);?></td>
-            <td class=""><?= br_number($kwhGerador, 0);?><?= $kwhGerador ? ' kWh' : ''; ?></td>
-            <td class=""><?= br_money($item->cedae_total);?></td>
-            <td class=""><?= br_number((float)($item->poco_consumo ?? 0), 0); ?> m³</td>
-            <td class=""><?= br_money($item->light_total);?></td>
-            <td class=""><?= br_money($item->total_consumo);?></td>
-
+            <td data-label="Operacional" class=""><?= br_money($operacional);?></td>
+            <td data-label="Gerador" class=""><?= br_money($item->diesel_total);?></td>
+            <td data-label="Gerador Kwh" class=""><?= br_number($kwhGerador, 0);?><?= $kwhGerador ? ' kWh' : ''; ?></td>
+            <td data-label="Cedae" class=""><?= br_money($item->cedae_total);?></td>
+            <td data-label="Poço" class=""><?= br_number((float)($item->poco_consumo ?? 0), 0); ?> m³</td>
+            <td data-label="Light" class=""><?= br_money($item->light_total);?></td>
+            <td data-label="Custo do Evento" class=""><?= br_money($item->total_consumo);?></td>
+            <td data-label="Ação" class="d-flex justify-content-center dashboard-actions-cell">
+                <?php if(!empty($item->descricao)):?>
+                    <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#dashboardInfo<?= (int)$item->id;?>"><i class="bi bi-chat-left-text"></i></a>
+                <?php else:?>
+                    <a href="#" type="button" class="btn btn-secondary text-white"><i class="bi bi-chat-left-text"></i></a>
+                <?php endif;?>
+                <a href="<?= base_url('/update/operacional/'.(int)$item->id);?>" type="button" class="btn btn-warning text-white"><i class="bi bi-pencil"></i></a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#dashboardDelete<?= (int)$item->id;?>"><i class="bi bi-trash"></i></button>
+            </td>
         </tr>
+        <div class="modal fade" id="dashboardInfo<?= (int)$item->id;?>" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5"><?= esc((string)$item->nome);?></h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body"><?= esc((string)($item->descricao ?? 'Sem observações.'));?></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="dashboardDelete<?= (int)$item->id;?>" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5">Confirmação de exclusão</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Quer mesmo excluir essa informação?</p>
+                        <strong><?= esc((string)$item->nome);?></strong>
+                        <strong><?= esc($rowDate);?></strong>
+                    </div>
+                    <div class="modal-footer">
+                        <form method="post" action="<?= base_url('/delete/operacional');?>">
+                            <?= csrf_field(); ?>
+                            <input type="hidden" name="id" value="<?= (int)$item->id;?>" />
+                            <input type="hidden" name="nome" value="<?= esc((string)$item->nome);?>" />
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endforeach;?>
     </tbody>
-    <?php endforeach;?>
     </table>
     </div>
-</a>
+</div>
 <?php endif;?>
 
 <?php else:?>
