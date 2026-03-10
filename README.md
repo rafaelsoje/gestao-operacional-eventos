@@ -1,90 +1,109 @@
-# CodeIgniter 4 Application Starter
+# Audiovisual - Controle Operacional de Eventos
 
-## What is CodeIgniter?
+Sistema interno para gestão operacional de eventos, com foco em custos, consumos, manutenção de geradores e acompanhamento de indicadores no dashboard.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+## Principais funcionalidades
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+- Cadastro e edição de eventos operacionais
+- Planejamento de eventos (previsão de custos)
+- Dashboard com KPIs e gráficos por período/categoria
+- Controle de consumo:
+  - Diesel
+  - Energia (Light / kWh)
+  - Água CEDAE
+  - Água de poço (monitoramento por m³)
+- Alertas automáticos:
+  - Geradores próximos/fora do limite de manutenção
+  - Consumo de água CEDAE acima de 6 m³ por evento
+  - Consumo de água de poço acima de 6 m³ por evento
+- Histórico de uso e manutenção de geradores (G1/G2)
+- Monitoramento de ruído por evento (Tribuna C, Pista de Cavalo, Corredor JB + média)
+- Calendário operacional e lista detalhada de eventos
+- Gestão de usuários, perfil, notificações e logs administrativos
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+## Stack
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+- Backend: PHP 8.3+ / CodeIgniter 4
+- Banco: MySQL (driver `MySQLi`)
+- Frontend: Bootstrap, jQuery, DataTables, FullCalendar
+- Build de assets: Webpack (Node.js)
 
-## Installation & updates
+## Requisitos
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+- PHP 8.3+
+- Composer
+- MySQL/MariaDB
+- Node.js + npm
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+## Instalação
 
-## Setup
+1. Instale dependências PHP:
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+```bash
+composer install
+```
 
-## Important Change with index.php
-
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
-
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
-
-**Please** read the user guide for a better explanation of how CI4 works!
-
-## Repository Management
-
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
-
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
-
-## Server Requirements
-
-PHP version 8.1 or higher is required, with the following extensions installed:
-
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
-
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
-
-Additionally, make sure that the following extensions are enabled in your PHP:
-
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
-
-## Frontend (Webpack)
-
-This project includes a basic webpack setup with output in `public/assets/build`.
-
-Install dependencies:
+2. Instale dependências frontend:
 
 ```bash
 npm install
 ```
 
-Development build (watch mode):
+3. Crie seu arquivo de ambiente:
+
+```bash
+cp .env.example .env
+```
+
+4. Configure no `.env`:
+
+- `CI_ENVIRONMENT`
+- `database.default.*`
+- `TELEGRAM_*` (se usar notificações)
+- `SUPERUSER_EMAIL`
+- `DEFAULT_USER_PASSWORD`
+
+5. Execute migrações (quando aplicável):
+
+```bash
+php spark migrate
+```
+
+6. Inicie a aplicação:
+
+```bash
+php spark serve
+```
+
+Acesse: `http://localhost:8080`
+
+## Build de assets
+
+Desenvolvimento (watch):
 
 ```bash
 npm run dev
 ```
 
-Production build:
+Produção:
 
 ```bash
 npm run build
 ```
+
+## Estrutura principal
+
+- `app/Controllers/Home.php`: fluxo principal (dashboard, cadastro, alertas, geradores)
+- `app/Services/OperacionalService.php`: agregações, séries e métricas
+- `app/Views/`: telas de dashboard, cadastro, listas e calendários
+- `app/Database/Migrations/`: migrações da aplicação
+- `app/Database/Migrations/sql/`: scripts SQL auxiliares
+
+## Observações
+
+- O sistema depende de autenticação (`auth`) e papéis (`admin`, `superuser`) para algumas rotas.
+- Em ambiente de produção, configure o servidor apontando para a pasta `public/`.
+
+## Licença
+
+Projeto sob licença MIT.
