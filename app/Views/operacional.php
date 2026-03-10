@@ -266,12 +266,11 @@ $hourOnly = static function (?string $hhmm): string {
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
+         <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
             <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
-                <div class="small text-muted">Consumo água poço</div>
-                <div class="small text-muted">Total no período</div>
-                <div class="fw-bold fs-2 text-dark mt-2"><?= br_number((float)($sum->poco_consumo ?? 0), 0); ?> <span class="fs-6">m³</span></div>
-                <?php $t = $trendFor('poco_consumo'); ?>
+                <div class="small text-muted">Consumo água CEDAE</div>                
+                <div class="fw-bold fs-2 text-dark mt-2"><?= br_number((float)($sum->cedae_consumo ?? 0), 0); ?> <span class="fs-6">m³</span></div>
+                <?php $t = $trendFor('cedae_consumo'); ?>
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
@@ -284,15 +283,15 @@ $hourOnly = static function (?string $hhmm): string {
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
+
         <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
             <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
-                <div class="small text-muted">Consumo água CEDAE</div>
-                <div class="small text-muted">Total no período</div>
-                <div class="fw-bold fs-2 text-dark mt-2"><?= br_number((float)($sum->cedae_consumo ?? 0), 0); ?> <span class="fs-6">m³</span></div>
-                <?php $t = $trendFor('cedae_consumo'); ?>
+                <div class="small text-muted">Consumo água poço</div>                
+                <div class="fw-bold fs-2 text-dark mt-2"><?= br_number((float)($sum->poco_consumo ?? 0), 0); ?> <span class="fs-6">m³</span></div>
+                <?php $t = $trendFor('poco_consumo'); ?>
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
-        </div>
+        </div>       
         <div class="col-12 col-sm-6 col-lg-4 kpi-col order-2 order-lg-1">
             <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
                 <div class="small text-muted">Custo pré-montagem</div>
