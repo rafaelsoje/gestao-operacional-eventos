@@ -541,19 +541,17 @@
         calcularMediaRuido();
 
         function formatarHoraGerador(valor) {
-            // Aceita digitação livre numérica e normaliza para formato HHHH:MM.
+            // Preenche no sentido esquerdo->direito (HHHH:MM), sem converter minutos em horas.
             const digitos = (valor || "").replace(/\D/g, "").slice(0, 6);
             if (!digitos) return "";
-            if (digitos.length <= 2) return digitos;
-            let horas = parseInt(digitos.slice(0, -2), 10);
-            let minutos = parseInt(digitos.slice(-2), 10);
-            if (Number.isNaN(horas)) horas = 0;
-            if (Number.isNaN(minutos)) minutos = 0;
-            if (minutos > 59) {
-                horas += Math.floor(minutos / 60);
-                minutos = minutos % 60;
+            if (digitos.length <= 4) return digitos;
+            const horas = digitos.slice(0, 4);
+            let minutos = digitos.slice(4);
+            // Bloqueia dezenas de minuto acima de 5 durante a digitação.
+            if (minutos.length >= 1 && minutos.charCodeAt(0) > 53) {
+                minutos = "";
             }
-            return `${String(horas)}:${String(minutos).padStart(2, "0")}`;
+            return `${horas}:${minutos}`;
         }
 
         function parseHoraGeradorParaMinutos(valor) {
