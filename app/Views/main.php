@@ -112,6 +112,7 @@
         <li><a href="<?=base_url('operacional/lista')?>" class="<?=(isset($listaOp)? "active" : "");?>"><i class="bi bi-list-ol navicon"></i>Lista de eventos</a></li>        
         <li><a href="<?=base_url('operacional/calendario')?>" class="<?=(isset($calendarioOp)? "active" : "");?>"><i class="bi bi-calendar-date navicon"></i>Calendário Operacional</a></li> 
         <li><a href="<?=base_url('operacional/geradores')?>" class="<?=(isset($geradoresPage)? "active" : "");?>"><i class="bi bi-tools navicon"></i>Geradores</a></li>
+        <li><a href="<?=base_url('visitas')?>" class="<?=(isset($visitasPage)? "active" : "");?>"><i class="bi bi-person-lines-fill navicon"></i>Visitas</a></li>
         <?php $navRole = $logged->role ?? (($logged->admin ?? 0) == 1 ? 'admin' : 'user'); ?>
         <?php if($navRole === 'admin' || $navRole === 'superuser'):?>
             <li><a href="<?=base_url('usuarios')?>"class="<?=(isset($botanicUser)? "active" : "");?>"><i class="bi bi-person-fill-check navicon"></i>Usuarios cadastrados</a></li>

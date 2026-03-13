@@ -7,6 +7,7 @@ use App\Models\Operacional;
 use App\Models\GeradorManutencao;
 use App\Models\Propostas;
 use App\Models\Users;
+use App\Models\Visita;
 use App\Services\OperacionalService;
 use App\Services\TelegramService;
 use App\Services\AvatarService;
@@ -364,6 +365,151 @@ class Home extends BaseController
 
     public function cadastroOperacional(){
         return view('cadastroOperacional',['cadastroOp' => true]);
+    }
+
+    public function visitas()
+    {
+        return view('visitas', [
+            'visitasPage' => true,
+            'data' => $this->loadRecentVisitas(),
+        ]);
+    }
+
+    public function updateVisita($id)
+    {
+        $id = (int)$id;
+        if ($id <= 0) {
+            return redirect()->route('visitas')->with('error', 'Parâmetro inválido para edição da visita.');
+        }
+
+        $model = new Visita();
+        $item = $model->find($id);
+        if (!$item) {
+            return redirect()->route('visitas')->with('error', 'Visita não encontrada para edição.');
+        }
+
+        return view('visitas', [
+            'visitasPage' => true,
+            'item' => $item,
+            'data' => $this->loadRecentVisitas(),
+        ]);
+    }
+
+    public function visitasStore()
+    {
+        $post = $this->request->getPost();
+        $id = (int)($post['id'] ?? 0);
+
+        $dataVisita = trim((string)($post['data_visita'] ?? ''));
+        $tipoVisita = trim((string)($post['tipo_visita'] ?? ''));
+        $responsavelExc = trim((string)($post['responsavel_exc'] ?? ''));
+        $cliente = trim((string)($post['cliente'] ?? ''));
+        $evento = trim((string)($post['evento'] ?? ''));
+        $dataEvento = trim((string)($post['data_evento'] ?? ''));
+        $horarioInicio = trim((string)($post['horario_inicio'] ?? ''));
+        $horarioTermino = trim((string)($post['horario_termino'] ?? ''));
+        $publicoEstimadoRaw = trim((string)($post['publico_estimado'] ?? ''));
+        $objetivoVisita = trim((string)($post['objetivo_visita'] ?? ''));
+
+        if (
+            $dataVisita === '' || $tipoVisita === '' || $responsavelExc === '' || $cliente === '' ||
+            $evento === '' || $dataEvento === '' || $horarioInicio === '' || $horarioTermino === '' ||
+            $publicoEstimadoRaw === '' || $objetivoVisita === ''
+        ) {
+            return redirect()->back()->withInput()->with('error', 'Preencha todos os campos obrigatórios da visita.');
+        }
+
+        if (!$this->isValidDateYmd($dataVisita) || !$this->isValidDateYmd($dataEvento)) {
+            return redirect()->back()->withInput()->with('error', 'Data inválida. Use o formato AAAA-MM-DD.');
+        }
+
+        if (preg_match('/^\d{2}:\d{2}$/', $horarioInicio) !== 1 || preg_match('/^\d{2}:\d{2}$/', $horarioTermino) !== 1) {
+            return redirect()->back()->withInput()->with('error', 'Horário inválido. Use o formato HH:MM.');
+        }
+
+        if (!ctype_digit($publicoEstimadoRaw)) {
+            return redirect()->back()->withInput()->with('error', 'Público estimado deve ser um número inteiro.');
+        }
+        $publicoEstimado = (int)$publicoEstimadoRaw;
+
+        $model = new Visita();
+        $payload = [
+            'data_visita' => $dataVisita,
+            'tipo_visita' => $tipoVisita,
+            'responsavel_exc' => $responsavelExc,
+            'cliente' => $cliente,
+            'evento' => $evento,
+            'data_evento' => $dataEvento,
+            'horario_inicio' => $horarioInicio . ':00',
+            'horario_termino' => $horarioTermino . ':00',
+            'publico_estimado' => $publicoEstimado,
+            'objetivo_visita' => $objetivoVisita,
+        ];
+        $saved = false;
+        if ($id > 0) {
+            $existing = $model->find($id);
+            if (!$existing) {
+                return redirect()->route('visitas')->with('error', 'Visita não encontrada para atualização.');
+            }
+            $saved = $model->update($id, $payload);
+        } else {
+            $saved = $model->insert($payload);
+        }
+
+        if (!$saved) {
+            return redirect()->back()->withInput()->with('error', 'Não foi possível salvar a visita.');
+        }
+
+        $user = session()->get('user');
+        if ($id > 0) {
+            (new Logs())->insert([
+                'title' => 'ATUALIZAÇÃO VISITA',
+                'description' => ($user->name ?? 'Usuário') . " atualizou visita #{$id}: {$evento} ({$cliente}) em " . date('Y-m-d H:i:s'),
+            ]);
+            return redirect()->route('visitas')->with('success', 'Visita atualizada com sucesso!');
+        }
+
+        (new Logs())->insert([
+            'title' => 'CADASTRO VISITA',
+            'description' => ($user->name ?? 'Usuário') . " cadastrou visita: {$evento} ({$cliente}) em " . date('Y-m-d H:i:s'),
+        ]);
+
+        return redirect()->route('visitas')->with('success', 'Visita cadastrada com sucesso!');
+    }
+
+    public function deleteVisita()
+    {
+        $id = (int)($this->request->getPost('id') ?? 0);
+        if ($id <= 0) {
+            return redirect()->route('visitas')->with('error', 'Registro inválido para exclusão.');
+        }
+
+        $model = new Visita();
+        $item = $model->find($id);
+        if (!$item) {
+            return redirect()->route('visitas')->with('error', 'Visita não encontrada para exclusão.');
+        }
+
+        if (!$model->delete($id)) {
+            return redirect()->route('visitas')->with('error', 'Não foi possível excluir a visita.');
+        }
+
+        $user = session()->get('user');
+        (new Logs())->insert([
+            'title' => 'EXCLUSÃO VISITA',
+            'description' => ($user->name ?? 'Usuário') . " excluiu visita #{$id}: " . ($item->evento ?? 'Sem evento') . ".",
+        ]);
+
+        return redirect()->route('visitas')->with('success', 'Visita excluída com sucesso.');
+    }
+
+    private function loadRecentVisitas(): array
+    {
+        return (new Visita())
+            ->orderBy('data_visita', 'desc')
+            ->orderBy('id', 'desc')
+            ->limit(100)
+            ->findAll();
     }
 
     public function operacionalLista(){

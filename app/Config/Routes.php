@@ -27,6 +27,10 @@ $routes->group('', ['filter' => 'auth'], function($routes){
     $routes->get('/operacional/lista', 'Home::operacionalLista', ['as' => 'operacional.lista']);
     $routes->get('/operacional/calendario', 'Home::calendarioOperacional', ['as' => 'calendario.operacional']);
     $routes->get('/operacional/geradores', 'Home::geradoresManutencao', ['as' => 'geradores.index']);
+    $routes->get('/visitas', 'Home::visitas', ['as' => 'visitas']);
+    $routes->post('/visitas', 'Home::visitasStore', ['as' => 'visitas.store', 'filter' => 'csrf']);
+    $routes->get('/update/visita/(:num)', 'Home::updateVisita/$1', ['as' => 'visitas.update']);
+    $routes->post('/delete/visita', 'Home::deleteVisita', ['as' => 'visitas.delete', 'filter' => 'csrf']);
     $routes->post('/operacional/geradores/store', 'Home::geradoresManutencaoStore', ['as' => 'geradores.store', 'filter' => 'csrf']);
     $routes->post('/operacional/geradores/update', 'Home::geradoresManutencaoUpdate', ['as' => 'geradores.update', 'filter' => 'csrf']);
     $routes->post('/operacional/geradores/delete', 'Home::geradoresManutencaoDelete', ['as' => 'geradores.delete', 'filter' => 'csrf']);
