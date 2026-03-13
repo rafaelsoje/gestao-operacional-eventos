@@ -62,6 +62,7 @@ writable/uploads/*
 
 writable/debugbar/*
 !writable/debugbar/.gitkeep
+writable/online-users.json
 
 php_errors.log
 
