@@ -321,7 +321,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const id  = ev.id;
     const url = "<?= site_url('update/operacional') ?>/" + id;
     const title = ev.title || `#${id}`;
-    document.getElementById('modal-id').innerHTML = `<a href="${url}">${title}</a>`;
+    const modalIdEl = document.getElementById('modal-id');
+    modalIdEl.textContent = '';
+    const detailLink = document.createElement('a');
+    detailLink.href = url;
+    detailLink.textContent = title;
+    modalIdEl.appendChild(detailLink);
     document.getElementById('modal-title').textContent = title;
     document.getElementById('modal-start').textContent = formatarData(ev.start);
     document.getElementById('modal-end').textContent   = ev.end ? formatarData(ev.end) : '---';

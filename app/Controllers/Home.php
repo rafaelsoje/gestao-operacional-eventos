@@ -1003,7 +1003,10 @@ class Home extends BaseController
             return redirect()->route('usuario')->with('error', 'Este e-mail já está cadastrado.');
         }
 
-        $defaultPassword = env('DEFAULT_USER_PASSWORD', 'Bemvindo@2026');
+        $defaultPassword = trim((string)env('DEFAULT_USER_PASSWORD', ''));
+        if ($defaultPassword === '') {
+            $defaultPassword = bin2hex(random_bytes(8));
+        }
         $pass = password_hash($defaultPassword, PASSWORD_DEFAULT);
         $data['avatar'] = "avatar.svg";
         $role = $data['role'] ?? 'user';

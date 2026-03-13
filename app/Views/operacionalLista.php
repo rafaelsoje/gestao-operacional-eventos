@@ -122,8 +122,8 @@
           ?>          
         <tr>
           <td data-label="Data"><?= $data;?></td>
-          <td data-label="Nome"><?= $item->nome;?></td>
-          <td data-label="Tipo de evento"><?= $item->tipo;?></td>
+          <td data-label="Nome"><?= esc((string)$item->nome);?></td>
+          <td data-label="Tipo de evento"><?= esc((string)$item->tipo);?></td>
           <td data-label="Operacional" class=""><?= br_money($operacional);?></td>
           <td data-label="Gerador" class=""><?= br_money($item->diesel_total);?></td>
           <td data-label="Cedae" class=""><?= br_money($item->cedae_total);?></td>
@@ -151,11 +151,11 @@
             <div class="modal-dialog modal-lg">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h1 class="modal-title fs-5" id="exampleModalLabel"><?= $item->nome;?></h1>
+                  <h1 class="modal-title fs-5" id="exampleModalLabel"><?= esc((string)$item->nome);?></h1>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                  <?= $item->descricao;?>
+                  <?= nl2br(esc((string)($item->descricao ?? '')));?>
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -176,14 +176,14 @@
                 </div>
                 <div class="modal-body">
                   <p>Quer mesmo excluir essa informação?</p>
-                  <strong> <?= $item->nome;?></strong>
-                  <strong> <?= $data;?></strong>                  
+                  <strong> <?= esc((string)$item->nome);?></strong>
+                  <strong> <?= esc((string)$data);?></strong>                  
                 </div>
                 <div class="modal-footer">
                   <form method="post" action="<?= base_url('/delete/operacional');?>">
                     <?= csrf_field(); ?>
-                    <input type="hidden" name="id" value="<?= $item->id;?>" />
-                    <input type="hidden" name="nome" value="<?= $item->nome;?>" />
+                    <input type="hidden" name="id" value="<?= (int)$item->id;?>" />
+                    <input type="hidden" name="nome" value="<?= esc((string)$item->nome);?>" />
                     
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-danger" data-bs-dismiss="modal">Excluir</button>
