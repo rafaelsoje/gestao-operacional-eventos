@@ -25,6 +25,8 @@ class RoleFilter implements FilterInterface
         if (!$this->isAllowed($role, $required)) {
             return redirect()->route('home')->with('error', 'Acesso negado.');
         }
+
+        return null;
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null): void

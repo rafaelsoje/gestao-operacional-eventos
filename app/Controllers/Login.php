@@ -136,7 +136,8 @@ class Login extends BaseController
             $real_ip = $remote_ip;
         }
 
-        if ($user && password_verify((string)$this->request->getPost('password'), $user->password)) {
+        $storedPasswordHash = (string)($user->password ?? '');
+        if ($user && $storedPasswordHash !== '' && password_verify((string)$this->request->getPost('password'), $storedPasswordHash)) {
 
             if(password_needs_rehash($user->password, PASSWORD_DEFAULT))
             {
@@ -386,7 +387,7 @@ class Login extends BaseController
         if (!empty($user->role)) {
             return (string)$user->role;
         }
-        return ($user->admin == '1') ? 'admin' : 'user';
+        return ((int)($user->admin ?? 0) === 1) ? 'admin' : 'user';
     }
 
     private function allowRecoveryAttempt(?string $email, string $ip): bool

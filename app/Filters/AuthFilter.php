@@ -30,6 +30,8 @@ class AuthFilter implements FilterInterface
             // Redireciona para a página de login com uma mensagem de erro
             return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
         }
+
+        return null;
     }
 
     /**

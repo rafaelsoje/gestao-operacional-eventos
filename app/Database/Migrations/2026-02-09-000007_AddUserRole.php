@@ -8,19 +8,23 @@ class AddUserRole extends Migration
 {
     public function up(): void
     {
-        $this->forge->addColumn('users', [
-            'role' => [
-                'type' => 'VARCHAR',
-                'constraint' => 20,
-                'null' => true,
-                'default' => 'user',
-                'after' => 'admin',
-            ],
-        ]);
+        if ($this->db->tableExists('users') && !$this->db->fieldExists('role', 'users')) {
+            $this->forge->addColumn('users', [
+                'role' => [
+                    'type' => 'VARCHAR',
+                    'constraint' => 20,
+                    'null' => true,
+                    'default' => 'user',
+                    'after' => 'admin',
+                ],
+            ]);
+        }
     }
 
     public function down(): void
     {
-        $this->forge->dropColumn('users', 'role');
+        if ($this->db->tableExists('users') && $this->db->fieldExists('role', 'users')) {
+            $this->forge->dropColumn('users', 'role');
+        }
     }
 }

@@ -8,24 +8,36 @@ class UpdateGeneratorHourFields extends Migration
 {
     public function up(): void
     {
-        $this->forge->modifyColumn('operacional', [
-            'leitura_g1' => ['name' => 'leitura_g1', 'type' => 'VARCHAR', 'constraint' => 7, 'null' => true],
-            'leitura_g2' => ['name' => 'leitura_g2', 'type' => 'VARCHAR', 'constraint' => 7, 'null' => true],
-        ]);
+        if (!$this->db->tableExists('operacional')) {
+            return;
+        }
 
-        $this->forge->addColumn('operacional', [
-            'leitura_saida_g1' => ['type' => 'VARCHAR', 'constraint' => 7, 'null' => true, 'after' => 'leitura_g1'],
-            'leitura_saida_g2' => ['type' => 'VARCHAR', 'constraint' => 7, 'null' => true, 'after' => 'leitura_g2'],
-        ]);
+        $fields = [];
+        if (!$this->db->fieldExists('leitura_saida_g1', 'operacional')) {
+            $fields['leitura_saida_g1'] = ['type' => 'VARCHAR', 'constraint' => 7, 'null' => true, 'after' => 'leitura_g1'];
+        }
+        if (!$this->db->fieldExists('leitura_saida_g2', 'operacional')) {
+            $fields['leitura_saida_g2'] = ['type' => 'VARCHAR', 'constraint' => 7, 'null' => true, 'after' => 'leitura_g2'];
+        }
+        if (!empty($fields)) {
+            $this->forge->addColumn('operacional', $fields);
+        }
     }
 
     public function down(): void
     {
-        $this->forge->dropColumn('operacional', ['leitura_saida_g1', 'leitura_saida_g2']);
+        if (!$this->db->tableExists('operacional')) {
+            return;
+        }
 
-        $this->forge->modifyColumn('operacional', [
-            'leitura_g1' => ['name' => 'leitura_g1', 'type' => 'TIME', 'null' => true],
-            'leitura_g2' => ['name' => 'leitura_g2', 'type' => 'TIME', 'null' => true],
-        ]);
+        $toDrop = [];
+        foreach (['leitura_saida_g1', 'leitura_saida_g2'] as $field) {
+            if ($this->db->fieldExists($field, 'operacional')) {
+                $toDrop[] = $field;
+            }
+        }
+        if (!empty($toDrop)) {
+            $this->forge->dropColumn('operacional', $toDrop);
+        }
     }
 }

@@ -36,7 +36,7 @@ class CreatePasswordResets extends Migration
 
         $this->forge->addKey('id', true);
         $this->forge->addKey('user_id');
-        $this->forge->addKey('token_hash', true);
+        $this->forge->addUniqueKey('token_hash');
         $this->forge->createTable('password_resets', true);
     }
 
