@@ -64,19 +64,30 @@ cp .env.example .env
 - `SUPERUSER_EMAIL`
 - `DEFAULT_USER_PASSWORD`
 
-5. Execute migrações (quando aplicável):
+5. Execute migrações:
 
 ```bash
 php spark migrate
 ```
 
-Se você aplica alterações manualmente no banco, use também os scripts em:
+6. Execute o seeder de usuários iniciais:
+
+```bash
+php spark db:seed UsersFromSqlSeeder
+```
+
+Esse seeder cria/atualiza:
+
+- Rafael Soje (`superuser`)
+- Guilherme Batista (`admin`)
+
+Se você precisar sincronizar manualmente com SQL legado, use os scripts em:
 
 - `app/Database/Migrations/sql/`
 - Exemplo recente: `app/Database/Migrations/sql/2026-03-12-000009_create_visitas.sql`
 - Dica: execute os arquivos SQL em ordem cronológica do prefixo (`YYYY-MM-DD-...`) para manter consistência com as migrations PHP.
 
-6. Inicie a aplicação:
+7. Inicie a aplicação:
 
 ```bash
 php spark serve
@@ -100,10 +111,14 @@ npm run build
 
 ## Estrutura principal
 
-- `app/Controllers/Home.php`: fluxo principal (dashboard, cadastro, alertas, geradores e visitas)
+- `app/Controllers/OperacionalController.php`: dashboard operacional, cadastro, planejamento e geradores
+- `app/Controllers/VisitasController.php`: módulo de visitas (CRUD)
+- `app/Controllers/AdminController.php`: usuários, notificações e logs administrativos
+- `app/Controllers/Home.php`: endpoints compartilhados (perfil, avatar, calendário) e helpers comuns
 - `app/Services/OperacionalService.php`: agregações, séries e métricas
 - `app/Views/`: telas de dashboard, cadastro, listas e calendários
 - `app/Database/Migrations/`: migrações da aplicação
+- `app/Database/Seeds/UsersFromSqlSeeder.php`: seed de usuários padrão
 - `app/Database/Migrations/sql/`: scripts SQL auxiliares
 
 ## Observações
