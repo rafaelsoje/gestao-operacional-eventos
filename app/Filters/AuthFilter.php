@@ -23,7 +23,7 @@ class AuthFilter implements FilterInterface
      *
      * @return RequestInterface|ResponseInterface|string|void
      */
-    public function before(RequestInterface $request, $arguments = null)
+    public function before(RequestInterface $request, $arguments = null): ?ResponseInterface
     {
         // Verifica se a sessão 'auth' não está presente
         if (!session()->has('auth')) {
@@ -44,7 +44,7 @@ class AuthFilter implements FilterInterface
      *
      * @return ResponseInterface|void
      */
-    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null): void
     {
         //
     }

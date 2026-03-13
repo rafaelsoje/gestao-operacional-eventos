@@ -17,7 +17,6 @@ $routes->group('', ['filter' => 'auth'], function($routes){
     
     $routes->get('/usuarios', 'Home::usuarios',['as' => 'usuarios', 'filter' => 'role:admin']);
     $routes->get('/calendario', 'Home::calendario');    
-    $routes->get('/rider', 'Home::rider', ['as' => 'rider']);
     $routes->get('/logs', 'Home::logs', ['as' => 'logs', 'filter' => 'role:superuser']);
     
     $routes->get('/cadastro/usuario', 'Home::cadastroUsuario', ['as' => 'usuario', 'filter' => 'role:admin']);
@@ -40,7 +39,6 @@ $routes->group('', ['filter' => 'auth'], function($routes){
     $routes->get('/cadastro/operacional', 'Home::cadastroOperacional', ['as' => 'cadastro.operacional']);
     $routes->post('/cadastro/operacional', 'Home::cadastroOperacionalStore', ['as' => 'cadastro.operacional.store', 'filter' => 'csrf']);
     $routes->post('/operacional/gerador/manutencao', 'Home::registrarManutencaoGerador', ['as' => 'gerador.manutencao.store', 'filter' => 'csrf']);
-    $routes->post('/update/operacional', 'Home::updateOperacionalStore', ['as' => 'update.operacional.store', 'filter' => 'csrf']);
     $routes->get('/update/operacional/(:num)', 'Home::updateOperacional/$1');
     $routes->post('/delete/operacional', 'Home::deleteOperacional', ['filter' => 'csrf']);
 

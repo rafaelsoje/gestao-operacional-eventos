@@ -6,7 +6,7 @@ use CodeIgniter\Database\Migration;
 
 class CreateSettings extends Migration
 {
-    public function up()
+    public function up(): void
     {
         $this->forge->addField([
             'key' => [
@@ -26,7 +26,7 @@ class CreateSettings extends Migration
         $this->forge->createTable('settings', true);
     }
 
-    public function down()
+    public function down(): void
     {
         $this->forge->dropTable('settings', true);
     }

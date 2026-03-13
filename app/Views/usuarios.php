@@ -248,11 +248,7 @@
   <!-- Script para ativar DataTables -->
   <script>
     $(document).ready(function() {
-      $('#example').DataTable();
-    });
-
-
-    $('#example').DataTable({
+      $('#example').DataTable({
         "paging": true,       // Ativar/desativar paginação
         "searching": true,    // Ativar/desativar o campo de busca
         "ordering": true,     // Ativar/desativar a ordenação das colunas
@@ -282,6 +278,7 @@
                 "sSortDescending": ": Ordenar colunas de forma descendente"
             }
         }
+      });
     });
 
   </script>

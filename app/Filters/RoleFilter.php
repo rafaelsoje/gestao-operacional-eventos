@@ -8,7 +8,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class RoleFilter implements FilterInterface
 {
-    public function before(RequestInterface $request, $arguments = null)
+    public function before(RequestInterface $request, $arguments = null): ?ResponseInterface
     {
         if (!session()->has('auth')) {
             return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
@@ -27,7 +27,7 @@ class RoleFilter implements FilterInterface
         }
     }
 
-    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null): void
     {
         //
     }

@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\Logs;
-use App\Models\Operacional;
 use App\Models\PasswordResets;
 use App\Models\Users;
 use App\Services\TelegramService;
@@ -211,7 +210,6 @@ class Login extends BaseController
 
             $log = (new Logs())->insert($data);    
             
-            #$this->telegran("Tentativa de login com falha. \n". $email);
             return redirect()->back()->with('error', "Usuário ou Senha inválidos.");            
         }  
     }
@@ -228,7 +226,7 @@ class Login extends BaseController
         return redirect()->route('login');
     }
 
-    public function recovery(): String
+    public function recovery(): string
     {
         return view('recovery');
     }
@@ -455,7 +453,7 @@ class Login extends BaseController
         return true;
     }
 
-    public function recoveryStore()
+    public function recoveryStore(): ResponseInterface
     {
         $ip = (string)$this->request->getIPAddress();
         $validate = $this->validate([
@@ -555,7 +553,7 @@ class Login extends BaseController
         return $hasColumn;
     }
 
-    private function rowValue($row, string $key)
+    private function rowValue($row, string $key): mixed
     {
         if (is_array($row)) {
             return $row[$key] ?? null;
@@ -581,38 +579,4 @@ class Login extends BaseController
         return substr($user, 0, 1) . '***@' . $domain;
     }
 
-    public function telegran($texto): void
-    {
-        // Telegram
-        // Monta a mensagem para o Telegram
-        // $texto = "📝 Novo Login efetuado:\n\n";
-        // $texto .= "👤 Nome: " . htmlspecialchars($nome) . "\n";
-        // $texto .= "📧 E-mail: " . htmlspecialchars($email) . "\n";
-        // $texto .= "Assunto: " . htmlspecialchars($assunto) . "\n";
-        // $texto .= "💬 Mensagem: " . htmlspecialchars($mensagem);
-
-        // Dados do bot
-        $bot_token = env('TELEGRAM_BOT_TOKEN'); 
-        $chat_id = env('TELEGRAM_CHAT_ID');
-
-        // Prepara a chamada cURL
-        $url = "https://api.telegram.org/bot$bot_token/sendMessage";
-
-        $dados = [
-            'chat_id' => $chat_id,
-            'text' => $texto,
-            'parse_mode' => 'HTML'
-        ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($dados));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        $resposta = curl_exec($ch);
-        $erro = curl_error($ch);
-        curl_close($ch);
-
-    }
 }

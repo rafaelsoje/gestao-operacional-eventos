@@ -6,7 +6,7 @@ use CodeIgniter\Database\Migration;
 
 class UpdateGeneratorHourFields extends Migration
 {
-    public function up()
+    public function up(): void
     {
         $this->forge->modifyColumn('operacional', [
             'leitura_g1' => ['name' => 'leitura_g1', 'type' => 'VARCHAR', 'constraint' => 7, 'null' => true],
@@ -19,7 +19,7 @@ class UpdateGeneratorHourFields extends Migration
         ]);
     }
 
-    public function down()
+    public function down(): void
     {
         $this->forge->dropColumn('operacional', ['leitura_saida_g1', 'leitura_saida_g2']);
 

@@ -6,7 +6,7 @@ use CodeIgniter\Database\Migration;
 
 class AddUserRole extends Migration
 {
-    public function up()
+    public function up(): void
     {
         $this->forge->addColumn('users', [
             'role' => [
@@ -19,7 +19,7 @@ class AddUserRole extends Migration
         ]);
     }
 
-    public function down()
+    public function down(): void
     {
         $this->forge->dropColumn('users', 'role');
     }

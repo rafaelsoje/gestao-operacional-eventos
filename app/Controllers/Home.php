@@ -11,9 +11,7 @@ use App\Models\Visita;
 use App\Services\OperacionalService;
 use App\Services\TelegramService;
 use App\Services\AvatarService;
-use CodeIgniter\Database\Query;
 use CodeIgniter\HTTP\ResponseInterface;
-use PhpParser\Node\Scalar\Float_;
 use Throwable;
 use stdClass;
 
@@ -23,7 +21,7 @@ class Home extends BaseController
     #               Operacional                  #
     ###############################################
 
-    public function operacional(){
+    public function operacional(): string|ResponseInterface {
         $service = new OperacionalService();
         $year = (int)date('Y');
 
@@ -333,7 +331,7 @@ class Home extends BaseController
         }
     }
 
-    public function downloadUpload(string $date, string $file)
+    public function downloadUpload(string $date, string $file): ResponseInterface
     {
         if (!session()->get('auth')) {
             return redirect()->route('login')->with('error', 'Sessão expirada. Faça login novamente.');
@@ -363,11 +361,11 @@ class Home extends BaseController
         return $this->response->download($path, null);
     }
 
-    public function cadastroOperacional(){
+    public function cadastroOperacional(): string {
         return view('cadastroOperacional',['cadastroOp' => true]);
     }
 
-    public function visitas()
+    public function visitas(): string
     {
         return view('visitas', [
             'visitasPage' => true,
@@ -375,7 +373,7 @@ class Home extends BaseController
         ]);
     }
 
-    public function updateVisita($id)
+    public function updateVisita($id): string|ResponseInterface
     {
         $id = (int)$id;
         if ($id <= 0) {
@@ -395,7 +393,7 @@ class Home extends BaseController
         ]);
     }
 
-    public function visitasStore()
+    public function visitasStore(): ResponseInterface
     {
         $post = $this->request->getPost();
         $id = (int)($post['id'] ?? 0);
@@ -477,7 +475,7 @@ class Home extends BaseController
         return redirect()->route('visitas')->with('success', 'Visita cadastrada com sucesso!');
     }
 
-    public function deleteVisita()
+    public function deleteVisita(): ResponseInterface
     {
         $id = (int)($this->request->getPost('id') ?? 0);
         if ($id <= 0) {
@@ -512,13 +510,13 @@ class Home extends BaseController
             ->findAll();
     }
 
-    public function operacionalLista(){
+    public function operacionalLista(): string {
         $data = (new Operacional())->where('YEAR(data)', date('Y'))->where('flag', 1)->findAll();
 
         return view('operacionalLista', ['data'=> $data, 'listaOp' => true]);
     }
 
-    public function cadastroOperacionalStore(){
+    public function cadastroOperacionalStore(): ResponseInterface {
 
         $post = $this->request->getPost();
 
@@ -653,7 +651,7 @@ class Home extends BaseController
         return redirect()->route('operacional.lista')->with('error', "Erro ao fazer cadastro!");
     }
 
-    public function registrarManutencaoGerador()
+    public function registrarManutencaoGerador(): ResponseInterface
     {
         $post = $this->request->getPost();
         $gerador = strtoupper(trim((string)($post['gerador'] ?? '')));
@@ -688,7 +686,7 @@ class Home extends BaseController
         return redirect()->back()->with('success', "Manutenção do {$gerador} registrada. Contagem reiniciada.");
     }
 
-    public function geradoresManutencao()
+    public function geradoresManutencao(): string
     {
         $service = new OperacionalService();
         $usage = $service->getGeneratorUsageStatus();
@@ -793,7 +791,7 @@ class Home extends BaseController
         ]);
     }
 
-    public function geradoresManutencaoStore()
+    public function geradoresManutencaoStore(): ResponseInterface
     {
         $post = $this->request->getPost();
         $gerador = strtoupper(trim((string)($post['gerador'] ?? '')));
@@ -824,7 +822,7 @@ class Home extends BaseController
         return redirect()->route('geradores.index')->with('success', "Manutenção do {$gerador} registrada com sucesso.");
     }
 
-    public function geradoresManutencaoUpdate()
+    public function geradoresManutencaoUpdate(): ResponseInterface
     {
         $post = $this->request->getPost();
         $id = (int)($post['id'] ?? 0);
@@ -861,7 +859,7 @@ class Home extends BaseController
         return redirect()->route('geradores.index')->with('success', 'Manutenção atualizada com sucesso.');
     }
 
-    public function geradoresManutencaoDelete()
+    public function geradoresManutencaoDelete(): ResponseInterface
     {
         $id = (int)($this->request->getPost('id') ?? 0);
         if ($id <= 0) {
@@ -887,7 +885,7 @@ class Home extends BaseController
         return redirect()->route('geradores.index')->with('success', 'Manutenção excluída com sucesso.');
     }
 
-    public function updateOperacional($id)
+    public function updateOperacional($id): string|ResponseInterface
     {
         if(is_int(intval($id)))
         {
@@ -905,7 +903,7 @@ class Home extends BaseController
 
     }
 
-    public function deleteOperacional()
+    public function deleteOperacional(): ResponseInterface
     {
         $data = $this->request->getPost();
 
@@ -930,17 +928,17 @@ class Home extends BaseController
 
     }
 
-    public function cadastroPlanejamento()
+    public function cadastroPlanejamento(): string
     {
         return view('cadastroPlanejamento', ['planejado' => true]);
     }
 
-    public function cadastroPlanejamentoStore()
+    public function cadastroPlanejamentoStore(): ResponseInterface
     {
         return $this->cadastroOperacionalStore();
     }
 
-    public function planejamentoLista()
+    public function planejamentoLista(): string
     {
         $data = (new Operacional())->where('YEAR(data)', date('Y'))->where('flag', 0)->findAll();
         return view('operacionalLista', ['data' => $data, 'flag' => 0, 'planejado' => true]);
@@ -985,7 +983,7 @@ class Home extends BaseController
         return view('cadastroUsuario');
     }
 
-    public function usuarioStore()
+    public function usuarioStore(): ResponseInterface
     {
         $validate = $this->validate([
             'name' => 'required|min_length[3]|max_length[120]',
@@ -1040,7 +1038,7 @@ class Home extends BaseController
 
     }
 
-    public function updateUsuario($id)
+    public function updateUsuario($id): string|ResponseInterface
     {
         if(is_int(intval($id)))
         {
@@ -1061,7 +1059,7 @@ class Home extends BaseController
         return redirect()->route('usuarios')->with('error', 'Parâmetro inválido.');
     }
 
-    public function updateUsuarioStore()
+    public function updateUsuarioStore(): ResponseInterface
     {
         // if (!session()->has('auth')) {
         //     return redirect()->route('login')->with('error', 'Sessão expirada!!!');
@@ -1184,7 +1182,7 @@ class Home extends BaseController
         return redirect()->route('usuarios')->with('success', 'Dados atualizados com sucesso!');
     }
 
-    public function perfil()
+    public function perfil(): string|ResponseInterface
     {
         if (!session()->has('auth')) {
             return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
@@ -1208,7 +1206,7 @@ class Home extends BaseController
         ]);
     }
 
-    public function perfilUpdate()
+    public function perfilUpdate(): ResponseInterface
     {
         if (!session()->has('auth')) {
             return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
@@ -1339,7 +1337,7 @@ class Home extends BaseController
             ->setBody((string)file_get_contents($path));
     }
 
-    public function removeUsuario($id = null)
+    public function removeUsuario($id = null): ResponseInterface
     {
         $id = $id ?? $this->request->getPost('id');
 
@@ -1352,7 +1350,6 @@ class Home extends BaseController
             if((new Users())->delete($id)){
                 $this->cleanupUnusedAvatar((string)($target->avatar ?? ''), null);
                 $user = session()->get('user');
-                #$this->telegran($user->name . " removeu usuario");
                 return redirect('usuarios')->with('success', 'Usuário removido com sucesso!');
             }
 
@@ -1362,7 +1359,7 @@ class Home extends BaseController
         return redirect()->route('usuarios')->with('error', 'Parametro incorreto.');
     }
 
-    public function notifications()
+    public function notifications(): string|ResponseInterface
     {
         if (!$this->canManageNotifications()) {
             return redirect()->route('home')->with('error', 'Acesso negado.');
@@ -1378,7 +1375,7 @@ class Home extends BaseController
         ]);
     }
 
-    public function notificationsUpdate()
+    public function notificationsUpdate(): ResponseInterface
     {
         if (!$this->canManageNotifications()) {
             return redirect()->route('home')->with('error', 'Acesso negado.');
@@ -1415,7 +1412,7 @@ class Home extends BaseController
         ]);
     }
 
-    public function logsCleanupDelete()
+    public function logsCleanupDelete(): ResponseInterface
     {
         if (!$this->canManageNotifications()) {
             return redirect()->route('home')->with('error', 'Acesso negado.');
@@ -1541,7 +1538,7 @@ class Home extends BaseController
         (new TelegramService())->send($message);
     }
 
-    public function calendario()
+    public function calendario(): string
     {
         $model = new Propostas();
 
@@ -1579,7 +1576,7 @@ class Home extends BaseController
     }
 
 
-    public function mes($num)
+    public function mes($num): string
     {
         switch($num){
             case '01':
@@ -1633,7 +1630,7 @@ class Home extends BaseController
         }
     }
 
-    public function calendarioOperacional()
+    public function calendarioOperacional(): string
     {
 
         $model = new Operacional(); // ajuste o nome do Model correto
@@ -1733,7 +1730,7 @@ class Home extends BaseController
 
     }
 
-    public function logs()
+    public function logs(): string
     {
         $data = (new Logs())->select()->orderBy('id', 'desc')->limit(50)->findAll();
         foreach ($data as $log) {
@@ -1775,41 +1772,6 @@ class Home extends BaseController
         $clean = trim((string) $clean);
 
         return $clean !== '' ? $clean : $description;
-    }
-
-    public function telegran($texto)
-    {
-        // Telegram
-        // Monta a mensagem para o Telegram
-        // $texto = "📝 Novo Login efetuado:\n\n";
-        // $texto .= "👤 Nome: " . htmlspecialchars($nome) . "\n";
-        // $texto .= "📧 E-mail: " . htmlspecialchars($email) . "\n";
-        // $texto .= "Assunto: " . htmlspecialchars($assunto) . "\n";
-        // $texto .= "💬 Mensagem: " . htmlspecialchars($mensagem);
-
-        // Dados do bot
-        $bot_token = env('TELEGRAM_BOT_TOKEN');
-        $chat_id = env('TELEGRAM_CHAT_ID');
-
-        // Prepara a chamada cURL
-        $url = "https://api.telegram.org/bot$bot_token/sendMessage";
-
-        $dados = [
-            'chat_id' => $chat_id,
-            'text' => $texto,
-            'parse_mode' => 'HTML'
-        ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($dados));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        $resposta = curl_exec($ch);
-        $erro = curl_error($ch);
-        curl_close($ch);
-
     }
 
     private function hasUsersMustChangePasswordColumn(): bool

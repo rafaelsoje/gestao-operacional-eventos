@@ -6,7 +6,7 @@ use CodeIgniter\Database\Migration;
 
 class AddGeneratorKwhFields extends Migration
 {
-    public function up()
+    public function up(): void
     {
         $fields = [
             'leitura_g1' => ['type' => 'TIME', 'null' => true, 'after' => 'tempo_g1'],
@@ -20,7 +20,7 @@ class AddGeneratorKwhFields extends Migration
         $this->forge->addColumn('operacional', $fields);
     }
 
-    public function down()
+    public function down(): void
     {
         $this->forge->dropColumn('operacional', [
             'leitura_g1',

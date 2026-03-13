@@ -6,7 +6,7 @@ use CodeIgniter\Database\Migration;
 
 class AddUsersMustChangePassword extends Migration
 {
-    public function up()
+    public function up(): void
     {
         $this->forge->addColumn('users', [
             'must_change_password' => [
@@ -19,7 +19,7 @@ class AddUsersMustChangePassword extends Migration
         ]);
     }
 
-    public function down()
+    public function down(): void
     {
         $this->forge->dropColumn('users', 'must_change_password');
     }

@@ -1,4 +1,4 @@
-# Audiovisual - Controle Operacional de Eventos
+# Controle Operacional de Eventos
 
 Sistema interno para gestão operacional de eventos, com foco em custos, consumos, manutenção de geradores e acompanhamento de indicadores no dashboard.
 
@@ -18,6 +18,7 @@ Sistema interno para gestão operacional de eventos, com foco em custos, consumo
   - Consumo de água de poço acima de 6 m³ por evento
 - Histórico de uso e manutenção de geradores (G1/G2)
 - Monitoramento de ruído por evento (Tribuna C, Pista de Cavalo, Corredor JB + média)
+- Módulo de visitas (cadastro, edição, visualização e exclusão)
 - Calendário operacional e lista detalhada de eventos
 - Gestão de usuários, perfil, notificações e logs administrativos
 
@@ -69,6 +70,12 @@ cp .env.example .env
 php spark migrate
 ```
 
+Se você aplica alterações manualmente no banco, use também os scripts em:
+
+- `app/Database/Migrations/sql/`
+- Exemplo recente: `app/Database/Migrations/sql/2026-03-12-000009_create_visitas.sql`
+- Dica: execute os arquivos SQL em ordem cronológica do prefixo (`YYYY-MM-DD-...`) para manter consistência com as migrations PHP.
+
 6. Inicie a aplicação:
 
 ```bash
@@ -93,7 +100,7 @@ npm run build
 
 ## Estrutura principal
 
-- `app/Controllers/Home.php`: fluxo principal (dashboard, cadastro, alertas, geradores)
+- `app/Controllers/Home.php`: fluxo principal (dashboard, cadastro, alertas, geradores e visitas)
 - `app/Services/OperacionalService.php`: agregações, séries e métricas
 - `app/Views/`: telas de dashboard, cadastro, listas e calendários
 - `app/Database/Migrations/`: migrações da aplicação

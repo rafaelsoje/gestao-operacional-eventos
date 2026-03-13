@@ -223,7 +223,7 @@ class OperacionalService
         ];
     }
 
-    private function applyFilters($builder, array $filters)
+    private function applyFilters($builder, array $filters): mixed
     {
         if (isset($filters['date_from'])) {
             $builder->where('data >=', $filters['date_from']);

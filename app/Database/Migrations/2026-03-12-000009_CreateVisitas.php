@@ -6,7 +6,7 @@ use CodeIgniter\Database\Migration;
 
 class CreateVisitas extends Migration
 {
-    public function up()
+    public function up(): void
     {
         if ($this->db->tableExists('visitas')) {
             return;
@@ -74,7 +74,7 @@ class CreateVisitas extends Migration
         $this->forge->createTable('visitas', true);
     }
 
-    public function down()
+    public function down(): void
     {
         if ($this->db->tableExists('visitas')) {
             $this->forge->dropTable('visitas', true);

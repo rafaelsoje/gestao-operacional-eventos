@@ -13,7 +13,7 @@ class Settings extends Model
     protected $allowedFields = ['key', 'value', 'updated_at'];
     protected $useTimestamps = false;
 
-    public function getValue(string $key, $default = null)
+    public function getValue(string $key, $default = null): mixed
     {
         $row = $this->find($key);
         if (!$row) {

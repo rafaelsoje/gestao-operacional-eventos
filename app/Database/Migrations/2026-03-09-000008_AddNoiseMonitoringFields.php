@@ -6,7 +6,7 @@ use CodeIgniter\Database\Migration;
 
 class AddNoiseMonitoringFields extends Migration
 {
-    public function up()
+    public function up(): void
     {
         $fields = [];
 
@@ -51,7 +51,7 @@ class AddNoiseMonitoringFields extends Migration
         }
     }
 
-    public function down()
+    public function down(): void
     {
         $toDrop = [];
         foreach (['ruido_tribuna_c', 'ruido_pista_cavalo', 'ruido_corredor_jb', 'ruido_media'] as $field) {

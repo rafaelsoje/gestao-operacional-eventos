@@ -6,7 +6,7 @@ use CodeIgniter\Database\Migration;
 
 class UpdateEquipeTurnosToNames extends Migration
 {
-    public function up()
+    public function up(): void
     {
         if ($this->db->fieldExists('equipe_manha', 'operacional')) {
             $this->forge->modifyColumn('operacional', [
@@ -33,7 +33,7 @@ class UpdateEquipeTurnosToNames extends Migration
         }
     }
 
-    public function down()
+    public function down(): void
     {
         if ($this->db->fieldExists('equipe_manha', 'operacional')) {
             $this->forge->modifyColumn('operacional', [

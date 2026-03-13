@@ -70,11 +70,7 @@
   <!-- Script para ativar DataTables -->
   <script>
     $(document).ready(function() {
-      $('#example').DataTable();
-    });
-
-
-    $('#example').DataTable({
+      $('#example').DataTable({
         "order": [[0, "desc"]], // Ordenar pela coluna 'Data' (primeira coluna) de forma decrescente
         "paging": true,       // Ativar/desativar paginação
         "searching": true,    // Ativar/desativar o campo de busca
@@ -105,6 +101,7 @@
                 "sSortDescending": ": Ordenar colunas de forma descendente"
             }
         }
+      });
     });
 
   </script>

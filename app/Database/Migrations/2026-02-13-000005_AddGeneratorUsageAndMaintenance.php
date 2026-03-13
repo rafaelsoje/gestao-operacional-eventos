@@ -6,7 +6,7 @@ use CodeIgniter\Database\Migration;
 
 class AddGeneratorUsageAndMaintenance extends Migration
 {
-    public function up()
+    public function up(): void
     {
         $this->forge->addColumn('operacional', [
             'uso_min_g1' => ['type' => 'INT', 'null' => true, 'after' => 'leitura_saida_g1'],
@@ -52,7 +52,7 @@ class AddGeneratorUsageAndMaintenance extends Migration
         $this->forge->createTable('gerador_manutencoes');
     }
 
-    public function down()
+    public function down(): void
     {
         $this->forge->dropColumn('operacional', ['uso_min_g1', 'uso_min_g2']);
         $this->forge->dropTable('gerador_manutencoes', true);

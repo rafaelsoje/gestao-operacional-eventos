@@ -6,7 +6,7 @@ use CodeIgniter\Database\Migration;
 
 class AddEquipeTurnos extends Migration
 {
-    public function up()
+    public function up(): void
     {
         $fields = [
             'equipe_manha' => ['type' => 'TINYINT', 'constraint' => 1, 'null' => true, 'default' => 0, 'after' => 'limpeza'],
@@ -16,7 +16,7 @@ class AddEquipeTurnos extends Migration
         $this->forge->addColumn('operacional', $fields);
     }
 
-    public function down()
+    public function down(): void
     {
         $this->forge->dropColumn('operacional', ['equipe_manha', 'equipe_noite']);
     }
