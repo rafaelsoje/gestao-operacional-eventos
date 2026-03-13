@@ -1,6 +1,7 @@
 <?= $this->extend('main')?>;
 
 <?php $this->section('content');?>
+<?php // Edição de usuário existente com controle de nome e nível de acesso. ?>
 
 <div class="container mt-3">
     <div class="d-flex align-items-center justify-content-between mb-3">

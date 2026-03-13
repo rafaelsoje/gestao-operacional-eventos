@@ -6,11 +6,13 @@ use CodeIgniter\Model;
 
 class Visita extends Model
 {
+    // Registro operacional de visitas técnicas/comerciais no espaço de eventos.
     protected $table = 'visitas';
     protected $primaryKey = 'id';
     protected $returnType = 'object';
     protected $protectFields = true;
     protected $allowedFields = [
+        // Dados principais da visita e contexto do evento associado.
         'data_visita',
         'tipo_visita',
         'responsavel_exc',

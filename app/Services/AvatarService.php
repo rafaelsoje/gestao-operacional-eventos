@@ -19,6 +19,7 @@ class AvatarService
 
     public function save(UploadedFile $file): string
     {
+        // Garante diretório local antes de qualquer manipulação de imagem.
         $this->ensureUploadDir();
 
         $baseName = sha1(uniqid('', true));
@@ -27,6 +28,7 @@ class AvatarService
 
         if (function_exists('imagewebp')) {
             try {
+                // Pipeline padrão: converte para WEBP e normaliza dimensões de avatar.
                 Services::image('gd')
                     ->withFile($file)
                     ->convert(IMAGETYPE_WEBP)
@@ -45,6 +47,7 @@ class AvatarService
         }
 
         $fallbackName = $baseName . '.' . $ext;
+        // Fallback para upload original quando não houver suporte/erro no GD->WEBP.
         $file->move($this->uploadDir, $fallbackName);
 
         return $fallbackName;
@@ -52,6 +55,7 @@ class AvatarService
 
     public function resolvePath(string $avatar): string
     {
+        // Resolve avatar customizado com fallback para mídia padrão do sistema.
         $safe = basename($avatar);
         if ($safe === '' || $safe !== $avatar || $safe === 'avatar.svg') {
             return $this->defaultAvatarPath;
@@ -72,6 +76,7 @@ class AvatarService
 
     private function ensureUploadDir(): void
     {
+        // Cria pasta de uploads sob demanda para manter deploy idempotente.
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0755, true);
         }

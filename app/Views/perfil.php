@@ -37,6 +37,7 @@
         <div class="col-12 col-lg-8">
             <div class="card">
                 <div class="card-body">
+                    <!-- Atualização de avatar e senha do usuário autenticado. -->
                     <form method="post" action="<?= url_to('perfil.update');?>" enctype="multipart/form-data">
                         <?= csrf_field(); ?>
 
@@ -75,6 +76,7 @@
 
 <script>
     (function () {
+        // Validação visual de senha no front para reduzir erros de submissão.
         const pwd = document.getElementById('new_password');
         const confirm = document.getElementById('new_password_confirm');
         const feedback = document.getElementById('password_match_feedback');

@@ -12,6 +12,7 @@
     <div class="flash text-center alert alert-success text-success"><?php echo session()->get('success') ?? ''; ?></div>
   <?php endif; ?>
 
+  <!-- Preferência global de envio de alertas operacionais para Telegram. -->
   <form method="post" action="<?= url_to('admin.notifications.update');?>">
     <?= csrf_field(); ?>
     <div class="form-check form-switch">
@@ -26,6 +27,7 @@
   <hr class="my-4">
 
   <h4 class="mb-3">Limpeza de logs</h4>
+  <!-- Bloco administrativo: pré-visualiza impacto antes de remover logs antigos. -->
   <div class="card mb-4">
     <div class="card-body">
       <div class="row g-3 align-items-end">
@@ -116,6 +118,7 @@
 
 <script>
   (function () {
+    // Fluxo client-side da limpeza: prévia assíncrona + confirmação em modal.
     const selectDays = document.getElementById('logs_cleanup_days');
     const previewBox = document.getElementById('logs_cleanup_preview');
     const triggerBtn = document.getElementById('logs_cleanup_trigger');
