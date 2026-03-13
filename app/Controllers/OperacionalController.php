@@ -11,6 +11,9 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class OperacionalController extends Home
 {
+    /**
+     * Renderiza dashboard operacional com filtros, cards e gráficos agregados.
+     */
     public function operacional(): string|ResponseInterface {
         $service = new OperacionalService();
         $year = (int)date('Y');
@@ -321,6 +324,9 @@ class OperacionalController extends Home
         }
     }
 
+    /**
+     * Faz download seguro de arquivos enviados no cadastro operacional.
+     */
     public function downloadUpload(string $date, string $file): ResponseInterface
     {
         if (!session()->get('auth')) {
@@ -351,16 +357,25 @@ class OperacionalController extends Home
         return $this->response->download($path, null);
     }
 
+    /**
+     * Exibe formulário de cadastro operacional.
+     */
     public function cadastroOperacional(): string {
         return view('cadastroOperacional',['cadastroOp' => true]);
     }
 
+    /**
+     * Lista eventos operacionais realizados no ano atual.
+     */
     public function operacionalLista(): string {
         $data = (new Operacional())->where('YEAR(data)', date('Y'))->where('flag', 1)->findAll();
 
         return view('operacionalLista', ['data'=> $data, 'listaOp' => true]);
     }
 
+    /**
+     * Cria ou atualiza registro operacional, incluindo auditoria e notificações.
+     */
     public function cadastroOperacionalStore(): ResponseInterface {
 
         $post = $this->request->getPost();
@@ -500,6 +515,9 @@ class OperacionalController extends Home
         return redirect()->route('operacional.lista')->with('error', "Erro ao fazer cadastro!");
     }
 
+    /**
+     * Registra manutenção de gerador (fluxo legado compatível).
+     */
     public function registrarManutencaoGerador(): ResponseInterface
     {
         $post = $this->request->getPost();
@@ -535,6 +553,9 @@ class OperacionalController extends Home
         return redirect()->back()->with('success', "Manutenção do {$gerador} registrada. Contagem reiniciada.");
     }
 
+    /**
+     * Exibe painel de manutenção e histórico de uso dos geradores.
+     */
     public function geradoresManutencao(): string
     {
         $service = new OperacionalService();
@@ -640,6 +661,9 @@ class OperacionalController extends Home
         ]);
     }
 
+    /**
+     * Salva nova manutenção com validação centralizada por FormRequest.
+     */
     public function geradoresManutencaoStore(): ResponseInterface
     {
         $post = $this->request->getPost();
@@ -676,6 +700,9 @@ class OperacionalController extends Home
         return redirect()->route('geradores.index')->with('success', "Manutenção do {$gerador} registrada com sucesso.");
     }
 
+    /**
+     * Atualiza manutenção existente com validação e auditoria.
+     */
     public function geradoresManutencaoUpdate(): ResponseInterface
     {
         $post = $this->request->getPost();
@@ -719,6 +746,9 @@ class OperacionalController extends Home
         return redirect()->route('geradores.index')->with('success', 'Manutenção atualizada com sucesso.');
     }
 
+    /**
+     * Exclui manutenção de gerador e registra log.
+     */
     public function geradoresManutencaoDelete(): ResponseInterface
     {
         $id = (int)($this->request->getPost('id') ?? 0);
@@ -745,6 +775,9 @@ class OperacionalController extends Home
         return redirect()->route('geradores.index')->with('success', 'Manutenção excluída com sucesso.');
     }
 
+    /**
+     * Carrega um cadastro operacional/planejamento para edição.
+     */
     public function updateOperacional($id): string|ResponseInterface
     {
         if (!$this->isAdminUser()) {
@@ -767,6 +800,9 @@ class OperacionalController extends Home
 
     }
 
+    /**
+     * Exclui registro operacional com restrição para administradores.
+     */
     public function deleteOperacional(): ResponseInterface
     {
         if (!$this->isAdminUser()) {
@@ -796,22 +832,34 @@ class OperacionalController extends Home
 
     }
 
+    /**
+     * Exibe formulário de cadastro de planejamento.
+     */
     public function cadastroPlanejamento(): string
     {
         return view('cadastroPlanejamento', ['planejado' => true]);
     }
 
+    /**
+     * Reaproveita fluxo de gravação operacional para planejamento.
+     */
     public function cadastroPlanejamentoStore(): ResponseInterface
     {
         return $this->cadastroOperacionalStore();
     }
 
+    /**
+     * Lista eventos planejados (flag 0) no ano atual.
+     */
     public function planejamentoLista(): string
     {
         $data = (new Operacional())->where('YEAR(data)', date('Y'))->where('flag', 0)->findAll();
         return view('operacionalLista', ['data' => $data, 'flag' => 0, 'planejado' => true]);
     }
 
+    /**
+     * Monta feed de eventos e renderiza calendário operacional anual.
+     */
     public function calendarioOperacional(): string
     {
 

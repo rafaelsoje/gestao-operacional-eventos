@@ -13,6 +13,9 @@ use Throwable;
 
 class AdminController extends Home
 {
+    /**
+     * Lista usuários (exceto superusuário) com status de atividade.
+     */
     public function usuarios(): string
     {
         $list = new Users();
@@ -47,11 +50,17 @@ class AdminController extends Home
         return view('usuarios', ['users' => $users, 'botanicUser' => true]);
     }
 
+    /**
+     * Exibe formulário de cadastro de usuário.
+     */
     public function cadastroUsuario(): string
     {
         return view('cadastroUsuario');
     }
 
+    /**
+     * Persiste novo usuário com papel, senha inicial e log de auditoria.
+     */
     public function usuarioStore(): ResponseInterface
     {
         if (!$this->validateData($this->request->getPost(), UserFormRequest::storeRules(), UserFormRequest::messages())) {
@@ -104,6 +113,9 @@ class AdminController extends Home
 
     }
 
+    /**
+     * Carrega um usuário específico para edição.
+     */
     public function updateUsuario($id): string|ResponseInterface
     {
         if(is_int(intval($id)))
@@ -125,6 +137,9 @@ class AdminController extends Home
         return redirect()->route('usuarios')->with('error', 'Parâmetro inválido.');
     }
 
+    /**
+     * Atualiza perfil/permissões e sincroniza sessão quando necessário.
+     */
     public function updateUsuarioStore(): ResponseInterface
     {
         // if (!session()->has('auth')) {
@@ -243,6 +258,9 @@ class AdminController extends Home
         return redirect()->route('usuarios')->with('success', 'Dados atualizados com sucesso!');
     }
 
+    /**
+     * Remove usuário por id e limpa avatar não utilizado.
+     */
     public function removeUsuario($id = null): ResponseInterface
     {
         $id = $id ?? $this->request->getPost('id');
@@ -265,6 +283,9 @@ class AdminController extends Home
         return redirect()->route('usuarios')->with('error', 'Parametro incorreto.');
     }
 
+    /**
+     * Exibe painel de notificações e usuários online.
+     */
     public function notifications(): string|ResponseInterface
     {
         if (!$this->canManageNotifications()) {
@@ -281,6 +302,9 @@ class AdminController extends Home
         ]);
     }
 
+    /**
+     * Atualiza a flag de envio para Telegram.
+     */
     public function notificationsUpdate(): ResponseInterface
     {
         if (!$this->canManageNotifications()) {
@@ -293,6 +317,9 @@ class AdminController extends Home
         return redirect()->route('admin.notifications')->with('success', 'Configuração atualizada.');
     }
 
+    /**
+     * Retorna prévia (JSON) de quantos logs serão removidos.
+     */
     public function logsCleanupPreview(): ResponseInterface
     {
         if (!$this->canManageNotifications()) {
@@ -318,6 +345,9 @@ class AdminController extends Home
         ]);
     }
 
+    /**
+     * Executa limpeza de logs por período e registra auditoria.
+     */
     public function logsCleanupDelete(): ResponseInterface
     {
         if (!$this->canManageNotifications()) {
@@ -375,6 +405,9 @@ class AdminController extends Home
         return redirect()->route('admin.notifications')->with('success', "Foram removidos {$count} registros de logs com mais de {$days} dias.");
     }
 
+    /**
+     * Exibe os logs recentes com descrição tratada para visualização.
+     */
     public function logs(): string
     {
         $data = (new Logs())->select()->orderBy('id', 'desc')->limit(50)->findAll();

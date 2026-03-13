@@ -14,6 +14,9 @@ use Throwable;
 
 class Home extends BaseController
 {
+    /**
+     * Exibe os dados do perfil do usuário autenticado.
+     */
     public function perfil(): string|ResponseInterface
     {
         if (!session()->has('auth')) {
@@ -38,6 +41,9 @@ class Home extends BaseController
         ]);
     }
 
+    /**
+     * Atualiza dados de perfil, avatar e senha do usuário atual.
+     */
     public function perfilUpdate(): ResponseInterface
     {
         if (!session()->has('auth')) {
@@ -126,6 +132,9 @@ class Home extends BaseController
         return redirect()->route('perfil')->with('success', 'Perfil atualizado com sucesso!');
     }
 
+    /**
+     * Remove avatar antigo quando não está mais em uso por nenhum usuário.
+     */
     protected function cleanupUnusedAvatar(?string $oldAvatar, ?string $newAvatar = null): void
     {
         $old = trim((string)$oldAvatar);
@@ -151,6 +160,9 @@ class Home extends BaseController
         }
     }
 
+    /**
+     * Faz entrega segura de arquivos de avatar armazenados em disco.
+     */
     public function avatar(string $file): ResponseInterface
     {
         if (!session()->get('auth')) {
@@ -170,6 +182,9 @@ class Home extends BaseController
             ->setBody((string)file_get_contents($path));
     }
 
+    /**
+     * Define se o usuário atual pode gerenciar notificações administrativas.
+     */
     protected function canManageNotifications(): bool
     {
         $user = session()->get('user');
@@ -177,6 +192,9 @@ class Home extends BaseController
         return $user && $user->email === $superEmail;
     }
 
+    /**
+     * Normaliza intervalo de limpeza de logs para opções permitidas.
+     */
     protected function getCleanupRange($rawValue): ?string
     {
         $value = trim((string) $rawValue);
@@ -187,6 +205,9 @@ class Home extends BaseController
         return in_array($value, ['30', '60', '90'], true) ? $value : null;
     }
 
+    /**
+     * Conta logs mais antigos que a janela informada em dias.
+     */
     protected function countLogsOlderThanDays(int $days): int
     {
         $limitDate = date('Y-m-d H:i:s', strtotime("-{$days} days"));
@@ -199,6 +220,9 @@ class Home extends BaseController
         return $countByCreatedAt + count($legacyIds);
     }
 
+    /**
+     * Recupera ids de logs legados sem created_at usando descrição.
+     */
     protected function getLegacyLogIdsOlderThanDays(int $days): array
     {
         $limitTimestamp = strtotime("-{$days} days");
@@ -219,11 +243,17 @@ class Home extends BaseController
         return $ids;
     }
 
+    /**
+     * Conta todos os registros da tabela de logs.
+     */
     protected function countAllLogs(): int
     {
         return (int) (new Logs())->countAllResults();
     }
 
+    /**
+     * Extrai timestamp textual da descrição de logs legados.
+     */
     protected function extractTimestampFromLogDescription(string $description): ?int
     {
         if (preg_match('/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $description, $matches) !== 1) {
@@ -234,11 +264,17 @@ class Home extends BaseController
         return $parsed !== false ? (int) $parsed : null;
     }
 
+    /**
+     * Envia notificação para Telegram respeitando configuração ativa.
+     */
     protected function notifyTelegram(string $message): void
     {
         (new TelegramService())->send($message);
     }
 
+    /**
+     * Monta estrutura de calendário mensal para o dashboard principal.
+     */
     public function calendario(): string
     {
         $model = new Propostas();
@@ -277,6 +313,9 @@ class Home extends BaseController
     }
 
 
+    /**
+     * Converte número do mês para nome textual em português.
+     */
     public function mes($num): string
     {
         switch($num){
@@ -331,6 +370,9 @@ class Home extends BaseController
         }
     }
 
+    /**
+     * Extrai nome de usuário presente no início da descrição do log.
+     */
     protected function extractLogUserName(string $description): string
     {
         $description = trim($description);
@@ -347,6 +389,9 @@ class Home extends BaseController
         return '---';
     }
 
+    /**
+     * Remove prefixo de usuário da descrição para exibição limpa.
+     */
     protected function stripUserFromDescription(string $description): string
     {
         $description = trim($description);
@@ -361,6 +406,9 @@ class Home extends BaseController
         return $clean !== '' ? $clean : $description;
     }
 
+    /**
+     * Verifica presença da coluna de troca obrigatória de senha.
+     */
     protected function hasUsersMustChangePasswordColumn(): bool
     {
         static $hasColumn = null;
@@ -372,17 +420,26 @@ class Home extends BaseController
         return $hasColumn;
     }
 
+    /**
+     * Detecta exceção de e-mail duplicado em operações no banco.
+     */
     protected function isDuplicateEmailException(Throwable $e): bool
     {
         $message = mb_strtolower($e->getMessage());
         return str_contains($message, 'duplicate') && str_contains($message, 'email');
     }
 
+    /**
+     * Valida identificador de gerador permitido pelo sistema.
+     */
     protected function isValidGerador(string $gerador): bool
     {
         return in_array($gerador, ['G1', 'G2'], true);
     }
 
+    /**
+     * Valida data no formato estrito AAAA-MM-DD.
+     */
     protected function isValidDateYmd(string $date): bool
     {
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
@@ -393,6 +450,9 @@ class Home extends BaseController
         return checkdate($month, $day, $year);
     }
 
+    /**
+     * Normaliza tipos de evento de busca e remove valores inválidos.
+     */
     protected function sanitizeSearchTipos($rawTipos): ?array
     {
         if ($rawTipos === null || $rawTipos === '') {
@@ -429,6 +489,9 @@ class Home extends BaseController
         return array_values(array_unique($tipos));
     }
 
+    /**
+     * Calcula tempo de uso de gerador a partir dos campos do formulário.
+     */
     protected function calculateGeneratorUsageMinutesFromPost(array $post, string $entradaKey, string $saidaKey): int
     {
         return $this->calculateGeneratorUsageMinutesFromHourValues(
@@ -437,6 +500,9 @@ class Home extends BaseController
         );
     }
 
+    /**
+     * Gera série acumulada de horas de uso para gráficos de geradores.
+     */
     protected function buildGeneratorAccumulatedLine(
         array $events,
         array $maintenances = [],
@@ -506,6 +572,9 @@ class Home extends BaseController
         return $line;
     }
 
+    /**
+     * Consolida uso diário por gerador a partir dos eventos operacionais.
+     */
     protected function aggregateGeneratorDailyUsage(array $events): array
     {
         if (empty($events)) {
@@ -537,6 +606,9 @@ class Home extends BaseController
         return $dailyUsage;
     }
 
+    /**
+     * Obtém a maior data disponível no conjunto de eventos.
+     */
     protected function maxEventDate(array $events): ?string
     {
         $maxDate = null;
@@ -553,6 +625,9 @@ class Home extends BaseController
         return $maxDate;
     }
 
+    /**
+     * Carrega e indexa manutenção para reinício da contagem de uso.
+     */
     protected function loadGeneratorMaintenanceTimeline(array $events): array
     {
         $timeline = ['g1' => [], 'g2' => []];
@@ -597,6 +672,9 @@ class Home extends BaseController
         return $timeline;
     }
 
+    /**
+     * Resolve minutos de uso por evento com fallback de colunas legadas.
+     */
     protected function resolveEventGeneratorUsageMinutes(object $event, string $generator): int
     {
         $suffix = strtolower($generator) === 'g2' ? 'g2' : 'g1';
@@ -621,6 +699,9 @@ class Home extends BaseController
         return $this->parseHourMeterToMinutes((string)($event->{$tempoField} ?? '')) ?? 0;
     }
 
+    /**
+     * Calcula diferença em minutos entre duas leituras de horímetro.
+     */
     protected function calculateGeneratorUsageMinutesFromHourValues(string $entradaValue, string $saidaValue): int
     {
         $entrada = $this->parseHourMeterToMinutes($entradaValue);
@@ -633,6 +714,9 @@ class Home extends BaseController
         return $saida - $entrada;
     }
 
+    /**
+     * Converte valor textual de horímetro para minutos inteiros.
+     */
     protected function parseHourMeterToMinutes(string $value): ?int
     {
         $value = trim($value);
@@ -661,6 +745,9 @@ class Home extends BaseController
         return null;
     }
 
+    /**
+     * Normaliza lista de nomes de equipe para persistência textual.
+     */
     protected function normalizeEquipeNames($input): ?string
     {
         $allowed = ['Helder', 'Nathan', 'Anderson'];
@@ -675,6 +762,9 @@ class Home extends BaseController
         return empty($valid) ? null : implode(',', $valid);
     }
 
+    /**
+     * Gera filtros do período anterior para cálculo de tendências.
+     */
     protected function buildPreviousPeriodFilters(array $filters): ?array
     {
         if (isset($filters['date_from'], $filters['date_to'])) {
@@ -717,6 +807,9 @@ class Home extends BaseController
         return null;
     }
 
+    /**
+     * Monta indicadores comparativos do período atual versus anterior.
+     */
     protected function buildTrendCards(object $sum, ?object $prevSum, float $avgEventCost, ?float $prevAvgEventCost): array
     {
         $cards = [
@@ -735,6 +828,9 @@ class Home extends BaseController
         return $cards;
     }
 
+    /**
+     * Anexa medições sonoras normalizadas ao payload operacional.
+     */
     protected function appendNoiseMonitoringData(array &$data, array $post): void
     {
         $db = db_connect();
@@ -762,6 +858,9 @@ class Home extends BaseController
         $data['monitor_sonoro'] = $media;
     }
 
+    /**
+     * Converte leitura de ruído para float com tratamento de formato local.
+     */
     protected function parseNoiseReading($value): ?float
     {
         if ($value === null) {
@@ -777,6 +876,9 @@ class Home extends BaseController
         return round((float)$normalized, 2);
     }
 
+    /**
+     * Avalia consumo CEDAE e retorna alerta quando houver anomalia.
+     */
     protected function buildCedaeConsumptionAlert(array $events): array
     {
         $limit = 6.0;
@@ -818,6 +920,9 @@ class Home extends BaseController
         ];
     }
 
+    /**
+     * Avalia consumo do poço e retorna alerta quando houver anomalia.
+     */
     protected function buildPocoConsumptionAlert(array $events): array
     {
         $limit = 6.0;
@@ -858,6 +963,9 @@ class Home extends BaseController
         ];
     }
 
+    /**
+     * Calcula variação percentual e direção para cards de tendência.
+     */
     protected function makeTrendValue(float $current, float $previous): array
     {
         if ($previous <= 0) {
@@ -877,6 +985,9 @@ class Home extends BaseController
         ];
     }
 
+    /**
+     * Indica se o usuário da sessão possui papel administrativo.
+     */
     protected function isAdminUser(): bool
     {
         $user = session()->get('user');

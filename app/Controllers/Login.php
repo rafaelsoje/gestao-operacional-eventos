@@ -18,6 +18,9 @@ class Login extends BaseController
 {
     protected $session;    
 
+    /**
+     * Exibe login padrão ou tela de nova senha via token de recuperação.
+     */
     public function index(): String|ResponseInterface
     {
 
@@ -41,6 +44,9 @@ class Login extends BaseController
         return view('login');
     }
 
+    /**
+     * Processa autenticação, controles anti-força bruta e sessão do usuário.
+     */
     public function store(): ResponseInterface
     {      
         $this->session = session();  
@@ -215,6 +221,9 @@ class Login extends BaseController
         }  
     }
 
+    /**
+     * Encerra sessão autenticada e limpa presença online.
+     */
     public function logOut(): ResponseInterface
     {
         $user = session()->get('user');
@@ -227,11 +236,17 @@ class Login extends BaseController
         return redirect()->route('login');
     }
 
+    /**
+     * Exibe formulário para solicitar recuperação de senha.
+     */
     public function recovery(): string
     {
         return view('recovery');
     }
 
+    /**
+     * Gera token de recuperação e tenta enviar e-mail ao usuário.
+     */
     public function recoverySend(): ResponseInterface
     {
         $email = mb_strtolower(trim((string)$this->request->getPost('email')));
@@ -320,6 +335,9 @@ class Login extends BaseController
         
     }
 
+    /**
+     * Exibe formulário de troca obrigatória após login.
+     */
     public function forcePasswordForm(): string|ResponseInterface
     {
         if (!session()->has('auth')) {
@@ -339,6 +357,9 @@ class Login extends BaseController
         return view('newPasswd', ['forceChange' => true]);
     }
 
+    /**
+     * Persiste nova senha para fluxo de troca obrigatória.
+     */
     public function forcePasswordStore(): ResponseInterface
     {
         if (!session()->has('auth')) {
@@ -378,6 +399,9 @@ class Login extends BaseController
         return redirect()->route('home')->with('success', 'Senha atualizada com sucesso.');
     }
 
+    /**
+     * Resolve papel efetivo do usuário (superuser/admin/user).
+     */
     private function resolveUserRole($user): string
     {
         $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
@@ -390,6 +414,9 @@ class Login extends BaseController
         return ((int)($user->admin ?? 0) === 1) ? 'admin' : 'user';
     }
 
+    /**
+     * Limita tentativas de recovery por IP e e-mail.
+     */
     private function allowRecoveryAttempt(?string $email, string $ip): bool
     {
         $cache = Services::cache();
@@ -422,6 +449,9 @@ class Login extends BaseController
         return true;
     }
 
+    /**
+     * Limita tentativas de login por IP e e-mail.
+     */
     private function allowLoginAttempt(?string $email, string $ip): bool
     {
         $cache = Services::cache();
@@ -454,6 +484,9 @@ class Login extends BaseController
         return true;
     }
 
+    /**
+     * Valida token e redefine senha no fluxo de recuperação.
+     */
     public function recoveryStore(): ResponseInterface
     {
         $ip = (string)$this->request->getIPAddress();
@@ -522,6 +555,9 @@ class Login extends BaseController
 
     }
 
+    /**
+     * Registra trilha de auditoria do processo de recuperação de senha.
+     */
     private function logRecoveryEvent(string $status, array $context = []): void
     {
         $parts = ['status=' . $status];
@@ -543,6 +579,9 @@ class Login extends BaseController
         }
     }
 
+    /**
+     * Verifica existência da coluna usada no fluxo de troca obrigatória.
+     */
     private function hasUsersMustChangePasswordColumn(): bool
     {
         static $hasColumn = null;
@@ -554,6 +593,9 @@ class Login extends BaseController
         return $hasColumn;
     }
 
+    /**
+     * Lê valor de array/objeto sem gerar avisos de índice/propriedade.
+     */
     private function rowValue($row, string $key): mixed
     {
         if (is_array($row)) {
@@ -566,6 +608,9 @@ class Login extends BaseController
         return null;
     }
 
+    /**
+     * Mascara e-mail para logs sem expor endereço completo.
+     */
     private function maskEmail(string $email): string
     {
         if ($email === '' || strpos($email, '@') === false) {

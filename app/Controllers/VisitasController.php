@@ -9,6 +9,9 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class VisitasController extends Home
 {
+    /**
+     * Exibe o formulário e a lista das 100 visitas mais recentes.
+     */
     public function visitas(): string
     {
         return view('visitas', [
@@ -17,6 +20,9 @@ class VisitasController extends Home
         ]);
     }
 
+    /**
+     * Carrega uma visita para edição no formulário principal.
+     */
     public function updateVisita($id): string|ResponseInterface
     {
         if (!$this->isAdminUser()) {
@@ -41,6 +47,9 @@ class VisitasController extends Home
         ]);
     }
 
+    /**
+     * Cria ou atualiza uma visita com validação centralizada.
+     */
     public function visitasStore(): ResponseInterface
     {
         $post = $this->request->getPost();
@@ -117,6 +126,9 @@ class VisitasController extends Home
         return redirect()->route('visitas')->with('success', 'Visita cadastrada com sucesso!');
     }
 
+    /**
+     * Remove uma visita existente e registra auditoria em logs.
+     */
     public function deleteVisita(): ResponseInterface
     {
         if (!$this->isAdminUser()) {
@@ -147,6 +159,9 @@ class VisitasController extends Home
         return redirect()->route('visitas')->with('success', 'Visita excluida com sucesso.');
     }
 
+    /**
+     * Retorna a listagem limitada para manter a tabela responsiva.
+     */
     protected function loadRecentVisitas(): array
     {
         return (new Visita())
