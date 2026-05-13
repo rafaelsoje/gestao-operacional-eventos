@@ -31,6 +31,12 @@ $pocoAlert = $poco_alert ?? [
     'count' => 0,
     'is_alert' => false,
 ];
+$taxaCozinhaSummary = $taxa_cozinha_summary ?? [
+    'previsto' => 0,
+    'recebido' => 0,
+    'pendente' => 0,
+    'alertas' => 0,
+];
 $selectedTipos = $tipo ?? ['social', 'corporativo', 'entretenimento'];
 $isTipoChecked = static function (string $value) use ($selectedTipos): bool {
     return in_array($value, $selectedTipos, true);
@@ -328,7 +334,32 @@ $hourOnly = static function (?string $hhmm): string {
                 <div class="small <?= esc($t['class']); ?>">vs período anterior: <?= esc($t['text']); ?></div>
             </div>
         </div>
-        <div class="col-12 col-md-6 order-1 order-lg-2">
+    </div>
+
+    <div class="row g-3 align-items-stretch mt-1">
+        <div class="col-12 col-lg-4">
+            <a href="<?= base_url('operacional/taxa-cozinha'); ?>" class="text-decoration-none">
+                <div class="stat-card bg-white rounded shadow-lg h-100 text-start p-3 kpi-card">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div>
+                            <div class="small text-muted">Taxa de cozinha</div>
+                            <div class="small text-muted">Recebido no período</div>
+                        </div>
+                        <?php if ((int)($taxaCozinhaSummary['alertas'] ?? 0) > 0): ?>
+                            <span class="badge bg-danger"><?= (int)$taxaCozinhaSummary['alertas']; ?> alerta(s)</span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="fw-bold fs-2 money text-success mt-2"><?= br_money($taxaCozinhaSummary['recebido'] ?? 0); ?></div>
+                    <div class="small text-muted">
+                        Previsto: <?= br_money($taxaCozinhaSummary['previsto'] ?? 0); ?>
+                    </div>
+                    <div class="small <?= ((float)($taxaCozinhaSummary['pendente'] ?? 0) > 0) ? 'text-danger' : 'text-success'; ?>">
+                        Pendente: <?= br_money($taxaCozinhaSummary['pendente'] ?? 0); ?>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-12 col-lg-4">
             <?php $g1 = $generatorUsage['g1']; ?>
             <?php
                 $g1Progress = (float)($g1['progress_percent'] ?? 0);
@@ -365,7 +396,7 @@ $hourOnly = static function (?string $hhmm): string {
                 </small>
             </div>
         </div>
-        <div class="col-12 col-md-6 order-1 order-lg-2">
+        <div class="col-12 col-lg-4">
             <?php $g2 = $generatorUsage['g2']; ?>
             <?php
                 $g2Progress = (float)($g2['progress_percent'] ?? 0);
@@ -416,11 +447,14 @@ $hourOnly = static function (?string $hhmm): string {
 </div>
 
 <div class="chart row g-3 mt-2 mb-2">
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-lg-4">
         <div class="chart-box shadow" id="column_chart2" ></div>
     </div>
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-lg-4">
         <div class="chart-box shadow" id="public_category_chart"></div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="chart-box shadow" id="taxa_cozinha_status_chart"></div>
     </div>
 </div>
 
@@ -667,8 +701,9 @@ function validarDatas(form) {
     drawDonutChart();
      drawColumnChart();
      drawColumnChart2();
-     drawPublicCategoryChart();
-     drawTopEventsChart();
+	     drawPublicCategoryChart();
+	     drawTaxaCozinhaStatusChart();
+	     drawTopEventsChart();
      drawLineChart();
      drawLineGeneratorChart();
  }
@@ -745,6 +780,7 @@ var lineTitle = <?= json_encode($lineTitle ?? 'Custo anual') ?>;
 var lineGenerator = <?= $lineGenerator ?? '[]' ?>;
 var topEvents = <?= $topEvents ?? '[]' ?>;
 var publicByCategory = <?= $publicByCategory ?? '[]' ?>;
+var taxaCozinhaStatus = <?= $taxaCozinhaStatus ?? '[]' ?>;
 
 function hasChartRows(arr) {
     return Array.isArray(arr) && arr.length > 1;
@@ -785,8 +821,27 @@ function drawPublicCategoryChart() {
 
     var chart = new google.visualization.BarChart(document.getElementById('public_category_chart'));
     chart.draw(view, options);
-}
-//  GRAFICO LINHA
+	}
+
+	function drawTaxaCozinhaStatusChart() {
+	    if (!hasChartRows(taxaCozinhaStatus) || !document.getElementById('taxa_cozinha_status_chart')) {
+	        return;
+	    }
+
+	    var data = google.visualization.arrayToDataTable(taxaCozinhaStatus);
+	    var options = {
+	        title: 'Status taxa de cozinha',
+	        pieHole: 0.45,
+	        legend: { position: 'bottom' },
+	        colors: ['#198754', '#ffc107', '#dc3545'],
+	        chartArea: { width: '92%', height: '72%' },
+	        pieSliceText: 'value'
+	    };
+
+	    var chart = new google.visualization.PieChart(document.getElementById('taxa_cozinha_status_chart'));
+	    chart.draw(data, options);
+	}
+	//  GRAFICO LINHA
  function drawLineChart() {
      if (!hasChartRows(line) || !document.getElementById('line_chart')) {
          return;

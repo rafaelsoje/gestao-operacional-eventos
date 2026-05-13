@@ -271,6 +271,7 @@ class OperacionalController extends Home
         $trendCards = $this->buildTrendCards($sum, $prevSum, $avgEventCost, $prevAvgEventCost);
         $cedaeAlert = $this->buildCedaeConsumptionAlert($data);
         $pocoAlert = $this->buildPocoConsumptionAlert($data);
+        $taxaCozinhaDashboard = $this->buildTaxaCozinhaDashboard($filters ?? []);
 
         $payload = [
             'sum' => $sum,
@@ -287,6 +288,8 @@ class OperacionalController extends Home
             'lineGenerator' => json_encode($generatorAccumLine),
             'cedae_alert' => $cedaeAlert,
             'poco_alert' => $pocoAlert,
+            'taxa_cozinha_summary' => $taxaCozinhaDashboard['summary'],
+            'taxaCozinhaStatus' => json_encode($taxaCozinhaDashboard['status_chart']),
         ];
 
         if(isset($search)){
@@ -789,6 +792,7 @@ class OperacionalController extends Home
         if ($tableReady) {
             $taxas = $db->table('taxas_cozinha tc')
                 ->select('tc.*, op.nome AS evento_nome, op.data AS evento_data, users.name AS responsavel_nome')
+                ->select("CASE WHEN tc.status_financeiro = 'pago' THEN COALESCE(tc.valor_taxa, 0) ELSE COALESCE(tc.valor_pago, 0) END AS valor_pago_efetivo", false)
                 ->join('operacional op', 'op.id = tc.operacional_id', 'left')
                 ->join('users', 'users.id = tc.responsavel_id', 'left')
                 ->orderBy('op.data', 'desc')
@@ -841,6 +845,11 @@ class OperacionalController extends Home
         if (!in_array($statusFinanceiro, ['pendente', 'pago', 'parcial'], true)) {
             return redirect()->route('taxa.cozinha')->with('error', 'Status financeiro inválido.');
         }
+        $valorTaxa = money_to_decimal($post['valor_taxa'] ?? null);
+        $valorPago = money_to_decimal($post['valor_pago'] ?? null);
+        if ($statusFinanceiro === 'pago' && (float)$valorPago <= 0) {
+            $valorPago = $valorTaxa;
+        }
 
         $comprovante = $this->storeTaxaCozinhaComprovante();
         if ($comprovante === false) {
@@ -853,13 +862,13 @@ class OperacionalController extends Home
             'operacional_id' => $operacionalId,
             'cliente' => trim((string)($post['cliente'] ?? '')),
             'responsavel_id' => (int)($post['responsavel_id'] ?? 0) ?: null,
-            'valor_taxa' => money_to_decimal($post['valor_taxa'] ?? null),
+            'valor_taxa' => $valorTaxa,
             'embutida_contrato' => $this->boolFromPost($post['embutida_contrato'] ?? null),
             'houve_negociacao' => $this->boolFromPost($post['houve_negociacao'] ?? null),
             'detalhes_negociacao' => trim((string)($post['detalhes_negociacao'] ?? '')),
             'status_financeiro' => $statusFinanceiro,
             'forma_pagamento' => trim((string)($post['forma_pagamento'] ?? '')),
-            'valor_pago' => money_to_decimal($post['valor_pago'] ?? null),
+            'valor_pago' => $valorPago,
             'data_pagamento' => $this->dateOrNull($post['data_pagamento'] ?? null),
             'cobranca_realizada' => $this->boolFromPost($post['cobranca_realizada'] ?? null),
             'data_cobranca' => $this->dateOrNull($post['data_cobranca'] ?? null),
@@ -972,6 +981,98 @@ class OperacionalController extends Home
         $file->move($target, $name);
 
         return $name;
+    }
+
+    private function buildTaxaCozinhaDashboard(array $filters): array
+    {
+        $empty = [
+            'summary' => [
+                'previsto' => 0.0,
+                'recebido' => 0.0,
+                'pendente' => 0.0,
+                'alertas' => 0,
+            ],
+            'status_chart' => [
+                ['Status', 'Quantidade'],
+                ['Pago', 0],
+                ['Parcial', 0],
+                ['Pendente', 0],
+            ],
+        ];
+
+        $db = db_connect();
+        if (!$db->tableExists('taxas_cozinha')) {
+            return $empty;
+        }
+
+        $summaryBuilder = $db->table('taxas_cozinha tc')
+            ->select('SUM(COALESCE(tc.valor_taxa, 0)) AS previsto', false)
+            ->select("SUM(CASE WHEN tc.status_financeiro = 'pago' THEN COALESCE(tc.valor_taxa, 0) ELSE COALESCE(tc.valor_pago, 0) END) AS recebido", false)
+            ->select("SUM(CASE WHEN tc.status_financeiro <> 'pago' OR tc.houve_negociacao = 1 THEN 1 ELSE 0 END) AS alertas", false)
+            ->join('operacional op', 'op.id = tc.operacional_id', 'inner');
+        $this->applyTaxaCozinhaDashboardFilters($summaryBuilder, $filters);
+        $summaryRow = $summaryBuilder->get()->getRow();
+
+        $previsto = (float)($summaryRow->previsto ?? 0);
+        $recebido = (float)($summaryRow->recebido ?? 0);
+        $pendente = max(0.0, $previsto - $recebido);
+
+        $statusBuilder = $db->table('taxas_cozinha tc')
+            ->select('tc.status_financeiro, COUNT(tc.id) AS total')
+            ->join('operacional op', 'op.id = tc.operacional_id', 'inner')
+            ->groupBy('tc.status_financeiro');
+        $this->applyTaxaCozinhaDashboardFilters($statusBuilder, $filters);
+        $statusRows = $statusBuilder->get()->getResult();
+
+        $statusTotals = [
+            'pago' => 0,
+            'parcial' => 0,
+            'pendente' => 0,
+        ];
+        foreach ($statusRows as $row) {
+            $status = (string)($row->status_financeiro ?? 'pendente');
+            if (array_key_exists($status, $statusTotals)) {
+                $statusTotals[$status] = (int)($row->total ?? 0);
+            }
+        }
+
+        return [
+            'summary' => [
+                'previsto' => $previsto,
+                'recebido' => $recebido,
+                'pendente' => $pendente,
+                'alertas' => (int)($summaryRow->alertas ?? 0),
+            ],
+            'status_chart' => [
+                ['Status', 'Quantidade'],
+                ['Pago', $statusTotals['pago']],
+                ['Parcial', $statusTotals['parcial']],
+                ['Pendente', $statusTotals['pendente']],
+            ],
+        ];
+    }
+
+    private function applyTaxaCozinhaDashboardFilters(object $builder, array $filters): void
+    {
+        if (isset($filters['flag'])) {
+            $builder->where('op.flag', (int)$filters['flag']);
+        }
+
+        if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            $builder->where('op.data >=', $filters['date_from']);
+            $builder->where('op.data <=', $filters['date_to']);
+        } else {
+            if (!empty($filters['month'])) {
+                $builder->where('MONTH(op.data)', (int)$filters['month']);
+            }
+            if (!empty($filters['year'])) {
+                $builder->where('YEAR(op.data)', (int)$filters['year']);
+            }
+        }
+
+        if (!empty($filters['tipos']) && is_array($filters['tipos'])) {
+            $builder->whereIn('LOWER(op.tipo)', array_map('strtolower', $filters['tipos']));
+        }
     }
 
     /**

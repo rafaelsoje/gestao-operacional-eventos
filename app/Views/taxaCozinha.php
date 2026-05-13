@@ -8,7 +8,6 @@ $eventos = $eventos ?? [];
 $responsaveis = $responsaveis ?? [];
 $taxas = $taxas ?? [];
 $tableReady = (bool)($tableReady ?? false);
-$today = new DateTimeImmutable('today');
 $statusBadge = static function (string $status): string {
     return match ($status) {
         'pago' => 'success',
@@ -28,15 +27,22 @@ $selected = static function (mixed $actual, mixed $expected): string {
 $formatDateInput = static function (mixed $date): string {
     return !empty($date) ? esc((string)$date) : '';
 };
-$alertsFor = static function (object $taxa) use ($today): array {
+$alertsFor = static function (object $taxa): array {
     $alertas = [];
-    if (($taxa->status_financeiro ?? 'pendente') !== 'pago' && !empty($taxa->evento_data)) {
-        $eventDate = new DateTimeImmutable((string)$taxa->evento_data);
-        $days = (int)$today->diff($eventDate)->format('%r%a');
-        if ($days >= 0 && $days <= 7) {
-            $alertas[] = 'Taxa não paga: faltam ' . $days . ' dia(s)';
-        }
+    $status = (string)($taxa->status_financeiro ?? 'pendente');
+    $cobrancaRealizada = (int)($taxa->cobranca_realizada ?? 0) === 1;
+    $dataCobranca = trim((string)($taxa->data_cobranca ?? ''));
+
+    if ($status === 'parcial') {
+        $alertas[] = 'Pagamento parcial';
+    } elseif ($status === 'pendente' && !$cobrancaRealizada) {
+        $alertas[] = 'Cobrança não realizada';
+    } elseif ($status === 'pendente' && $cobrancaRealizada) {
+        $alertas[] = $dataCobranca !== ''
+            ? 'Cobrado em ' . br_date($dataCobranca) . ' | pagamento pendente'
+            : 'Cobrança realizada | pagamento pendente';
     }
+
     if ((int)($taxa->houve_negociacao ?? 0) === 1) {
         $alertas[] = 'Houve negociação';
     }
@@ -113,7 +119,7 @@ $alertsFor = static function (object $taxa) use ($today): array {
                                 <td data-label="Evento"><?= esc((string)($taxa->evento_nome ?? '-')); ?></td>
                                 <td data-label="Cliente"><?= esc((string)($taxa->cliente ?? '-')); ?></td>
                                 <td data-label="Valor"><?= br_money($taxa->valor_taxa ?? 0); ?></td>
-                                <td data-label="Pago"><?= br_money($taxa->valor_pago ?? 0); ?></td>
+                                <td data-label="Pago"><?= br_money($taxa->valor_pago_efetivo ?? ($taxa->valor_pago ?? 0)); ?></td>
                                 <td data-label="Status">
                                     <span class="badge text-bg-<?= $statusBadge((string)($taxa->status_financeiro ?? 'pendente')); ?>">
                                         <?= esc(ucfirst((string)($taxa->status_financeiro ?? 'pendente'))); ?>
@@ -185,7 +191,6 @@ $alertsFor = static function (object $taxa) use ($today): array {
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="submit" form="taxaCreateForm" class="btn btn-success"><i class="bi bi-save"></i> Cadastrar</button>
-                <button type="submit" form="taxaCreateForm" name="marcar_pago" value="1" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Marcar como pago</button>
             </div>
         </div>
     </div>
@@ -412,7 +417,6 @@ $alertsFor = static function (object $taxa) use ($today): array {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="taxaEditForm<?= $modalId; ?>" class="btn btn-success"><i class="bi bi-save"></i> Salvar</button>
-                    <button type="submit" form="taxaEditForm<?= $modalId; ?>" name="marcar_pago" value="1" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Marcar como pago</button>
                 </div>
             </div>
         </div>
