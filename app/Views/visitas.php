@@ -3,83 +3,29 @@
 <?php $this->section('content'); ?>
 <?php helper('format'); ?>
 
-<div class="container mt-3">
-    <div class="container border pt-2 pb-2 bg-white">
-        <h3 class="text-center mb-3 border p-1"><?= isset($item) ? 'Atualização de visita' : 'Cadastro de Visitas'; ?></h3>
+<?php
+$visitas = $data ?? [];
+$timeValue = static function (mixed $value): string {
+    return substr((string)$value, 0, 5);
+};
+?>
 
-        <?php if (session()->has('error')) : ?>
-            <div class="alert alert-danger text-center"><?= esc((string)session()->get('error')); ?></div>
-        <?php endif; ?>
-        <?php if (session()->has('success')) : ?>
-            <div class="alert alert-success text-center"><?= esc((string)session()->get('success')); ?></div>
-        <?php endif; ?>
+<div class="container-fluid mt-3 mb-5">
+    <?php if (session()->has('error')) : ?>
+        <div class="alert alert-danger text-center"><?= esc((string)session()->get('error')); ?></div>
+    <?php endif; ?>
+    <?php if (session()->has('success')) : ?>
+        <div class="alert alert-success text-center"><?= esc((string)session()->get('success')); ?></div>
+    <?php endif; ?>
 
-        <form class="row g-3" method="post" action="<?= url_to('visitas.store'); ?>">
-            <?= csrf_field(); ?>
-            <?php if (isset($item)) : ?>
-                <input type="hidden" name="id" value="<?= (int)$item->id; ?>">
-            <?php endif; ?>
-
-            <div class="col-12 col-md-6">
-                <label class="form-label">Data da visita</label>
-                <input type="date" class="form-control" name="data_visita" value="<?= esc(old('data_visita', isset($item) ? (string)$item->data_visita : '')); ?>" required>
-            </div>
-
-            <div class="col-12 col-md-6">
-                <label class="form-label">Tipo de visita</label>
-                <input type="text" class="form-control" name="tipo_visita" value="<?= esc(old('tipo_visita', isset($item) ? (string)$item->tipo_visita : '')); ?>" required>
-            </div>
-
-            <div class="col-12 col-md-6">
-                <label class="form-label">Responsável (EXC)</label>
-                <input type="text" class="form-control" name="responsavel_exc" value="<?= esc(old('responsavel_exc', isset($item) ? (string)$item->responsavel_exc : '')); ?>" required>
-            </div>
-
-            <div class="col-12 col-md-6">
-                <label class="form-label">Cliente</label>
-                <input type="text" class="form-control" name="cliente" value="<?= esc(old('cliente', isset($item) ? (string)$item->cliente : '')); ?>" required>
-            </div>
-
-            <div class="col-12 col-md-6">
-                <label class="form-label">Evento</label>
-                <input type="text" class="form-control" name="evento" value="<?= esc(old('evento', isset($item) ? (string)$item->evento : '')); ?>" required>
-            </div>
-
-            <div class="col-12 col-md-6">
-                <label class="form-label">Data do evento</label>
-                <input type="date" class="form-control" name="data_evento" value="<?= esc(old('data_evento', isset($item) ? (string)$item->data_evento : '')); ?>" required>
-            </div>
-
-            <div class="col-12 col-md-3">
-                <label class="form-label">Horário de início</label>
-                <input type="time" class="form-control" name="horario_inicio" value="<?= esc(old('horario_inicio', isset($item) ? substr((string)$item->horario_inicio, 0, 5) : '')); ?>" required>
-            </div>
-
-            <div class="col-12 col-md-3">
-                <label class="form-label">Horário de término</label>
-                <input type="time" class="form-control" name="horario_termino" value="<?= esc(old('horario_termino', isset($item) ? substr((string)$item->horario_termino, 0, 5) : '')); ?>" required>
-            </div>
-
-            <div class="col-12 col-md-6">
-                <label class="form-label">Público estimado</label>
-                <input type="number" class="form-control" name="publico_estimado" min="0" step="1" value="<?= esc(old('publico_estimado', isset($item) ? (string)$item->publico_estimado : '')); ?>" required>
-            </div>
-
-            <div class="col-12">
-                <label class="form-label">Objetivo da visita</label>
-                <textarea class="form-control" name="objetivo_visita" rows="4" required><?= esc(old('objetivo_visita', isset($item) ? (string)$item->objetivo_visita : '')); ?></textarea>
-            </div>
-
-            <div class="col-12 d-flex justify-content-end">
-                <?php if (isset($item)) : ?>
-                    <a href="<?= base_url('visitas'); ?>" class="btn btn-outline-secondary me-2">Cancelar edição</a>
-                <?php endif; ?>
-                <button type="submit" class="btn btn-primary"><?= isset($item) ? 'Atualizar visita' : 'Salvar visita'; ?></button>
-            </div>
-        </form>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <h3 class="mb-0">Visitas</h3>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#visitaCreateModal">
+            <i class="bi bi-plus-circle"></i> Cadastrar visita
+        </button>
     </div>
 
-    <div class="container border pt-2 pb-2 bg-white mt-3">
+    <div class="bg-white border p-3">
         <h5 class="mb-3">Visitas cadastradas</h5>
         <div class="table-responsive">
             <table id="visitasTable" class="display table table-striped table-hover dt-stack" style="width:100%">
@@ -97,110 +43,164 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (!empty($data ?? [])) : ?>
-                        <?php foreach (($data ?? []) as $item) : ?>
-                            <tr>
-                                <td data-order="<?= esc((string)$item->data_visita); ?>"><?= esc(br_date((string)$item->data_visita)); ?></td>
-                                <td><?= esc((string)$item->tipo_visita); ?></td>
-                                <td><?= esc((string)$item->cliente); ?></td>
-                                <td><?= esc((string)$item->evento); ?></td>
-                                <td data-order="<?= esc((string)$item->data_evento); ?>"><?= esc(br_date((string)$item->data_evento)); ?></td>
-                                <td><?= esc(substr((string)$item->horario_inicio, 0, 5)); ?></td>
-                                <td><?= esc(substr((string)$item->horario_termino, 0, 5)); ?></td>
-                                <td><?= esc((string)$item->publico_estimado); ?></td>
-                                <td class="d-flex justify-content-center">
-                                    <a href="#" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#view<?= (int)$item->id; ?>"><i class="bi bi-eye"></i></a>
-                                    <a href="<?= base_url('/update/visita/' . (int)$item->id); ?>" class="btn btn-warning text-white me-2 ms-2"><i class="bi bi-pencil"></i></a>
-                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete<?= (int)$item->id; ?>"><i class="bi bi-trash"></i></button>
-                                </td>
-                            </tr>
-
-                            <div class="modal fade" id="view<?= (int)$item->id; ?>" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h1 class="modal-title fs-5">Detalhes da visita</h1>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p class="mb-1"><strong>Data da visita:</strong> <?= esc(br_date((string)$item->data_visita)); ?></p>
-                                            <p class="mb-1"><strong>Tipo:</strong> <?= esc((string)$item->tipo_visita); ?></p>
-                                            <p class="mb-1"><strong>Responsável (EXC):</strong> <?= esc((string)$item->responsavel_exc); ?></p>
-                                            <p class="mb-1"><strong>Cliente:</strong> <?= esc((string)$item->cliente); ?></p>
-                                            <p class="mb-1"><strong>Evento:</strong> <?= esc((string)$item->evento); ?></p>
-                                            <p class="mb-1"><strong>Data do evento:</strong> <?= esc(br_date((string)$item->data_evento)); ?></p>
-                                            <p class="mb-1"><strong>Início:</strong> <?= esc(substr((string)$item->horario_inicio, 0, 5)); ?></p>
-                                            <p class="mb-1"><strong>Término:</strong> <?= esc(substr((string)$item->horario_termino, 0, 5)); ?></p>
-                                            <p class="mb-1"><strong>Público estimado:</strong> <?= esc((string)$item->publico_estimado); ?></p>
-                                            <hr>
-                                            <p class="mb-0"><strong>Objetivo da visita:</strong><br><?= nl2br(esc((string)$item->objetivo_visita)); ?></p>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="modal fade" id="delete<?= (int)$item->id; ?>" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h1 class="modal-title fs-5">Confirmação de exclusão</h1>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            Quer mesmo excluir a visita do evento <strong><?= esc((string)$item->evento); ?></strong> do cliente <strong><?= esc((string)$item->cliente); ?></strong>?
-                                        </div>
-                                        <div class="modal-footer">
-                                            <form method="post" action="<?= url_to('visitas.delete'); ?>">
-                                                <?= csrf_field(); ?>
-                                                <input type="hidden" name="id" value="<?= (int)$item->id; ?>">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                <button type="submit" class="btn btn-danger">Excluir</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                    <?php foreach ($visitas as $visita) : ?>
+                        <tr>
+                            <td data-label="Data visita" data-order="<?= esc((string)$visita->data_visita); ?>"><?= esc(br_date((string)$visita->data_visita)); ?></td>
+                            <td data-label="Tipo"><?= esc((string)$visita->tipo_visita); ?></td>
+                            <td data-label="Cliente"><?= esc((string)$visita->cliente); ?></td>
+                            <td data-label="Evento"><?= esc((string)$visita->evento); ?></td>
+                            <td data-label="Data evento" data-order="<?= esc((string)$visita->data_evento); ?>"><?= esc(br_date((string)$visita->data_evento)); ?></td>
+                            <td data-label="Início"><?= esc($timeValue($visita->horario_inicio)); ?></td>
+                            <td data-label="Término"><?= esc($timeValue($visita->horario_termino)); ?></td>
+                            <td data-label="Público"><?= esc((string)$visita->publico_estimado); ?></td>
+                            <td data-label="Ação" class="d-flex justify-content-center">
+                                <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#visitaView<?= (int)$visita->id; ?>">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-warning text-white me-2 ms-2" data-bs-toggle="modal" data-bs-target="#visitaEdit<?= (int)$visita->id; ?>">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#visitaDelete<?= (int)$visita->id; ?>">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
+<div class="modal fade" id="visitaCreateModal" tabindex="-1" aria-labelledby="visitaCreateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="visitaCreateModalLabel">Cadastrar visita</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="visitaCreateForm" method="post" action="<?= url_to('visitas.store'); ?>">
+                    <?= csrf_field(); ?>
+                    <?= view('visitaFormFields', ['item' => null]); ?>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="visitaCreateForm" class="btn btn-primary">Cadastrar visita</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php foreach ($visitas as $visita) : ?>
+    <?php $modalId = (int)$visita->id; ?>
+    <div class="modal fade" id="visitaView<?= $modalId; ?>" tabindex="-1" aria-labelledby="visitaViewLabel<?= $modalId; ?>" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="visitaViewLabel<?= $modalId; ?>">Detalhes da visita</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6"><strong>Data da visita:</strong> <?= esc(br_date((string)$visita->data_visita)); ?></div>
+                        <div class="col-md-6"><strong>Tipo:</strong> <?= esc((string)$visita->tipo_visita); ?></div>
+                        <div class="col-md-6"><strong>Responsável (EXC):</strong> <?= esc((string)$visita->responsavel_exc); ?></div>
+                        <div class="col-md-6"><strong>Cliente:</strong> <?= esc((string)$visita->cliente); ?></div>
+                        <div class="col-md-6"><strong>Evento:</strong> <?= esc((string)$visita->evento); ?></div>
+                        <div class="col-md-6"><strong>Data do evento:</strong> <?= esc(br_date((string)$visita->data_evento)); ?></div>
+                        <div class="col-md-6"><strong>Início:</strong> <?= esc($timeValue($visita->horario_inicio)); ?></div>
+                        <div class="col-md-6"><strong>Término:</strong> <?= esc($timeValue($visita->horario_termino)); ?></div>
+                        <div class="col-md-6"><strong>Público estimado:</strong> <?= esc((string)$visita->publico_estimado); ?></div>
+                        <div class="col-12"><strong>Objetivo da visita:</strong><br><?= nl2br(esc((string)$visita->objetivo_visita)); ?></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="visitaEdit<?= $modalId; ?>" tabindex="-1" aria-labelledby="visitaEditLabel<?= $modalId; ?>" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="visitaEditLabel<?= $modalId; ?>">Alterar visita</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="visitaEditForm<?= $modalId; ?>" method="post" action="<?= url_to('visitas.store'); ?>">
+                        <?= csrf_field(); ?>
+                        <input type="hidden" name="id" value="<?= $modalId; ?>">
+                        <?= view('visitaFormFields', ['item' => $visita]); ?>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="visitaEditForm<?= $modalId; ?>" class="btn btn-primary">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="visitaDelete<?= $modalId; ?>" tabindex="-1" aria-labelledby="visitaDeleteLabel<?= $modalId; ?>" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="visitaDeleteLabel<?= $modalId; ?>">Confirmação de exclusão</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    Quer mesmo excluir a visita do evento <strong><?= esc((string)$visita->evento); ?></strong> do cliente <strong><?= esc((string)$visita->cliente); ?></strong>?
+                </div>
+                <div class="modal-footer">
+                    <form method="post" action="<?= url_to('visitas.delete'); ?>">
+                        <?= csrf_field(); ?>
+                        <input type="hidden" name="id" value="<?= $modalId; ?>">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Excluir</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endforeach; ?>
+
 <script>
     $(document).ready(function () {
         $('#visitasTable').DataTable({
-            "order": [[0, "desc"]],
-            "paging": true,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "pageLength": 10,
-            "language": {
-                "sEmptyTable": "Nenhum dado disponível na tabela",
-                "sInfo": "Mostrando _START_ até _END_ de _TOTAL_ registros",
-                "sInfoEmpty": "Mostrando 0 até 0 de 0 registros",
-                "sInfoFiltered": "(filtrado de _MAX_ registros no total)",
-                "sInfoPostFix": "",
-                "sInfoThousands": ".",
-                "sLengthMenu": "Mostrar _MENU_ registros",
-                "sLoadingRecords": "Carregando...",
-                "sProcessing": "Processando...",
-                "sSearch": "Pesquisar:",
-                "sZeroRecords": "Nenhum registro encontrado",
-                "oPaginate": {
-                    "sFirst": "Primeiro",
-                    "sLast": "Último",
-                    "sNext": "Próximo",
-                    "sPrevious": "Anterior"
+            order: [[0, "desc"]],
+            paging: true,
+            searching: true,
+            ordering: true,
+            info: true,
+            pageLength: 10,
+            columnDefs: [
+                {orderable: false, targets: 8}
+            ],
+            language: {
+                sEmptyTable: "Nenhum dado disponível na tabela",
+                sInfo: "Mostrando _START_ até _END_ de _TOTAL_ registros",
+                sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
+                sInfoFiltered: "(filtrado de _MAX_ registros no total)",
+                sInfoPostFix: "",
+                sInfoThousands: ".",
+                sLengthMenu: "Mostrar _MENU_ registros",
+                sLoadingRecords: "Carregando...",
+                sProcessing: "Processando...",
+                sSearch: "Pesquisar:",
+                sZeroRecords: "Nenhum registro encontrado",
+                oPaginate: {
+                    sFirst: "Primeiro",
+                    sLast: "Último",
+                    sNext: "Próximo",
+                    sPrevious: "Anterior"
                 },
-                "oAria": {
-                    "sSortAscending": ": Ordenar colunas de forma ascendente",
-                    "sSortDescending": ": Ordenar colunas de forma descendente"
+                oAria: {
+                    sSortAscending: ": Ordenar colunas de forma ascendente",
+                    sSortDescending: ": Ordenar colunas de forma descendente"
                 }
             }
         });

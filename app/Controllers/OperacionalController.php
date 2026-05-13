@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Models\GeradorManutencao;
 use App\Models\Logs;
 use App\Models\Operacional;
+use App\Models\TaxaCozinha;
+use App\Models\Users;
 use App\Services\OperacionalService;
 use App\Validation\FormRequest\GeradorManutencaoFormRequest;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -773,6 +775,203 @@ class OperacionalController extends Home
         ]);
 
         return redirect()->route('geradores.index')->with('success', 'Manutenção excluída com sucesso.');
+    }
+
+    /**
+     * Exibe cadastro e acompanhamento da taxa de cozinha.
+     */
+    public function taxaCozinha(): string
+    {
+        $db = db_connect();
+        $taxas = [];
+        $tableReady = $db->tableExists('taxas_cozinha');
+
+        if ($tableReady) {
+            $taxas = $db->table('taxas_cozinha tc')
+                ->select('tc.*, op.nome AS evento_nome, op.data AS evento_data, users.name AS responsavel_nome')
+                ->join('operacional op', 'op.id = tc.operacional_id', 'left')
+                ->join('users', 'users.id = tc.responsavel_id', 'left')
+                ->orderBy('op.data', 'desc')
+                ->orderBy('tc.id', 'desc')
+                ->get()
+                ->getResult();
+        }
+
+        $eventos = (new Operacional())
+            ->select('id, nome, data')
+            ->orderBy('data', 'desc')
+            ->findAll();
+
+        $responsaveis = (new Users())
+            ->select('id, name')
+            ->orderBy('name', 'asc')
+            ->findAll();
+
+        return view('taxaCozinha', [
+            'taxaCozinhaPage' => true,
+            'eventos' => $eventos,
+            'responsaveis' => $responsaveis,
+            'taxas' => $taxas,
+            'tableReady' => $tableReady,
+        ]);
+    }
+
+    /**
+     * Salva os dados financeiros e operacionais da taxa de cozinha.
+     */
+    public function taxaCozinhaStore(): ResponseInterface
+    {
+        $db = db_connect();
+        if (!$db->tableExists('taxas_cozinha')) {
+            return redirect()->route('taxa.cozinha')->with('error', 'Execute as migrations antes de salvar a taxa de cozinha.');
+        }
+
+        helper('money');
+        $post = $this->request->getPost();
+        $id = (int)($post['id'] ?? 0);
+        $operacionalId = (int)($post['operacional_id'] ?? 0);
+        if ($operacionalId <= 0 || !(new Operacional())->find($operacionalId)) {
+            return redirect()->route('taxa.cozinha')->with('error', 'Selecione um evento válido.');
+        }
+
+        $statusFinanceiro = (string)($post['status_financeiro'] ?? 'pendente');
+        if ($this->request->getPost('marcar_pago') === '1') {
+            $statusFinanceiro = 'pago';
+        }
+        if (!in_array($statusFinanceiro, ['pendente', 'pago', 'parcial'], true)) {
+            return redirect()->route('taxa.cozinha')->with('error', 'Status financeiro inválido.');
+        }
+
+        $comprovante = $this->storeTaxaCozinhaComprovante();
+        if ($comprovante === false) {
+            return redirect()->route('taxa.cozinha')->with('error', 'Comprovante inválido. Envie PDF, JPG, PNG ou WEBP.');
+        }
+
+        $model = new TaxaCozinha();
+        $existing = $id > 0 ? $model->find($id) : $model->where('operacional_id', $operacionalId)->first();
+        $payload = [
+            'operacional_id' => $operacionalId,
+            'cliente' => trim((string)($post['cliente'] ?? '')),
+            'responsavel_id' => (int)($post['responsavel_id'] ?? 0) ?: null,
+            'valor_taxa' => money_to_decimal($post['valor_taxa'] ?? null),
+            'embutida_contrato' => $this->boolFromPost($post['embutida_contrato'] ?? null),
+            'houve_negociacao' => $this->boolFromPost($post['houve_negociacao'] ?? null),
+            'detalhes_negociacao' => trim((string)($post['detalhes_negociacao'] ?? '')),
+            'status_financeiro' => $statusFinanceiro,
+            'forma_pagamento' => trim((string)($post['forma_pagamento'] ?? '')),
+            'valor_pago' => money_to_decimal($post['valor_pago'] ?? null),
+            'data_pagamento' => $this->dateOrNull($post['data_pagamento'] ?? null),
+            'cobranca_realizada' => $this->boolFromPost($post['cobranca_realizada'] ?? null),
+            'data_cobranca' => $this->dateOrNull($post['data_cobranca'] ?? null),
+            'observacoes' => trim((string)($post['observacoes'] ?? '')),
+            'responsavel_pagamento' => trim((string)($post['responsavel_pagamento'] ?? '')),
+            'prevista_contrato' => $this->boolFromPost($post['prevista_contrato'] ?? null),
+        ];
+
+        if ($comprovante !== null) {
+            $payload['comprovante'] = $comprovante;
+        } elseif ($existing && !empty($existing->comprovante)) {
+            $payload['comprovante'] = $existing->comprovante;
+        }
+
+        $saved = $existing
+            ? $model->update((int)$existing->id, $payload)
+            : $model->insert($payload);
+
+        if (!$saved) {
+            return redirect()->route('taxa.cozinha')->with('error', 'Não foi possível salvar a taxa de cozinha.');
+        }
+
+        $user = session()->get('user');
+        (new Logs())->insert([
+            'title' => 'TAXA DE COZINHA',
+            'description' => ($user->name ?? 'Usuário') . ' salvou taxa de cozinha do evento #' . $operacionalId . ' em ' . date('Y-m-d H:i:s'),
+        ]);
+
+        return redirect()->route('taxa.cozinha')->with('success', 'Taxa de cozinha salva com sucesso.');
+    }
+
+    public function taxaCozinhaDelete(): ResponseInterface
+    {
+        $id = (int)($this->request->getPost('id') ?? 0);
+        if ($id <= 0) {
+            return redirect()->route('taxa.cozinha')->with('error', 'Taxa inválida para exclusão.');
+        }
+
+        $model = new TaxaCozinha();
+        $taxa = $model->find($id);
+        if (!$taxa) {
+            return redirect()->route('taxa.cozinha')->with('error', 'Taxa de cozinha não encontrada.');
+        }
+
+        if (!$model->delete($id)) {
+            return redirect()->route('taxa.cozinha')->with('error', 'Não foi possível excluir a taxa de cozinha.');
+        }
+
+        $user = session()->get('user');
+        (new Logs())->insert([
+            'title' => 'EXCLUSÃO TAXA DE COZINHA',
+            'description' => ($user->name ?? 'Usuário') . ' excluiu taxa de cozinha #' . $id . ' em ' . date('Y-m-d H:i:s'),
+        ]);
+
+        return redirect()->route('taxa.cozinha')->with('success', 'Taxa de cozinha excluída com sucesso.');
+    }
+
+    public function downloadTaxaCozinhaComprovante(string $file): ResponseInterface
+    {
+        $safeFile = basename($file);
+        if ($safeFile !== $file) {
+            return $this->response->setStatusCode(404);
+        }
+
+        $path = WRITEPATH . 'uploads/taxa-cozinha/' . $safeFile;
+        if (!is_file($path)) {
+            return $this->response->setStatusCode(404);
+        }
+
+        return $this->response->download($path, null);
+    }
+
+    private function boolFromPost(mixed $value): int
+    {
+        return in_array((string)$value, ['1', 'sim', 'true'], true) ? 1 : 0;
+    }
+
+    private function dateOrNull(mixed $value): ?string
+    {
+        $date = trim((string)$value);
+        if ($date === '') {
+            return null;
+        }
+
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) === 1 ? $date : null;
+    }
+
+    private function storeTaxaCozinhaComprovante(): string|false|null
+    {
+        $file = $this->request->getFile('comprovante');
+        if ($file === null || $file->getError() === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        if (!$file->isValid()) {
+            return false;
+        }
+
+        $extension = strtolower($file->getClientExtension());
+        if (!in_array($extension, ['pdf', 'jpg', 'jpeg', 'png', 'webp'], true)) {
+            return false;
+        }
+
+        $target = WRITEPATH . 'uploads/taxa-cozinha';
+        if (!is_dir($target)) {
+            mkdir($target, 0755, true);
+        }
+
+        $name = $file->getRandomName();
+        $file->move($target, $name);
+
+        return $name;
     }
 
     /**

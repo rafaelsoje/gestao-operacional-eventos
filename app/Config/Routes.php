@@ -26,6 +26,10 @@ $routes->group('', ['filter' => 'auth'], function($routes){
     $routes->get('/operacional/lista', 'OperacionalController::operacionalLista', ['as' => 'operacional.lista']);
     $routes->get('/operacional/calendario', 'OperacionalController::calendarioOperacional', ['as' => 'calendario.operacional']);
     $routes->get('/operacional/geradores', 'OperacionalController::geradoresManutencao', ['as' => 'geradores.index']);
+    $routes->get('/operacional/taxa-cozinha', 'OperacionalController::taxaCozinha', ['as' => 'taxa.cozinha']);
+    $routes->post('/operacional/taxa-cozinha', 'OperacionalController::taxaCozinhaStore', ['as' => 'taxa.cozinha.store', 'filter' => 'csrf']);
+    $routes->post('/operacional/taxa-cozinha/delete', 'OperacionalController::taxaCozinhaDelete', ['as' => 'taxa.cozinha.delete', 'filter' => 'csrf']);
+    $routes->get('/operacional/taxa-cozinha/comprovante/(:segment)', 'OperacionalController::downloadTaxaCozinhaComprovante/$1', ['as' => 'taxa.cozinha.comprovante']);
     $routes->get('/visitas', 'VisitasController::visitas', ['as' => 'visitas']);
     $routes->post('/visitas', 'VisitasController::visitasStore', ['as' => 'visitas.store', 'filter' => 'csrf']);
     $routes->get('/update/visita/(:num)', 'VisitasController::updateVisita/$1', ['as' => 'visitas.update', 'filter' => 'role:admin']);
