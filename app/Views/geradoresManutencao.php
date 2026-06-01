@@ -73,7 +73,14 @@ if (session()->has('error')) {
     }
 </style>
 
-<div class="container-fluid mt-3">
+<div class="page-shell mt-3">
+    <div class="page-hero">
+        <div>
+            <h2>Geradores</h2>
+            <p>Controle horas de uso, manutenção e histórico operacional dos geradores.</p>
+        </div>
+    </div>
+
     <div class="row g-3 mb-3">
         <?php $g1 = $usage['g1']; ?>
         <?php
@@ -85,7 +92,7 @@ if (session()->has('error')) {
                 : (!empty($g1['is_warning']) ? 'generator-warning-soft' : 'bg-success');
         ?>
         <div class="col-12 col-md-6">
-            <div class="card shadow-sm">
+            <div class="metric-card h-100">
                 <div class="card-body">
                     <h5 class="card-title mb-1">Gerador G1</h5>
                     <div class="fs-4 fw-bold <?= $g1ValueClass; ?>">
@@ -113,7 +120,7 @@ if (session()->has('error')) {
                 : (!empty($g2['is_warning']) ? 'generator-warning-soft' : 'bg-success');
         ?>
         <div class="col-12 col-md-6">
-            <div class="card shadow-sm">
+            <div class="metric-card h-100">
                 <div class="card-body">
                     <h5 class="card-title mb-1">Gerador G2</h5>
                     <div class="fs-4 fw-bold <?= $g2ValueClass; ?>">
@@ -134,9 +141,14 @@ if (session()->has('error')) {
     </div>
 
     <?php if ($tableReady): ?>
-        <div class="card shadow-sm mb-3">
+        <div class="content-card mb-3">
             <div class="card-body">
-                <h5 class="card-title">Registrar manutenção</h5>
+                <div class="content-card-header">
+                    <div>
+                        <h5>Registrar manutenção</h5>
+                        <small>Atualize o marco de manutenção dos geradores.</small>
+                    </div>
+                </div>
                 <form class="row g-2" method="post" action="<?= url_to('geradores.store'); ?>">
                     <?= csrf_field(); ?>
                     <div class="col-12 col-md-2">
@@ -161,9 +173,14 @@ if (session()->has('error')) {
             </div>
         </div>
 
-        <div class="card shadow-sm">
+        <div class="content-card">
             <div class="card-body">
-                <h5 class="card-title">Histórico de manutenções</h5>
+                <div class="content-card-header">
+                    <div>
+                        <h5>Histórico de manutenções</h5>
+                        <small><?= count($rows); ?> registro(s) encontrados</small>
+                    </div>
+                </div>
                 <div class="row g-2 mb-3">
                     <div class="col-12 col-md-3">
                         <label class="form-label">Filtrar gerador</label>
@@ -186,7 +203,7 @@ if (session()->has('error')) {
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table id="manutencoesTable" class="table table-striped align-middle">
+                    <table id="manutencoesTable" class="table table-striped table-hover align-middle app-table">
                         <thead>
                             <tr>
                                 <th>Data</th>
@@ -205,10 +222,10 @@ if (session()->has('error')) {
                                         <td><?= esc((string)($item->observacao ?? '')); ?></td>
                                         <td><?= !empty($item->created_at) ? esc(date('d/m/Y H:i', strtotime((string)$item->created_at))) : '-'; ?></td>
                                         <td class="text-center">
-                                            <button type="button" class="btn btn-warning btn-sm text-white" data-bs-toggle="modal" data-bs-target="#editManut<?= (int)$item->id; ?>">
+                                            <button type="button" class="btn btn-warning btn-sm text-white btn-icon" data-bs-toggle="modal" data-bs-target="#editManut<?= (int)$item->id; ?>">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button type="button" class="btn btn-danger btn-sm btn-delete-manut" data-id="<?= (int)$item->id; ?>">
+                                            <button type="button" class="btn btn-danger btn-sm btn-delete-manut btn-icon" data-id="<?= (int)$item->id; ?>">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </td>
@@ -261,14 +278,19 @@ if (session()->has('error')) {
             </div>
         </div>
 
-        <div class="card shadow-sm mt-3">
+        <div class="content-card mt-3">
             <div class="card-body">
-                <h5 class="card-title">Histórico de uso dos geradores</h5>
+                <div class="content-card-header">
+                    <div>
+                        <h5>Histórico de uso dos geradores</h5>
+                        <small>Uso calculado a partir dos eventos operacionais.</small>
+                    </div>
+                </div>
                 <?php if (!$usageColumnsReady): ?>
                     <div class="text-muted">Colunas de uso não encontradas no banco. Execute o SQL de atualização.</div>
                 <?php else: ?>
                     <div class="table-responsive">
-                        <table id="usoGeradoresTable" class="table table-striped align-middle">
+                        <table id="usoGeradoresTable" class="table table-striped table-hover align-middle app-table">
                             <thead>
                                 <tr>
                                     <th>Data</th>

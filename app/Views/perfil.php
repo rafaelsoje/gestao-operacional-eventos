@@ -2,8 +2,13 @@
 
 <?php $this->section('content');?>
 
-<div class="container mt-3">
-    <h3 class="mb-3">Meu Perfil</h3>
+<div class="page-shell mt-3">
+    <div class="page-hero">
+        <div>
+            <h2>Meu perfil</h2>
+            <p>Atualize sua foto e mantenha sua senha de acesso em dia.</p>
+        </div>
+    </div>
 
     <?php if (session()->has('error')) : ?>
         <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
@@ -14,7 +19,7 @@
 
     <div class="row g-3">
         <div class="col-12 col-lg-4">
-            <div class="card">
+            <div class="content-card h-100">
                 <div class="card-body text-center">
                     <img src="<?= url_to('avatar.show', $user->avatar ?? 'avatar.svg');?>" class="rounded-circle mb-3" style="width: 140px; height: 140px; object-fit: cover;" alt="Foto do usuário">
                     <h5 class="mb-1"><?= esc($user->name ?? '') ?></h5>
@@ -35,8 +40,14 @@
         </div>
 
         <div class="col-12 col-lg-8">
-            <div class="card">
+            <div class="content-card">
                 <div class="card-body">
+                    <div class="content-card-header">
+                        <div>
+                            <h5>Dados de acesso</h5>
+                            <small>Avatar e alteração de senha</small>
+                        </div>
+                    </div>
                     <!-- Atualização de avatar e senha do usuário autenticado. -->
                     <form method="post" action="<?= url_to('perfil.update');?>" enctype="multipart/form-data">
                         <?= csrf_field(); ?>

@@ -2,14 +2,16 @@
 
 <?php $this->section('content');?>
 
-<div class="container mt-3">
-    <div class="d-flex align-items-end justify-content-end mb-3">
-        <a href="<?= base_url('/operacional/lista');?>" type="button" class="btn btn-success">Lista de eventos</a>
+<div class="page-shell mt-3 mb-5">
+    <div class="page-hero">
+        <div>
+            <h2><?= (isset($item)) ? "Atualização operacional" : "Cadastro operacional"; ?></h2>
+            <p>Registre horários, equipe, consumos, público e custos do evento.</p>
+        </div>
+        <a href="<?= base_url('/operacional/lista');?>" type="button" class="btn btn-outline-secondary">Lista de eventos</a>
     </div>
-</div>
 
-<div class="container border pt-2 pb-2 mb-5">
-    <h3 class="text-center mb-3 border p-1 bg-white"><?= (isset($item))? "Atualização de cadastro" : "Cadastro de Operacional";?></h3>
+<div class="content-card p-3">
     <form class="row g-3" method="post" action="<?= url_to('cadastro.operacional.store');?>" enctype="multipart/form-data">
         <?= csrf_field(); ?>
         
@@ -100,7 +102,7 @@
             ?>
             <input type="number" step="0.01" class="form-control" name="ruido_media" readonly <?= $ruidoMediaInicial !== '' ? 'value="' . $ruidoMediaInicial . '"' : ''; ?>>
         </div>       
-        <div class="p-1 fs-5">Gerador 1</div>
+        <div class="form-section-title">Gerador 1</div>
         <div class="col-12 col-md-4">
             <label class="form-label">Gerador 1 ligado</label>
             <input type="time" class="form-control" name="liga_g1" <?= isset($item) ? 'value="' . $item->liga_g1 . '"' : ''; ?>>
@@ -138,7 +140,7 @@
             <label class="form-label">Consumo KWH G1</label>
             <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_consumo_g1" readonly>
         </div>
-        <div class="p-1 fs-5">Gerador 2</div>
+        <div class="form-section-title">Gerador 2</div>
         <div class="col-12 col-md-4">
             <label class="form-label">Gerador 2 ligado</label>
             <input type="time" class="form-control" name="liga_g2" <?= isset($item) ? 'value="' . $item->liga_g2 . '"' : ''; ?>>
@@ -176,7 +178,7 @@
             <label class="form-label">Consumo KWH G2</label>
             <input type="number" step="1" inputmode="numeric" class="form-control" name="kwh_consumo_g2" readonly>
         </div>
-        <div class="p-1 fs-5">Público</div>
+        <div class="form-section-title">Público</div>
         <div class="col-md-3">
             <label class="form-label">Público final</label>
             <input type="number" class="form-control" name="publico_final" <?= isset($item) ? 'value="' . $item->publico_final . '"' : ''; ?>>
@@ -196,7 +198,7 @@
             ?>
             <input type="number" class="form-control" name="publico_total_calc" value="<?= isset($item) ? $publicoTotalInicial : ''; ?>" readonly>
         </div>
-        <div class="p-1 fs-5">Equipe operacional</div>        
+        <div class="form-section-title">Equipe operacional</div>
         <div class="col-12 col-md-4">
             <label for="inputAddress2" class="form-label">Segurança</label>
             <input type="number" class="form-control" name="seguranca" <?= isset($item) ? 'value="' . $item->seguranca . '"' : ''; ?>>
@@ -216,7 +218,7 @@
                 $equipeManhaRaw = isset($item) ? (string)($item->equipe_manha ?? '') : '';
                 $equipeManhaArr = array_filter(array_map('trim', explode(',', $equipeManhaRaw)));
             ?>
-            <div class="border rounded bg-white p-2">
+            <div class="form-check-panel p-2">
                 <small class="text-muted d-block mb-1">Selecione quem participou</small>
                 <div class="d-flex flex-wrap gap-3">
                     <div class="form-check form-check-inline m-0">
@@ -240,7 +242,7 @@
                 $equipeNoiteRaw = isset($item) ? (string)($item->equipe_noite ?? '') : '';
                 $equipeNoiteArr = array_filter(array_map('trim', explode(',', $equipeNoiteRaw)));
             ?>
-            <div class="border rounded bg-white p-2">
+            <div class="form-check-panel p-2">
                 <small class="text-muted d-block mb-1">Selecione quem participou</small>
                 <div class="d-flex flex-wrap gap-3">
                     <div class="form-check form-check-inline m-0">
@@ -287,7 +289,7 @@
             <input type="text" class="form-control money" name="total_operacional" <?= isset($item) ? 'value="' . $item->total_operacional . '"' : ''; ?>>            
         </div> 
 
-        <div class="p-1 fs-5">Consumo</div>        
+        <div class="form-section-title">Consumo</div>
         <div class="col-md-3">
             <label class="form-label">Valor Diesel</label>
             <input type="text" class="form-control money" name="valor_diesel" <?= isset($item) ? 'value="' . $item->valor_diesel . '"' : ''; ?>>
@@ -369,12 +371,12 @@
             <textarea class="form-control" id="exampleFormControlTextarea1" rows="4" name="descricao" ><?= isset($item) ? $item->descricao : ''; ?></textarea>
         </div>        
         <div class="col-12 d-flex justify-content-end">
-            <button type="submit" class="btn btn-primary"><?= (isset($item)? "Atualizar cadastro operacional" : "Cadastrar dados operaionais" )?></button>
+            <button type="submit" class="btn btn-primary"><?= (isset($item)? "Atualizar cadastro operacional" : "Cadastrar dados operacionais" )?></button>
         </div>
     </form>
 </div>
+</div>
 
-  
   <script>
     $(document).ready(function(){
 

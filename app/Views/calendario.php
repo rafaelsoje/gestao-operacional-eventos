@@ -9,10 +9,11 @@
   padding: 1.5rem;
 }
 .calendar-box {
-  background:#f8f9fa;
-  border:1px solid #ddd;
-  border-radius:6px;
-  padding:.5rem;
+  background:#fff;
+  border:1px solid rgba(15, 23, 42, 0.08);
+  border-radius:8px;
+  padding:.75rem;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
 }
 .calendar-box h3 {
   font-size:1.1rem;
@@ -29,11 +30,16 @@ button{
 }
 </style>
 
-<div class="container py-4">
-  <h2 class="text-center mb-3">Calendário de Propostas - <?= esc($ano) ?></h2>
+<div class="page-shell py-3">
+  <div class="page-hero">
+    <div>
+      <h2>Calendário de propostas</h2>
+      <p>Visão anual das propostas de <?= esc($ano) ?>.</p>
+    </div>
+  </div>
 
   <!-- (Opcional) seletor de ano -->
-  <div class="d-flex justify-content-center mb-4">
+  <div class="content-card p-3 mb-3">
     <form method="get" action="" class="d-flex justify-content-center align-items-center gap-2" id="formAno">
       <input type="number" class="form-control" id="calendar-year-select" name="ano" value="<?= esc($ano) ?>" min="1970" max="2100">
       <button type="submit" class="btn btn-success">Pesquisar</button>

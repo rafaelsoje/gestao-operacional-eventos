@@ -27,6 +27,15 @@ $selected = static function (mixed $actual, mixed $expected): string {
 $formatDateInput = static function (mixed $date): string {
     return !empty($date) ? esc((string)$date) : '';
 };
+$eventoSituacao = static function (mixed $flag): string {
+    return (int)$flag === 0 ? 'Planejado' : 'Realizado';
+};
+$eventoSituacaoBadge = static function (mixed $flag): string {
+    return (int)$flag === 0 ? 'primary' : 'success';
+};
+$eventoOptionLabel = static function (object $evento) use ($eventoSituacao): string {
+    return (string)$evento->nome . ' - ' . br_date((string)$evento->data) . ' [' . $eventoSituacao($evento->flag ?? 1) . ']';
+};
 $alertsFor = static function (object $taxa): array {
     $alertas = [];
     $status = (string)($taxa->status_financeiro ?? 'pendente');
@@ -51,7 +60,7 @@ $alertsFor = static function (object $taxa): array {
 };
 ?>
 
-<div class="container-fluid mt-3 mb-5 taxa-cozinha-page">
+<div class="page-shell mt-3 mb-5 taxa-cozinha-page">
     <?php if (session()->has('error')) : ?>
         <div class="flash text-center alert alert-danger text-danger"><?= session()->get('error') ?? ''; ?></div>
     <?php endif; ?>
@@ -66,7 +75,8 @@ $alertsFor = static function (object $taxa): array {
 
     <style>
         .taxa-cozinha-page .section-box {
-            border: 1px solid rgba(0, 0, 0, 0.14);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: 8px;
             background: #fff;
             padding: 1rem;
             height: 100%;
@@ -86,22 +96,38 @@ $alertsFor = static function (object $taxa): array {
         }
     </style>
 
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-        <h3 class="mb-0">Taxa de Cozinha</h3>
+    <div class="page-hero">
+        <div>
+            <h2>Taxa de cozinha</h2>
+            <p>Controle cobranças de eventos realizados e planejados, valores recebidos, pendências e comprovantes.</p>
+        </div>
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#taxaCreateModal">
             <i class="bi bi-plus-circle"></i> Cadastrar taxa
         </button>
     </div>
 
-    <div class="bg-white border p-3">
-        <h4 class="mb-3">Eventos com taxa cadastrada</h4>
+    <div class="alert alert-info d-flex align-items-start gap-2">
+        <i class="bi bi-info-circle mt-1"></i>
+        <div>
+            Você pode lançar cobrança para evento planejado antes da realização. Use o status financeiro e a data da cobrança para acompanhar pendências.
+        </div>
+    </div>
+
+    <div class="content-card p-3">
+        <div class="content-card-header">
+            <div>
+                <h5>Eventos com taxa cadastrada</h5>
+                <small><?= count($taxas); ?> registro(s) encontrados</small>
+            </div>
+        </div>
         <?php if ($taxas): ?>
             <div class="table-responsive">
-                <table id="taxaCozinhaTable" class="display table table-striped table-hover dt-stack align-middle" style="width:100%">
+                <table id="taxaCozinhaTable" class="display table table-striped table-hover dt-stack align-middle app-table" style="width:100%">
                     <thead>
                         <tr>
                             <th>Data</th>
                             <th>Evento</th>
+                            <th>Situação</th>
                             <th>Cliente</th>
                             <th>Valor</th>
                             <th>Pago</th>
@@ -117,6 +143,11 @@ $alertsFor = static function (object $taxa): array {
                             <tr>
                                 <td data-label="Data"><?= !empty($taxa->evento_data) ? br_date((string)$taxa->evento_data) : '-'; ?></td>
                                 <td data-label="Evento"><?= esc((string)($taxa->evento_nome ?? '-')); ?></td>
+                                <td data-label="Situação">
+                                    <span class="badge text-bg-<?= $eventoSituacaoBadge($taxa->evento_flag ?? 1); ?>">
+                                        <?= esc($eventoSituacao($taxa->evento_flag ?? 1)); ?>
+                                    </span>
+                                </td>
                                 <td data-label="Cliente"><?= esc((string)($taxa->cliente ?? '-')); ?></td>
                                 <td data-label="Valor"><?= br_money($taxa->valor_taxa ?? 0); ?></td>
                                 <td data-label="Pago"><?= br_money($taxa->valor_pago_efetivo ?? ($taxa->valor_pago ?? 0)); ?></td>
@@ -129,14 +160,14 @@ $alertsFor = static function (object $taxa): array {
                                 <td data-label="Alertas">
                                     <?= $alertas ? esc(implode(' | ', $alertas)) : '<span class="text-muted">Sem alertas</span>'; ?>
                                 </td>
-                                <td data-label="Ação" class="actions-cell">
-                                    <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#taxaView<?= (int)$taxa->id; ?>">
+                                <td data-label="Ação" class="actions-cell action-cell">
+                                    <button type="button" class="btn btn-info text-white btn-icon" data-bs-toggle="modal" data-bs-target="#taxaView<?= (int)$taxa->id; ?>">
                                         <i class="bi bi-eye"></i>
                                     </button>
-                                    <button type="button" class="btn btn-warning text-white me-2 ms-2" data-bs-toggle="modal" data-bs-target="#taxaEdit<?= (int)$taxa->id; ?>">
+                                    <button type="button" class="btn btn-warning text-white btn-icon" data-bs-toggle="modal" data-bs-target="#taxaEdit<?= (int)$taxa->id; ?>">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#taxaDelete<?= (int)$taxa->id; ?>">
+                                    <button type="button" class="btn btn-danger btn-icon" data-bs-toggle="modal" data-bs-target="#taxaDelete<?= (int)$taxa->id; ?>">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </td>
@@ -167,7 +198,7 @@ $alertsFor = static function (object $taxa): array {
                         <select class="form-select" name="operacional_id" required>
                             <option value="">Selecione...</option>
                             <?php foreach ($eventos as $evento): ?>
-                                <option value="<?= (int)$evento->id; ?>"><?= esc((string)$evento->nome); ?> - <?= br_date((string)$evento->data); ?></option>
+                                <option value="<?= (int)$evento->id; ?>"><?= esc($eventoOptionLabel($evento)); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -212,6 +243,7 @@ $alertsFor = static function (object $taxa): array {
                     <div class="row g-3">
                         <div class="col-md-6"><strong>Cliente:</strong> <?= esc((string)($taxa->cliente ?? '-')); ?></div>
                         <div class="col-md-6"><strong>Data do evento:</strong> <?= !empty($taxa->evento_data) ? br_date((string)$taxa->evento_data) : '-'; ?></div>
+                        <div class="col-md-6"><strong>Situação do evento:</strong> <?= esc($eventoSituacao($taxa->evento_flag ?? 1)); ?></div>
                         <div class="col-md-6"><strong>Valor da taxa:</strong> <?= br_money($taxa->valor_taxa ?? 0); ?></div>
                         <div class="col-md-6"><strong>Valor pago:</strong> <?= br_money($taxa->valor_pago ?? 0); ?></div>
                         <div class="col-md-6"><strong>Status:</strong> <?= esc(ucfirst((string)($taxa->status_financeiro ?? 'pendente'))); ?></div>
@@ -262,7 +294,7 @@ $alertsFor = static function (object $taxa): array {
                                     <option value="">Selecione...</option>
                                     <?php foreach ($eventos as $evento): ?>
                                         <option value="<?= (int)$evento->id; ?>" <?= $selected($taxa->operacional_id, $evento->id); ?>>
-                                            <?= esc((string)$evento->nome); ?> - <?= br_date((string)$evento->data); ?>
+                                            <?= esc($eventoOptionLabel($evento)); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -464,7 +496,7 @@ $alertsFor = static function (object $taxa): array {
             $('#taxaCozinhaTable').DataTable({
                 columnDefs: [
                     {type: "date-dd-mm-yyyy", targets: 0},
-                    {orderable: false, targets: 8}
+                    {orderable: false, targets: 9}
                 ],
                 order: [[0, "desc"]],
                 paging: true,

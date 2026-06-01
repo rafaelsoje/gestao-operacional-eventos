@@ -57,6 +57,211 @@ $hourOnly = static function (?string $hhmm): string {
 };
 ?>
 
+<style>
+    .main {
+        background: #f5f7fb;
+    }
+
+    .dashboard-shell {
+        padding: 0 1rem 1.5rem;
+    }
+
+    .dashboard-hero {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.1rem 1.25rem;
+        margin: 0 0 1rem;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 8px;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .dashboard-hero h2 {
+        margin: 0;
+        color: #172033;
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: 0;
+    }
+
+    .dashboard-hero p {
+        margin: 0.25rem 0 0;
+        color: #64748b;
+    }
+
+    .dashboard-period {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.6rem;
+        border-radius: 999px;
+        background: #eef6ff;
+        color: #0f5f96;
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+
+    .dashboard-filter-wrap {
+        padding: 0.85rem 1rem !important;
+        margin: 0 0 1rem !important;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .dashboard-filter-form .form-control {
+        min-height: 42px;
+        border-color: #dbe3ee;
+        border-radius: 7px;
+    }
+
+    .dashboard-filter-form .form-check {
+        margin-bottom: 0;
+    }
+
+    .dashboard-filter-form .form-check-label {
+        color: #344054;
+        font-weight: 600;
+    }
+
+    .dashboard-filter-form .btn {
+        min-height: 42px;
+        border-radius: 7px;
+        font-weight: 700;
+    }
+
+    .dashboard-modern-alerts {
+        padding: 0 !important;
+        text-align: left !important;
+    }
+
+    .dashboard-modern-alerts .alert {
+        border: 0;
+        border-left: 4px solid currentColor;
+        border-radius: 8px;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+    }
+
+    .dashboard-modern-alerts .alert-danger {
+        background: #fff1f2;
+        color: #8a1f2d;
+    }
+
+    .dashboard-modern-alerts .alert-warning {
+        background: #fff8e6;
+        color: #875a08;
+    }
+
+    .stat-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 8px !important;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06) !important;
+        transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 18px 32px rgba(15, 23, 42, 0.1) !important;
+    }
+
+    .kpi-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: #3197da;
+    }
+
+    .kpi-col:nth-child(3n + 2) .kpi-card::before {
+        background: #1f9d67;
+    }
+
+    .kpi-col:nth-child(3n) .kpi-card::before {
+        background: #f59f00;
+    }
+
+    .kpi-card .text-muted:first-child {
+        color: #526173 !important;
+        font-weight: 700;
+    }
+
+    .chart {
+        padding: 0 1rem;
+    }
+
+    .chart-box {
+        min-height: 320px;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    .dashboard-table-card {
+        margin: 1rem;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 8px;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    .dashboard-table-card .table {
+        margin-bottom: 0;
+    }
+
+    .dashboard-table-card thead th {
+        border-bottom: 1px solid #dbe3ee;
+        color: #344054;
+        font-size: 0.88rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .dashboard-table-card tbody td {
+        color: #27313f;
+        vertical-align: middle;
+    }
+
+    .dashboard-table-card tbody tr:hover {
+        background: #f8fbff;
+    }
+
+    .dashboard-actions-cell .btn {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 7px;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-shell {
+            padding: 0 0.75rem 1rem;
+        }
+
+        .dashboard-hero {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .chart {
+            padding: 0 0.75rem;
+        }
+
+        .dashboard-table-card {
+            margin: 0.75rem;
+        }
+    }
+</style>
+
 <?php if (session()->has('error')): ?>
     <div class="alert alert-danger mt-3 mb-0"><?= esc((string)session()->get('error')); ?></div>
 <?php endif; ?>
@@ -67,7 +272,33 @@ $hourOnly = static function (?string $hhmm): string {
 <?php if($hasRows || (float)($sum->total_consumo ?? 0) > 0):?>
 
 <?php if($hasRows):?>
-<div class="px-4 mb-3 mt-2 d-flex align-items-center justify-content-end dashboard-filter-wrap">
+<div class="dashboard-shell">
+<div class="dashboard-hero">
+    <div>
+        <h2>Dashboard Operacional</h2>
+        <?php if(isset($search)):?>
+            <?php
+                $inicio = br_date($search['data_inicial']);
+                $fim = br_date($search['data_final']);
+            ?>
+            <p>Resultados do período de <?= esc($inicio . ' a ' . $fim); ?></p>
+        <?php elseif(isset($get)):?>
+            <p>Planejamento operacional do mês selecionado.</p>
+        <?php else:?>
+            <p>Resumo dos lançamentos operacionais mais recentes.</p>
+        <?php endif;?>
+    </div>
+    <div class="dashboard-period">
+        <i class="bi bi-calendar3"></i>
+        <?php if(isset($search)):?>
+            <?= esc($inicio . ' a ' . $fim); ?>
+        <?php else:?>
+            <?= esc((string)$mes); ?>
+        <?php endif;?>
+    </div>
+</div>
+
+<div class="d-flex align-items-center justify-content-end dashboard-filter-wrap">
 
 <!-- <nav class="" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
         <ol class="breadcrumb">
@@ -75,7 +306,7 @@ $hourOnly = static function (?string $hhmm): string {
             <li class="breadcrumb-item active" aria-current="page">Library</li>
         </ol>
     </nav> -->
-    <form class="row g-2 dashboard-filter-form w-100 justify-content-end" method="get" action="<?= url_to('search.operacional.get');?>">
+    <form class="row g-2 dashboard-filter-form w-100 justify-content-end align-items-center" method="get" action="<?= url_to('search.operacional.get');?>">
         <div class="col-12 col-md-3 col-lg-2">
             <input type="date" id="data_inicial" name="data_inicial" class="form-control"  required>
         </div>
@@ -103,26 +334,22 @@ $hourOnly = static function (?string $hhmm): string {
 </div>
 
 <?php if(isset($search)):?>
-    <div>
-        <?php
-            $inicio = br_date($search['data_inicial']);
-            $fim = br_date($search['data_final']);
-        ?>
-        <h6>Exibindo resultados do período de <span class="text-danger"><?= $inicio . " a " . $fim;?></span>
+    <div class="mb-3">
+        <h6 class="mb-0 text-muted">Exibindo resultados do período de <span class="text-primary"><?= $inicio . " a " . $fim;?></span>
         <?php foreach($tipo as $item){
             echo " " . $item . " ";
         }
         ?></h6>
     </div>
 <?php elseif(isset($get)):?>
-<h6>Exibindo planejamento para o mês de  <span class="text-danger"><?= $mes; ?></span></h6>
+<h6 class="mb-3 text-muted">Exibindo planejamento para o mês de <span class="text-primary"><?= $mes; ?></span></h6>
 <?php else:?>
-<h6>Exibindo lançamentos de <span class="text-danger"><?= $mes; ?></span></h6>
+<h6 class="mb-3 text-muted">Exibindo lançamentos de <span class="text-primary"><?= $mes; ?></span></h6>
 <?php endif;?>
 
 
 
-<div class="px-1 text-center p-2">
+<div class="dashboard-modern-alerts">
     <?php if (!empty($generatorUsage['has_alert'])): ?>
         <div class="alert alert-danger alert-dismissible fade show text-start mb-3" role="alert">
             Atenção: um ou mais geradores já atingiram 200 horas de uso e precisam de manutenção.
@@ -436,6 +663,7 @@ $hourOnly = static function (?string $hhmm): string {
     </div>
 
 </div>
+</div>
 
 <div class="chart row g-3 mt-2 mb-2">
     <div class="col-12 col-md-6">
@@ -513,9 +741,12 @@ $hourOnly = static function (?string $hhmm): string {
 <?php endif ;?>
 
 <?php if(!empty($data)):?>
-<div class="shadow-lg bg-white d-block px-2 pt-1">
-    <div class="d-flex justify-content-between align-items-center mt-3">
-        <h6 class="mb-0">Eventos realizados</h6>
+<div class="dashboard-table-card bg-white d-block px-3 pt-3 pb-2">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <h5 class="mb-0 fw-bold">Eventos realizados</h5>
+            <small class="text-muted">Últimos eventos do período exibido</small>
+        </div>
         <a href="<?= (isset($get))? base_url('operacional/planejamento/lista') : base_url('/operacional/lista');?>" class="btn btn-sm btn-outline-secondary">Ver lista completa</a>
     </div>
     <div class="table-responsive">

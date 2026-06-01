@@ -10,7 +10,7 @@
         </ol>
 </nav> -->
 
-<div class="container-fluid mt-3">
+<div class="page-shell mt-3">
         <?php if (session()->has('error')) : ?>
           <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
         <?php endif; ?>
@@ -18,8 +18,14 @@
           <div class="flash text-center alert alert-success text-success"><?php echo session()->get('success') ?? ''; ?></div>
         <?php endif; ?>
   
-  <div class="d-flex flex-wrap align-items-end justify-content-end gap-2 mb-3">
-      <a href="<?= base_url('/cadastro/operacional');?>" type="button" class="btn btn-success">+ Cadastrar Evento</a>
+  <div class="page-hero">
+    <div>
+      <h2>Lista de eventos</h2>
+      <p>Consulte custos, consumos e registros operacionais dos eventos.</p>
+    </div>
+      <a href="<?= base_url('/cadastro/operacional');?>" type="button" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Cadastrar evento
+      </a>
   </div>
      <!-- Tabela Striped
      <div class="table-responsive">
@@ -91,10 +97,16 @@
 
 <!-- Tabela -->
 
-<div class="container-fluid">
+<div class="content-card p-3">
   <?php if($data):?>
+    <div class="content-card-header">
+      <div>
+        <h5>Eventos cadastrados</h5>
+        <small><?= count($data); ?> registro(s) encontrados</small>
+      </div>
+    </div>
     <div class="table-responsive">
-    <table id="propostas" class="display table table-striped dt-stack" style="width:100%">
+    <table id="propostas" class="display table table-striped table-hover dt-stack app-table" style="width:100%">
       <thead>
         <tr>
         <!-- <th>ID</th> -->
@@ -132,16 +144,16 @@
           <!-- <td class=""><?= br_number($kwhG1, 0);?><?= $kwhG1 ? ' kWh' : ''; ?></td> -->
           <!-- <td class=""><?= br_number($kwhG2, 0);?><?= $kwhG2 ? ' kWh' : ''; ?></td> -->
           <td data-label="Custo do Evento" class=""><?= br_money($item->total_consumo);?></td>
-          <td data-label="Ação" class="d-flex justify-content-center" >
+          <td data-label="Ação" class="d-flex justify-content-center action-cell" >
             <?php if(!empty($item->descricao)):?>
-              <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#i<?= $item->id;?>"><i class="bi bi-chat-left-text"></i></a>
+              <a href="#" type="button" class="btn btn-info text-white btn-icon" data-bs-toggle="modal" data-bs-target="#i<?= $item->id;?>"><i class="bi bi-chat-left-text"></i></a>
               <?php else:?>
-                <a href="#" type="button" class="btn btn-secondary text-white" data-bs-target="#i<?= $item->id;?>"><i class="bi bi-chat-left-text"></i></a>
+                <a href="#" type="button" class="btn btn-secondary text-white btn-icon" data-bs-target="#i<?= $item->id;?>"><i class="bi bi-chat-left-text"></i></a>
             
               <?php endif;?>
 
-              <a href="<?= base_url('/update/operacional/'.$item->id);?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="bi bi-pencil"></i></a>
-            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#e<?= $item->id;?>"><i class="bi bi-trash"></i></button>
+              <a href="<?= base_url('/update/operacional/'.$item->id);?>" type="button" class="btn btn-warning text-white btn-icon"><i class="bi bi-pencil"></i></a>
+            <button type="button" class="btn btn-danger btn-icon" data-bs-toggle="modal" data-bs-target="#e<?= $item->id;?>"><i class="bi bi-trash"></i></button>
             <!-- <button class="btn btn-danger btn-sm" onclick="confirmarExclusao(1, 'Ana Silva')">Excluir</button> -->
           </td>
         </tr> 
@@ -199,8 +211,9 @@
     </table>
     </div>
     <?php else:?>
-      <h4>Nenhuma dado cadastrado!</h4>
+      <div class="alert alert-info mb-0">Nenhum dado cadastrado.</div>
     <?php endif;?>  
+</div>
 </div>
 
 

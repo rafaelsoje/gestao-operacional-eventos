@@ -11,24 +11,21 @@
 
 
 
-<div class="container-fluid mt-3">
-  <div class="d-flex justify-content-between">
-    <div class="col-md-4">        
-        <!-- <select id="inputState" class="form-select">
-            <option selected>Todas as propostas</option>
-            <option>Proposta aceita</option>
-            <option>Proposta recusada</option>                
-        </select> -->
+<div class="page-shell mt-3">
+  <div class="page-hero">
+    <div>
+      <h2>Usuários</h2>
+      <p>Gerencie acessos, permissões e atividade recente da equipe.</p>
     </div>
-    <div class="d-flex align-items-end justify-content-end mb-3">
-        <a href="<?= base_url('/cadastro/usuario');?>" type="button" class="btn btn-success">+ Adicionar usuário</a>
-    </div>
-</div>    
+    <a href="<?= base_url('/cadastro/usuario');?>" type="button" class="btn btn-success">
+      <i class="bi bi-person-plus"></i> Adicionar usuário
+    </a>
+  </div>
 
 
 <!-- Tabela -->
 
-<div class="container-fluid">
+<div class="content-card p-3">
     <?php if (session()->has('error')) : ?>
         <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
     <?php endif; ?>
@@ -38,8 +35,14 @@
     <?php endif; ?>
   <?php if(isset($users) && !empty($users)): ?>
     <?php $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com')); ?>
+    <div class="content-card-header">
+      <div>
+        <h5>Usuários cadastrados</h5>
+        <small><?= count($users); ?> usuário(s) listados</small>
+      </div>
+    </div>
     <div class="table-responsive">
-    <table id="example" class="display table table-striped dt-stack" style="width:100%">
+    <table id="example" class="display table table-striped table-hover dt-stack app-table" style="width:100%">
       <thead>
         <tr>
           <th>Nome</th>
@@ -73,27 +76,27 @@
                 <span class="text-muted">Sem atividade</span>
               <?php endif; ?>
             </td>
-            <td class="d-flex justify-content-center" >
+            <td class="d-flex justify-content-center action-cell" >
               
-              <a href="#" type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#view<?=$user->id;?>"><i class="bi bi-eye"></i></a>
+              <a href="#" type="button" class="btn btn-info text-white btn-icon" data-bs-toggle="modal" data-bs-target="#view<?=$user->id;?>"><i class="bi bi-eye"></i></a>
 
               <?php $session =  session()->get('user');?>
               <?php $sessionRole = $session->role ?? (($session->admin ?? 0) == 1 ? 'admin' : 'user'); ?>
               <?php if($user->email == $session->email):?>
-                <a href="<?= base_url('/perfil');?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="bi bi-pencil"></i></a>
+                <a href="<?= base_url('/perfil');?>" type="button" class="btn btn-warning text-white btn-icon"><i class="bi bi-pencil"></i></a>
               <?php elseif($sessionRole === 'admin' || $sessionRole === 'superuser'):?>
-                <a href="<?= base_url('/update/usuario/' . $user->id);?>" type="button" class="btn btn-warning text-white me-2 ms-2"><i class="bi bi-pencil"></i></a>
+                <a href="<?= base_url('/update/usuario/' . $user->id);?>" type="button" class="btn btn-warning text-white btn-icon"><i class="bi bi-pencil"></i></a>
               <?php else:?>
-                <a href="#" type="button" class="btn btn-warning text-white me-2 ms-2 disabled"><i class="bi bi-pencil"></i></a>
+                <a href="#" type="button" class="btn btn-warning text-white btn-icon disabled"><i class="bi bi-pencil"></i></a>
               <?php endif;?>
 
                                          
               <?php if($user->email != $session->email && ($sessionRole === 'admin' || $sessionRole === 'superuser')):?>                       
-                <button type="button" class="btn btn-danger text-white" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="bi bi-trash"></i></button>
+                <button type="button" class="btn btn-danger text-white btn-icon" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="bi bi-trash"></i></button>
               <?php elseif($user->email == $session->email):?>
-                <button href="#" type="button" class="btn btn-secondary text-white disabled" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="bi bi-trash"></i></button>
+                <button href="#" type="button" class="btn btn-secondary text-white btn-icon disabled" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="bi bi-trash"></i></button>
               <?php else:?>
-                <button href="#" type="button" class="btn btn-secondary text-white disabled" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="bi bi-trash"></i></button>
+                <button href="#" type="button" class="btn btn-secondary text-white btn-icon disabled" data-bs-toggle="modal" data-bs-target="#delete<?=$user->id;?>"><i class="bi bi-trash"></i></button>
               <?php endif;?>
               <!-- <button type="button" class="btn btn-danger" onclick="confirmarExclusao(1, 'Ana Silva')"><i class="bi bi-trash"></i></button> -->
               <!-- <button class="btn btn-danger btn-sm" onclick="confirmarExclusao(1, 'Ana Silva')">Excluir</button> -->

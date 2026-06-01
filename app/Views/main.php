@@ -76,6 +76,82 @@
           padding-bottom: 10px;
         }
       }
+
+      .top-account-menu {
+        display: flex;
+        justify-content: flex-end;
+        padding: 12px 18px 4px;
+        position: relative;
+        z-index: 20;
+      }
+
+      .top-account-menu .dropdown-toggle {
+        min-height: 46px;
+        max-width: 220px;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+        color: #27313f;
+        text-align: left;
+      }
+
+      .top-account-menu .dropdown-toggle:hover,
+      .top-account-menu .dropdown-toggle:focus {
+        background: #fff;
+        color: #111827;
+      }
+
+      .top-account-menu .account-avatar {
+        width: 34px;
+        height: 34px;
+        object-fit: cover;
+        object-position: center;
+        border: 2px solid rgba(49, 151, 218, 0.32);
+      }
+
+      .top-account-menu .account-name {
+        display: block;
+        max-width: 124px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+
+      .top-account-menu .account-role {
+        display: block;
+        color: #6b7280;
+        font-size: 12px;
+        line-height: 1.2;
+      }
+
+      .top-account-menu .dropdown-menu {
+        min-width: 220px;
+        border-radius: 6px;
+      }
+
+      .top-account-menu .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      @media (max-width: 480px) {
+        .top-account-menu {
+          padding-right: 12px;
+        }
+
+        .top-account-menu .account-text {
+          display: none;
+        }
+
+        .top-account-menu .dropdown-toggle {
+          min-width: 48px;
+          padding-left: 6px;
+          padding-right: 6px;
+        }
+      }
     </style>
 
   <title>Operacional</title>
@@ -86,23 +162,32 @@
   <header id="header" class="header dark-background d-flex flex-column">
     <i class="header-toggle d-xl-none bi bi-list"></i>
 
+    <?php $logged = session()->get('user');?>
+    <?php $loggedName = trim((string)($logged->name ?? 'Usuário')); ?>
+    <?php $loggedFirstName = explode(' ', $loggedName)[0] ?? 'Usuário'; ?>
+    <?php $navRole = $logged->role ?? (($logged->admin ?? 0) == 1 ? 'admin' : 'user'); ?>
+    <?php $isSuperuser = ($logged->email ?? '') == env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com')); ?>
+    <?php $roleLabel = match ($navRole) {
+        'superuser' => 'Superusuário',
+        'admin' => 'Administrador',
+        default => 'Usuário',
+    }; ?>
+
     <div class="profile-img">
-        <?php $user = session()->get('user');?>
-        <?php $logged = explode(' ', $user->name);?>
       <img
-        src="<?= url_to('avatar.show', $user->avatar ?? 'avatar.svg');?>"
+        src="<?= url_to('avatar.show', $logged->avatar ?? 'avatar.svg');?>"
         alt="avatar"
         class="img-fluid rounded-circle"
         style="width:120px;height:120px;object-fit:cover;object-position:center;"
       >
     </div>
+
     <a href="<?= base_url();?>" class="logo d-flex align-items-center justify-content-center">
       <!-- Uncomment the line below if you also wish to use an image logo -->
       <!-- <img src="assets/img/logo.png" alt=""> -->
-      <h1 class="sitename"><?=$logged['0'];?></h1>
+      <h1 class="sitename"><?= esc($loggedFirstName); ?></h1>
     </a>
 
-    <?php $logged = session()->get('user');?>      
     <nav id="navmenu" class="navmenu">
       <ul>
         <li><a href="<?= base_url()?>" class="<?=(isset($operacional)? "active" : "");?>"><i class="bi bi-house navicon"></i>Dados operaionais</a></li>
@@ -114,16 +199,6 @@
         <li><a href="<?=base_url('operacional/geradores')?>" class="<?=(isset($geradoresPage)? "active" : "");?>"><i class="bi bi-tools navicon"></i>Geradores</a></li>
         <li><a href="<?=base_url('visitas')?>" class="<?=(isset($visitasPage)? "active" : "");?>"><i class="bi bi-person-lines-fill navicon"></i>Visitas</a></li>
         <li><a href="<?=base_url('operacional/taxa-cozinha')?>" class="<?=(isset($taxaCozinhaPage)? "active" : "");?>"><i class="bi bi-cash-coin navicon"></i>Taxa de cozinha</a></li>
-        <?php $navRole = $logged->role ?? (($logged->admin ?? 0) == 1 ? 'admin' : 'user'); ?>
-        <?php if($navRole === 'admin' || $navRole === 'superuser'):?>
-            <li><a href="<?=base_url('usuarios')?>"class="<?=(isset($botanicUser)? "active" : "");?>"><i class="bi bi-person-fill-check navicon"></i>Usuarios cadastrados</a></li>
-        <?php endif;?>
-        <li><a href="<?=base_url('perfil')?>"><i class="bi bi-person-circle navicon"></i>Meu perfil</a></li>
-        <?php if($logged->email == env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'))):?>            
-            <li><a href="<?=base_url('admin/notifications')?>"><i class="bi bi-bell navicon"></i>Notificações</a></li>
-            <li><a href="<?=base_url('logs')?>"><i class="bi bi-envelope navicon"></i>Log</a></li>
-        <?php endif;?>
-        <li><a href="<?=base_url('logout')?>"><i class="bi bi-box-arrow-left navicon"></i>Sair</a></li>
         
         </ul>
     </nav>
@@ -133,6 +208,79 @@
    
   </header>
 <main class="main">
+    <div class="top-account-menu dropdown">
+      <button class="btn dropdown-toggle d-flex align-items-center gap-2" type="button" id="topAccountMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+        <img
+          src="<?= url_to('avatar.show', $logged->avatar ?? 'avatar.svg');?>"
+          alt="avatar"
+          class="account-avatar rounded-circle"
+        >
+        <span class="account-text flex-grow-1 min-w-0">
+          <span class="account-name"><?= esc($loggedFirstName); ?></span>
+          <span class="account-role"><?= esc($roleLabel); ?></span>
+        </span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="topAccountMenuButton">
+        <li><a class="dropdown-item" href="<?=base_url('perfil')?>"><i class="bi bi-person-circle"></i>Meu perfil</a></li>
+        <li><a class="dropdown-item" href="<?=base_url('assinatura')?>"><i class="bi bi-credit-card"></i>Assinatura</a></li>
+        <?php if($navRole === 'admin' || $navRole === 'superuser'):?>
+          <li><a class="dropdown-item" href="<?=base_url('usuarios')?>"><i class="bi bi-person-fill-check"></i>Usuários</a></li>
+        <?php endif;?>
+        <?php if($isSuperuser):?>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="<?=base_url('admin/notifications')?>"><i class="bi bi-bell"></i>Notificações</a></li>
+          <li><a class="dropdown-item" href="<?=base_url('logs')?>"><i class="bi bi-envelope"></i>Logs</a></li>
+        <?php endif;?>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="<?=base_url('logout')?>"><i class="bi bi-box-arrow-left"></i>Sair</a></li>
+      </ul>
+    </div>
+    <?php
+      $subscriptionState = null;
+      if (session()->get('auth')) {
+          try {
+              $subscriptionState = (new \App\Services\SystemSubscriptionService())->subscriptionState();
+          } catch (\Throwable $e) {
+              $subscriptionState = null;
+          }
+      }
+    ?>
+    <?php if (!empty($subscriptionState['enabled']) && !empty($subscriptionState['warning']) && empty($subscriptionPage)): ?>
+      <div class="container-fluid mt-3">
+        <div class="alert <?= !empty($subscriptionState['blocked']) ? 'alert-danger' : 'alert-warning'; ?> d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <span><?= esc((string)($subscriptionState['message'] ?? 'Mensalidade pendente.')); ?></span>
+          <a href="<?= base_url('assinatura'); ?>" class="btn btn-sm <?= !empty($subscriptionState['blocked']) ? 'btn-danger' : 'btn-warning'; ?>">
+            Ver pendência
+          </a>
+        </div>
+      </div>
+      <div class="modal fade" id="subscriptionPendingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Mensalidade pendente</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+              <?= esc((string)($subscriptionState['message'] ?? 'Mensalidade pendente.')); ?>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Depois</button>
+              <a href="<?= base_url('assinatura'); ?>" class="btn btn-primary">Ver pagamento</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script>
+        window.addEventListener('load', function () {
+          if (!window.bootstrap || !bootstrap.Modal || sessionStorage.getItem('subscriptionPendingShown') === '1') {
+            return;
+          }
+          sessionStorage.setItem('subscriptionPendingShown', '1');
+          new bootstrap.Modal(document.getElementById('subscriptionPendingModal')).show();
+        });
+      </script>
+    <?php endif; ?>
     <!-- Content page -->
     <?= $this->renderSection('content');?>
   </main>

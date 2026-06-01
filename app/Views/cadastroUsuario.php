@@ -3,13 +3,21 @@
 <?php $this->section('content');?>
 <?php // Tela de cadastro administrativo de usuários com definição de papel e senha padrão. ?>
 
-<div class="container mt-3">
-    <div class="d-flex align-items-end justify-content-end mb-3">
-        <a href="<?= base_url('/usuarios');?>" type="button" class="btn btn-success">Lista de usuários</a>
+<div class="page-shell mt-3">
+    <div class="page-hero">
+        <div>
+            <h2>Cadastro de usuários</h2>
+            <p>Crie novos acessos com perfil de usuário ou administrador.</p>
+        </div>
+        <a href="<?= base_url('/usuarios');?>" type="button" class="btn btn-outline-secondary">Lista de usuários</a>
     </div>
-</div>
-<div class="container border pt-2 pb-2">
-    <h3 class="text-center mb-3 border p-1">Cadastro de Usuários</h3>
+<div class="content-card p-3">
+    <div class="content-card-header">
+        <div>
+            <h5>Novo usuário</h5>
+            <small>A senha padrão será aplicada e o usuário trocará no primeiro login.</small>
+        </div>
+    </div>
     <form class="row g-3" method="post" action="<?= url_to('usuario.store');?>">
         <?= csrf_field(); ?> 
         <?php if (session()->has('error')) : ?>
@@ -45,5 +53,6 @@
             <button type="submit" class="btn btn-primary">Cadastrar Usuário</button>
         </div>
     </form>
+</div>
 </div>  
 <?php $this->endSection('content');?>

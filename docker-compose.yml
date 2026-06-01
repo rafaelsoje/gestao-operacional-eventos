@@ -1,0 +1,60 @@
+services:
+  app:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/var/www/html
+      - ./docker/app.env:/var/www/html/.env:ro
+      - composer_vendor:/var/www/html/vendor
+    environment:
+      CI_ENVIRONMENT: development
+      app_baseURL: http://localhost:8080/
+      database_default_hostname: db
+      database_default_database: audiovisual
+      database_default_username: audiovisual
+      database_default_password: audiovisual
+      database_default_DBDriver: MySQLi
+      database_default_port: 3306
+      TELEGRAM_ENABLED: "false"
+      TELEGRAM_BOT_TOKEN: CHANGE_ME
+      TELEGRAM_CHAT_ID: CHANGE_ME
+      TELEGRAM_ADMIN_EMAIL: admin@example.com
+      SUPERUSER_EMAIL: admin@example.com
+      DEFAULT_USER_PASSWORD: admin123
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: audiovisual
+      MYSQL_USER: audiovisual
+      MYSQL_PASSWORD: audiovisual
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  assets:
+    image: node:22-alpine
+    working_dir: /var/www/html
+    command: sh -c "npm install && npm run dev"
+    volumes:
+      - .:/var/www/html
+      - node_modules:/var/www/html/node_modules
+    profiles:
+      - assets
+
+volumes:
+  composer_vendor:
+  mysql_data:
+  node_modules:

@@ -10,7 +10,7 @@ $timeValue = static function (mixed $value): string {
 };
 ?>
 
-<div class="container-fluid mt-3 mb-5">
+<div class="page-shell mt-3 mb-5">
     <?php if (session()->has('error')) : ?>
         <div class="alert alert-danger text-center"><?= esc((string)session()->get('error')); ?></div>
     <?php endif; ?>
@@ -18,17 +18,25 @@ $timeValue = static function (mixed $value): string {
         <div class="alert alert-success text-center"><?= esc((string)session()->get('success')); ?></div>
     <?php endif; ?>
 
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-        <h3 class="mb-0">Visitas</h3>
+    <div class="page-hero">
+        <div>
+            <h2>Visitas</h2>
+            <p>Acompanhe visitas técnicas, clientes, eventos e público estimado.</p>
+        </div>
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#visitaCreateModal">
             <i class="bi bi-plus-circle"></i> Cadastrar visita
         </button>
     </div>
 
-    <div class="bg-white border p-3">
-        <h5 class="mb-3">Visitas cadastradas</h5>
+    <div class="content-card p-3">
+        <div class="content-card-header">
+            <div>
+                <h5>Visitas cadastradas</h5>
+                <small><?= count($visitas); ?> registro(s) encontrados</small>
+            </div>
+        </div>
         <div class="table-responsive">
-            <table id="visitasTable" class="display table table-striped table-hover dt-stack" style="width:100%">
+            <table id="visitasTable" class="display table table-striped table-hover dt-stack app-table" style="width:100%">
                 <thead>
                     <tr>
                         <th>Data visita</th>
@@ -53,14 +61,14 @@ $timeValue = static function (mixed $value): string {
                             <td data-label="Início"><?= esc($timeValue($visita->horario_inicio)); ?></td>
                             <td data-label="Término"><?= esc($timeValue($visita->horario_termino)); ?></td>
                             <td data-label="Público"><?= esc((string)$visita->publico_estimado); ?></td>
-                            <td data-label="Ação" class="d-flex justify-content-center">
-                                <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#visitaView<?= (int)$visita->id; ?>">
+                            <td data-label="Ação" class="d-flex justify-content-center action-cell">
+                                <button type="button" class="btn btn-info text-white btn-icon" data-bs-toggle="modal" data-bs-target="#visitaView<?= (int)$visita->id; ?>">
                                     <i class="bi bi-eye"></i>
                                 </button>
-                                <button type="button" class="btn btn-warning text-white me-2 ms-2" data-bs-toggle="modal" data-bs-target="#visitaEdit<?= (int)$visita->id; ?>">
+                                <button type="button" class="btn btn-warning text-white btn-icon" data-bs-toggle="modal" data-bs-target="#visitaEdit<?= (int)$visita->id; ?>">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#visitaDelete<?= (int)$visita->id; ?>">
+                                <button type="button" class="btn btn-danger btn-icon" data-bs-toggle="modal" data-bs-target="#visitaDelete<?= (int)$visita->id; ?>">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </td>

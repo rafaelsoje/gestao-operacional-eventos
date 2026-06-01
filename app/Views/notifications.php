@@ -2,8 +2,13 @@
 
 <?php $this->section('content');?>
 
-<div class="container mt-3">
-  <h3 class="mb-3">Notificações Telegram</h3>
+<div class="page-shell mt-3">
+  <div class="page-hero">
+    <div>
+      <h2>Administração</h2>
+      <p>Gerencie notificações, limpeza de logs e usuários online.</p>
+    </div>
+  </div>
 
   <?php if (session()->has('error')) : ?>
     <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
@@ -12,24 +17,34 @@
     <div class="flash text-center alert alert-success text-success"><?php echo session()->get('success') ?? ''; ?></div>
   <?php endif; ?>
 
-  <!-- Preferência global de envio de alertas operacionais para Telegram. -->
-  <form method="post" action="<?= url_to('admin.notifications.update');?>">
-    <?= csrf_field(); ?>
-    <div class="form-check form-switch">
-      <input class="form-check-input" type="checkbox" role="switch" id="telegram_enabled" name="telegram_enabled" value="1" <?= !empty($enabled) ? 'checked' : ''; ?>>
-      <label class="form-check-label" for="telegram_enabled">Ativar notificações Telegram</label>
+  <div class="content-card p-3 mb-4">
+    <div class="content-card-header">
+      <div>
+        <h5>Notificações Telegram</h5>
+        <small>Preferência global para alertas operacionais.</small>
+      </div>
     </div>
-    <div class="mt-3">
-      <button type="submit" class="btn btn-primary">Salvar</button>
-    </div>
-  </form>
+    <form method="post" action="<?= url_to('admin.notifications.update');?>">
+      <?= csrf_field(); ?>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="telegram_enabled" name="telegram_enabled" value="1" <?= !empty($enabled) ? 'checked' : ''; ?>>
+        <label class="form-check-label" for="telegram_enabled">Ativar notificações Telegram</label>
+      </div>
+      <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
 
-  <hr class="my-4">
-
-  <h4 class="mb-3">Limpeza de logs</h4>
   <!-- Bloco administrativo: pré-visualiza impacto antes de remover logs antigos. -->
-  <div class="card mb-4">
+  <div class="content-card mb-4">
     <div class="card-body">
+      <div class="content-card-header">
+        <div>
+          <h5>Limpeza de logs</h5>
+          <small>Pré-visualize o impacto antes de remover registros antigos.</small>
+        </div>
+      </div>
       <div class="row g-3 align-items-end">
         <div class="col-md-4">
           <label for="logs_cleanup_days" class="form-label">Remover logs com mais de</label>
@@ -59,13 +74,19 @@
     </div>
   </div>
 
-  <h4 class="mb-3">Usuários online agora</h4>
   <?php $onlineUsers = $onlineUsers ?? []; ?>
   <?php $onlineWindowSeconds = $onlineWindowSeconds ?? 300; ?>
 
+  <div class="content-card p-3">
+    <div class="content-card-header">
+      <div>
+        <h5>Usuários online agora</h5>
+        <small>Atividade nos últimos <?= esc((string) $onlineWindowSeconds); ?> segundos.</small>
+      </div>
+    </div>
   <?php if (!empty($onlineUsers)): ?>
     <div class="table-responsive">
-      <table class="table table-striped table-bordered align-middle">
+      <table class="table table-striped table-hover align-middle app-table">
         <thead>
           <tr>
             <th>Nome</th>
@@ -88,10 +109,10 @@
         </tbody>
       </table>
     </div>
-    <small class="text-muted d-block mt-2">Considera online quem teve atividade nos últimos <?= esc((string) $onlineWindowSeconds); ?> segundos.</small>
   <?php else: ?>
     <div class="alert alert-info mb-0">Nenhum usuário online no momento.</div>
   <?php endif; ?>
+  </div>
 </div>
 
 <div class="modal fade" id="logsCleanupModal" tabindex="-1" aria-labelledby="logsCleanupModalLabel" aria-hidden="true">

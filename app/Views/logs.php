@@ -4,7 +4,13 @@
 
 <!-- Tabela -->
 <?php $user = session()->get('user');?>
-<div class="container-fluid">
+<div class="page-shell mt-3">
+    <div class="page-hero">
+      <div>
+        <h2>Logs</h2>
+        <p>Auditoria das ações registradas no sistema.</p>
+      </div>
+    </div>
     <?php if (session()->has('error')) : ?>
         <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
     <?php endif; ?>
@@ -12,9 +18,16 @@
     <?php if (session()->has('success')) : ?>
         <div class="flash text-center alert alert-success text-success"><?php echo session()->get('success') ?? ''; ?></div>
     <?php endif; ?>
+  <div class="content-card p-3">
   <?php if(isset($logs) && !empty($logs)): ?>
+    <div class="content-card-header">
+      <div>
+        <h5>Registros do sistema</h5>
+        <small><?= count($logs); ?> log(s) encontrados</small>
+      </div>
+    </div>
     <div class="table-responsive">
-    <table id="example" class="display table table-striped dt-stack" style="width:100%">
+    <table id="example" class="display table table-striped table-hover dt-stack app-table" style="width:100%">
       <thead>
         <tr>
         <th>ID</th>
@@ -37,6 +50,7 @@
   <?php else:?>
     <div class="alert alert-info mb-0">Nenhum log registrado ainda.</div>
   <?php endif;?>  
+  </div>
 </div>
 
 

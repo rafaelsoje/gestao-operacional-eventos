@@ -2,14 +2,16 @@
 
 <?php $this->section('content');?>
 
-<div class="container mt-3">
-    <div class="d-flex align-items-end justify-content-end mb-3">
-        <a href="<?= base_url('/operacional/planejamento/lista');?>" type="button" class="btn btn-success">Lista de eventos</a>
+<div class="page-shell mt-3 mb-5">
+    <div class="page-hero">
+        <div>
+            <h2><?= (isset($item)) ? "Atualização de planejamento" : "Previsão de custo"; ?></h2>
+            <p>Planeje equipe, consumos e custo previsto antes do evento.</p>
+        </div>
+        <a href="<?= base_url('/operacional/planejamento/lista');?>" type="button" class="btn btn-outline-secondary">Lista de eventos</a>
     </div>
-</div>
 
-<div class="container border pt-2 pb-2 mb-5">
-    <h3 class="text-center mb-3 border p-1 bg-white"><?= (isset($item))? "Atualização de cadastro" : "Previsão de custo";?></h3>
+<div class="content-card p-3">
     <form class="row g-3" method="post" action="<?= url_to('cadastro.planejamento.store');?>" enctype="multipart/form-data">
         <?= csrf_field(); ?>
         
@@ -50,7 +52,7 @@
                 </select>
             <?php endif?>
         </div>                             
-        <div class="p-1 fs-5">Equipe operacional</div>                 
+        <div class="form-section-title">Equipe operacional</div>
         <div class="col-md-1">
             <label class="form-label">Montagem</label>
             <input type="number" class="form-control" name="premontagem" <?= isset($item) ? 'value="' . $item->premontagem . '"' : ''; ?>>
@@ -94,7 +96,7 @@
             </select>
         </div>
         
-        <div class="p-1 fs-5">Consumo</div>        
+        <div class="form-section-title">Consumo</div>
         <div class="col-md-3">
             <label class="form-label">Valor Diesel</label>
             <input type="text" class="form-control money" name="valor_diesel" <?= isset($item) ? 'value="' . $item->valor_diesel . '"' : ''; ?>>
@@ -176,12 +178,12 @@
             <textarea class="form-control" id="exampleFormControlTextarea1" rows="4" name="descricao" ><?= isset($item) ? $item->descricao : ''; ?></textarea>
         </div>        
         <div class="col-12 d-flex justify-content-end">
-            <button type="submit" class="btn btn-primary "><?= (isset($item)? "Atualizar cadastro operacional" : "Cadastrar dados operaionais" )?></button>
+            <button type="submit" class="btn btn-primary "><?= (isset($item)? "Atualizar planejamento" : "Cadastrar previsão" )?></button>
         </div>
     </form>
 </div>
+</div>
 
-  
   <script>
     $(document).ready(function(){
 

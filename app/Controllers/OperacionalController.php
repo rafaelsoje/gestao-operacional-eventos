@@ -791,7 +791,7 @@ class OperacionalController extends Home
 
         if ($tableReady) {
             $taxas = $db->table('taxas_cozinha tc')
-                ->select('tc.*, op.nome AS evento_nome, op.data AS evento_data, users.name AS responsavel_nome')
+                ->select('tc.*, op.nome AS evento_nome, op.data AS evento_data, op.flag AS evento_flag, users.name AS responsavel_nome')
                 ->select("CASE WHEN tc.status_financeiro = 'pago' THEN COALESCE(tc.valor_taxa, 0) ELSE COALESCE(tc.valor_pago, 0) END AS valor_pago_efetivo", false)
                 ->join('operacional op', 'op.id = tc.operacional_id', 'left')
                 ->join('users', 'users.id = tc.responsavel_id', 'left')
@@ -802,7 +802,7 @@ class OperacionalController extends Home
         }
 
         $eventos = (new Operacional())
-            ->select('id, nome, data')
+            ->select('id, nome, data, flag')
             ->orderBy('data', 'desc')
             ->findAll();
 

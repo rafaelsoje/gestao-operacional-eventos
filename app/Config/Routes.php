@@ -11,13 +11,19 @@ $routes->get('/logout', 'Login::logout', ['as' => 'logout']);
 $routes->get('recovery', 'Login::recovery', ['as' => 'recovery']);
 $routes->post('recovery', 'Login::recoverySend', ['as' => 'recovery.send', 'filter' => 'csrf']);
 $routes->post('recovery/store', 'Login::recoveryStore', ['as' => 'recovery.store', 'filter' => 'csrf']);
+$routes->post('/webhooks/asaas', 'SubscriptionController::webhook', ['as' => 'webhooks.asaas']);
 
 // Grupo de rotas que requer autenticação
-$routes->group('', ['filter' => 'auth'], function($routes){
+$routes->group('', ['filter' => ['auth', 'subscription']], function($routes){
     
     $routes->get('/usuarios', 'AdminController::usuarios',['as' => 'usuarios', 'filter' => 'role:admin']);
     $routes->get('/calendario', 'Home::calendario');    
     $routes->get('/logs', 'AdminController::logs', ['as' => 'logs', 'filter' => 'role:superuser']);
+    $routes->get('/assinatura', 'SubscriptionController::index', ['as' => 'subscription.index']);
+    $routes->post('/assinatura/sincronizar', 'SubscriptionController::sync', ['as' => 'subscription.sync', 'filter' => 'csrf']);
+    $routes->post('/assinatura/gerar-pix', 'SubscriptionController::regeneratePix', ['as' => 'subscription.regenerate', 'filter' => 'csrf']);
+    $routes->post('/assinatura/liberar-manual', 'SubscriptionController::manualPaid', ['as' => 'subscription.manualPaid', 'filter' => ['csrf', 'role:superuser']]);
+    $routes->post('/assinatura/configuracoes', 'SubscriptionController::settingsUpdate', ['as' => 'subscription.settings', 'filter' => ['csrf', 'role:superuser']]);
     
     $routes->get('/cadastro/usuario', 'AdminController::cadastroUsuario', ['as' => 'usuario', 'filter' => 'role:admin']);
     $routes->post('/cadastro/usuario', 'AdminController::usuarioStore', ['as' => 'usuario.store', 'filter' => ['csrf', 'role:admin']]);
