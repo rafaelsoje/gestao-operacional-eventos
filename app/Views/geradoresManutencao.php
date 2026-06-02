@@ -71,9 +71,24 @@ if (session()->has('error')) {
     .progress-bar.generator-warning-soft {
         background-color: #d89a1a !important;
     }
+    .geradores-page .generator-card {
+        padding: 1.15rem;
+    }
+    .geradores-page .generator-title {
+        color: #172033;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+    .geradores-page .generator-value {
+        font-size: 1.65rem;
+        line-height: 1.15;
+    }
+    .geradores-page .section-card {
+        padding: 1.2rem;
+    }
 </style>
 
-<div class="page-shell mt-3">
+<div class="page-shell mt-3 mb-5 geradores-page">
     <div class="page-hero">
         <div>
             <h2>Geradores</h2>
@@ -92,22 +107,20 @@ if (session()->has('error')) {
                 : (!empty($g1['is_warning']) ? 'generator-warning-soft' : 'bg-success');
         ?>
         <div class="col-12 col-md-6">
-            <div class="metric-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title mb-1">Gerador G1</h5>
-                    <div class="fs-4 fw-bold <?= $g1ValueClass; ?>">
-                        <?= esc($hourOnly((string)($g1['total_hhmm'] ?? '00:00'))); ?> / 200
-                    </div>
-                    <div class="progress mt-2" style="height: 10px;">
-                        <div class="progress-bar <?= $g1BarClass; ?>" role="progressbar" style="width: <?= (float)($g1['progress_percent'] ?? 0); ?>%"></div>
-                    </div>
-                    <small class="text-muted mt-2 d-block">
-                        Última manutenção: <?= !empty($g1['last_maintenance_date']) ? br_date((string)$g1['last_maintenance_date']) : 'não registrada'; ?>
-                    </small>
-                    <small class="text-muted d-block">
-                        Projeção manutenção: <?= isset($g1['days_to_maintenance']) ? ((int)$g1['days_to_maintenance'] . ' dias') : 'sem dados recentes'; ?>
-                    </small>
+            <div class="metric-card generator-card h-100">
+                <div class="generator-title mb-2">Gerador G1</div>
+                <div class="generator-value fw-bold <?= $g1ValueClass; ?>">
+                    <?= esc($hourOnly((string)($g1['total_hhmm'] ?? '00:00'))); ?> / 200
                 </div>
+                <div class="progress mt-3" style="height: 10px;">
+                    <div class="progress-bar <?= $g1BarClass; ?>" role="progressbar" style="width: <?= (float)($g1['progress_percent'] ?? 0); ?>%"></div>
+                </div>
+                <small class="text-muted mt-3 d-block">
+                    Última manutenção: <?= !empty($g1['last_maintenance_date']) ? br_date((string)$g1['last_maintenance_date']) : 'não registrada'; ?>
+                </small>
+                <small class="text-muted d-block">
+                    Projeção manutenção: <?= isset($g1['days_to_maintenance']) ? ((int)$g1['days_to_maintenance'] . ' dias') : 'sem dados recentes'; ?>
+                </small>
             </div>
         </div>
         <?php $g2 = $usage['g2']; ?>
@@ -120,36 +133,33 @@ if (session()->has('error')) {
                 : (!empty($g2['is_warning']) ? 'generator-warning-soft' : 'bg-success');
         ?>
         <div class="col-12 col-md-6">
-            <div class="metric-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title mb-1">Gerador G2</h5>
-                    <div class="fs-4 fw-bold <?= $g2ValueClass; ?>">
-                        <?= esc($hourOnly((string)($g2['total_hhmm'] ?? '00:00'))); ?> / 200
-                    </div>
-                    <div class="progress mt-2" style="height: 10px;">
-                        <div class="progress-bar <?= $g2BarClass; ?>" role="progressbar" style="width: <?= (float)($g2['progress_percent'] ?? 0); ?>%"></div>
-                    </div>
-                    <small class="text-muted mt-2 d-block">
-                        Última manutenção: <?= !empty($g2['last_maintenance_date']) ? br_date((string)$g2['last_maintenance_date']) : 'não registrada'; ?>
-                    </small>
-                    <small class="text-muted d-block">
-                        Projeção manutenção: <?= isset($g2['days_to_maintenance']) ? ((int)$g2['days_to_maintenance'] . ' dias') : 'sem dados recentes'; ?>
-                    </small>
+            <div class="metric-card generator-card h-100">
+                <div class="generator-title mb-2">Gerador G2</div>
+                <div class="generator-value fw-bold <?= $g2ValueClass; ?>">
+                    <?= esc($hourOnly((string)($g2['total_hhmm'] ?? '00:00'))); ?> / 200
                 </div>
+                <div class="progress mt-3" style="height: 10px;">
+                    <div class="progress-bar <?= $g2BarClass; ?>" role="progressbar" style="width: <?= (float)($g2['progress_percent'] ?? 0); ?>%"></div>
+                </div>
+                <small class="text-muted mt-3 d-block">
+                    Última manutenção: <?= !empty($g2['last_maintenance_date']) ? br_date((string)$g2['last_maintenance_date']) : 'não registrada'; ?>
+                </small>
+                <small class="text-muted d-block">
+                    Projeção manutenção: <?= isset($g2['days_to_maintenance']) ? ((int)$g2['days_to_maintenance'] . ' dias') : 'sem dados recentes'; ?>
+                </small>
             </div>
         </div>
     </div>
 
     <?php if ($tableReady): ?>
-        <div class="content-card mb-3">
-            <div class="card-body">
+        <div class="content-card section-card mb-3">
                 <div class="content-card-header">
                     <div>
                         <h5>Registrar manutenção</h5>
                         <small>Atualize o marco de manutenção dos geradores.</small>
                     </div>
                 </div>
-                <form class="row g-2" method="post" action="<?= url_to('geradores.store'); ?>">
+                <form class="row g-3 align-items-end" method="post" action="<?= url_to('geradores.store'); ?>">
                     <?= csrf_field(); ?>
                     <div class="col-12 col-md-2">
                         <label class="form-label">Gerador</label>
@@ -170,11 +180,9 @@ if (session()->has('error')) {
                         <button type="submit" class="btn btn-primary w-100">Salvar</button>
                     </div>
                 </form>
-            </div>
         </div>
 
-        <div class="content-card">
-            <div class="card-body">
+        <div class="content-card section-card">
                 <div class="content-card-header">
                     <div>
                         <h5>Histórico de manutenções</h5>
@@ -217,11 +225,11 @@ if (session()->has('error')) {
                             <?php if (!empty($rows)): ?>
                                 <?php foreach ($rows as $item): ?>
                                     <tr>
-                                        <td data-order="<?= esc((string)$item->data_manutencao); ?>" data-search="<?= esc((string)$item->data_manutencao); ?>"><?= br_date((string)$item->data_manutencao); ?></td>
-                                        <td><?= esc((string)$item->gerador); ?></td>
-                                        <td><?= esc((string)($item->observacao ?? '')); ?></td>
-                                        <td><?= !empty($item->created_at) ? esc(date('d/m/Y H:i', strtotime((string)$item->created_at))) : '-'; ?></td>
-                                        <td class="text-center">
+                                        <td data-label="Data" data-order="<?= esc((string)$item->data_manutencao); ?>" data-search="<?= esc((string)$item->data_manutencao); ?>"><?= br_date((string)$item->data_manutencao); ?></td>
+                                        <td data-label="Gerador"><?= esc((string)$item->gerador); ?></td>
+                                        <td data-label="Observação"><?= esc((string)($item->observacao ?? '')); ?></td>
+                                        <td data-label="Registrado em"><?= !empty($item->created_at) ? esc(date('d/m/Y H:i', strtotime((string)$item->created_at))) : '-'; ?></td>
+                                        <td data-label="Ações" class="text-center action-cell">
                                             <button type="button" class="btn btn-warning btn-sm text-white btn-icon" data-bs-toggle="modal" data-bs-target="#editManut<?= (int)$item->id; ?>">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
@@ -275,11 +283,9 @@ if (session()->has('error')) {
                         </tbody>
                     </table>
                 </div>
-            </div>
         </div>
 
-        <div class="content-card mt-3">
-            <div class="card-body">
+        <div class="content-card section-card mt-3">
                 <div class="content-card-header">
                     <div>
                         <h5>Histórico de uso dos geradores</h5>
@@ -312,11 +318,11 @@ if (session()->has('error')) {
                                             $ttH = str_pad((string)intdiv(max(0, $totMin), 60), 2, '0', STR_PAD_LEFT) . ':' . str_pad((string)(max(0, $totMin) % 60), 2, '0', STR_PAD_LEFT);
                                         ?>
                                         <tr>
-                                            <td data-order="<?= esc((string)$u->data); ?>"><?= br_date((string)$u->data); ?></td>
-                                            <td><?= esc((string)($u->nome ?? '-')); ?></td>
-                                            <td><?= esc($g1H); ?></td>
-                                            <td><?= esc($g2H); ?></td>
-                                            <td><?= esc($ttH); ?></td>
+                                            <td data-label="Data" data-order="<?= esc((string)$u->data); ?>"><?= br_date((string)$u->data); ?></td>
+                                            <td data-label="Evento"><?= esc((string)($u->nome ?? '-')); ?></td>
+                                            <td data-label="Uso G1"><?= esc($g1H); ?></td>
+                                            <td data-label="Uso G2"><?= esc($g2H); ?></td>
+                                            <td data-label="Total uso"><?= esc($ttH); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
@@ -328,7 +334,6 @@ if (session()->has('error')) {
                         </table>
                     </div>
                 <?php endif; ?>
-            </div>
         </div>
     <?php endif; ?>
 </div>

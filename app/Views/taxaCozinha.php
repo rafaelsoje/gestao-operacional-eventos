@@ -68,8 +68,11 @@ $alertsFor = static function (object $taxa): array {
         <div class="flash text-center alert alert-success text-success"><?= session()->get('success') ?? ''; ?></div>
     <?php endif; ?>
     <?php if (!$tableReady) : ?>
-        <div class="alert alert-warning">
-            A tabela da taxa de cozinha ainda não existe. Execute as migrations para liberar o salvamento.
+        <div class="app-banner app-banner-warning mb-3">
+            <div>
+                <strong>Tabela não encontrada</strong>
+                <p>A tabela da taxa de cozinha ainda não existe. Execute as migrations para liberar o salvamento.</p>
+            </div>
         </div>
     <?php endif; ?>
 
@@ -106,10 +109,10 @@ $alertsFor = static function (object $taxa): array {
         </button>
     </div>
 
-    <div class="alert alert-info d-flex align-items-start gap-2">
-        <i class="bi bi-info-circle mt-1"></i>
+    <div class="app-banner app-banner-info mb-3">
         <div>
-            Você pode lançar cobrança para evento planejado antes da realização. Use o status financeiro e a data da cobrança para acompanhar pendências.
+            <strong>Cobrança antecipada</strong>
+            <p>Você pode lançar cobrança para evento planejado antes da realização. Use o status financeiro e a data da cobrança para acompanhar pendências.</p>
         </div>
     </div>
 
@@ -177,7 +180,18 @@ $alertsFor = static function (object $taxa): array {
                 </table>
             </div>
         <?php else: ?>
-            <p class="text-muted mb-0">Nenhuma taxa de cozinha cadastrada.</p>
+            <div class="empty-state">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="empty-state-icon"><i class="bi bi-cash-coin"></i></span>
+                    <div>
+                        <h5>Nenhuma cobrança cadastrada</h5>
+                        <p>Cadastre a primeira taxa de cozinha para acompanhar pagamentos e pendências.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#taxaCreateModal">
+                    <i class="bi bi-plus-circle"></i> Cadastrar taxa
+                </button>
+            </div>
         <?php endif; ?>
     </div>
 </div>
@@ -188,6 +202,12 @@ $alertsFor = static function (object $taxa): array {
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="taxaCreateModalLabel">Cadastrar taxa de cozinha</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-tabs">
+                <span class="nav-link active"><i class="bi bi-calendar-event"></i> Evento</span>
+                <span class="nav-link"><i class="bi bi-cash-coin"></i> Taxa</span>
+                <span class="nav-link"><i class="bi bi-credit-card"></i> Pagamento</span>
+                <span class="nav-link"><i class="bi bi-clipboard-check"></i> Controle</span>
             </div>
             <div class="modal-body">
                 <form id="taxaCreateForm" method="post" action="<?= url_to('taxa.cozinha.store'); ?>" enctype="multipart/form-data">
@@ -282,6 +302,12 @@ $alertsFor = static function (object $taxa): array {
                 <div class="modal-header">
                     <h1 class="modal-title fs-5" id="taxaEditLabel<?= $modalId; ?>">Alterar taxa de cozinha</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-tabs">
+                    <span class="nav-link active"><i class="bi bi-calendar-event"></i> Evento</span>
+                    <span class="nav-link"><i class="bi bi-cash-coin"></i> Taxa</span>
+                    <span class="nav-link"><i class="bi bi-credit-card"></i> Pagamento</span>
+                    <span class="nav-link"><i class="bi bi-clipboard-check"></i> Controle</span>
                 </div>
                 <div class="modal-body">
                     <form id="taxaEditForm<?= $modalId; ?>" method="post" action="<?= url_to('taxa.cozinha.store'); ?>" enctype="multipart/form-data">

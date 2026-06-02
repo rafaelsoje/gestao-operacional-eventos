@@ -246,13 +246,27 @@
       }
     ?>
     <?php if (!empty($subscriptionState['enabled']) && !empty($subscriptionState['warning']) && empty($subscriptionPage)): ?>
-      <div class="container-fluid mt-3">
-        <div class="alert <?= !empty($subscriptionState['blocked']) ? 'alert-danger' : 'alert-warning'; ?> d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <span><?= esc((string)($subscriptionState['message'] ?? 'Mensalidade pendente.')); ?></span>
-          <a href="<?= base_url('assinatura'); ?>" class="btn btn-sm <?= !empty($subscriptionState['blocked']) ? 'btn-danger' : 'btn-warning'; ?>">
-            Ver pendência
-          </a>
+      <?php
+        $subscriptionBlocked = !empty($subscriptionState['blocked']);
+        $daysUntilBlock = (int)($subscriptionState['days_until_block'] ?? 0);
+        $bannerTitle = $subscriptionBlocked ? 'Sistema bloqueado por mensalidade vencida' : 'Mensalidade do sistema pendente';
+        $bannerDetail = $subscriptionBlocked
+          ? 'Regularize o pagamento para liberar as funcionalidades.'
+          : ($daysUntilBlock >= 0
+              ? 'Bloqueio previsto em ' . $daysUntilBlock . ' dia(s), caso o pagamento não seja identificado.'
+              : 'A tolerância terminou. Regularize para evitar bloqueio.');
+      ?>
+      <div class="subscription-banner app-banner <?= $subscriptionBlocked ? 'app-banner-danger' : 'app-banner-warning'; ?>">
+        <div class="d-flex align-items-start gap-2">
+          <i class="bi <?= $subscriptionBlocked ? 'bi-lock-fill text-danger' : 'bi-exclamation-triangle-fill text-warning'; ?> mt-1"></i>
+          <div>
+            <strong><?= esc($bannerTitle); ?></strong>
+            <p><?= esc((string)($subscriptionState['message'] ?? 'Mensalidade pendente.')); ?> <?= esc($bannerDetail); ?></p>
+          </div>
         </div>
+        <a href="<?= base_url('assinatura'); ?>" class="btn btn-sm <?= $subscriptionBlocked ? 'btn-danger' : 'btn-warning'; ?>">
+          Ver pagamento
+        </a>
       </div>
       <div class="modal fade" id="subscriptionPendingModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">

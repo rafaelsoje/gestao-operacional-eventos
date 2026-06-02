@@ -2,7 +2,28 @@
 
 <?php $this->section('content');?>
 
-<div class="page-shell mt-3">
+<div class="page-shell mt-3 mb-5 profile-page">
+    <style>
+        .profile-page .profile-card {
+            padding: 1.4rem;
+        }
+        .profile-page .profile-avatar {
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+            border: 6px solid #eef6ff;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+        }
+        .profile-page .access-card {
+            padding: 1.25rem;
+        }
+        .profile-page .security-section {
+            padding-top: 1rem;
+            margin-top: 1rem;
+            border-top: 1px solid #e5edf6;
+        }
+    </style>
+
     <div class="page-hero">
         <div>
             <h2>Meu perfil</h2>
@@ -11,53 +32,59 @@
     </div>
 
     <?php if (session()->has('error')) : ?>
-        <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
+        <div class="app-banner app-banner-danger mb-3">
+            <div><strong>Não foi possível atualizar</strong><p><?= esc((string)session()->get('error')); ?></p></div>
+        </div>
     <?php endif; ?>
     <?php if (session()->has('success')) : ?>
-        <div class="flash text-center alert alert-success text-success"><?php echo session()->get('success') ?? ''; ?></div>
+        <div class="app-banner app-banner-info mb-3">
+            <div><strong>Perfil atualizado</strong><p><?= esc((string)session()->get('success')); ?></p></div>
+        </div>
     <?php endif; ?>
 
     <div class="row g-3">
         <div class="col-12 col-lg-4">
-            <div class="content-card h-100">
-                <div class="card-body text-center">
-                    <img src="<?= url_to('avatar.show', $user->avatar ?? 'avatar.svg');?>" class="rounded-circle mb-3" style="width: 140px; height: 140px; object-fit: cover;" alt="Foto do usuário">
-                    <h5 class="mb-1"><?= esc($user->name ?? '') ?></h5>
+            <div class="content-card profile-card h-100 text-center">
+                <img src="<?= url_to('avatar.show', $user->avatar ?? 'avatar.svg');?>" class="profile-avatar rounded-circle mb-3" alt="Foto do usuário">
+                <h5 class="mb-1"><?= esc($user->name ?? '') ?></h5>
+                <div class="text-muted"><?= esc($user->email ?? '') ?></div>
+                <div class="mt-2">
+                    <?php
+                        $nivel = 'Usuário comum';
+                        if ($role === 'admin') {
+                            $nivel = 'Administrador';
+                        } elseif ($role === 'superuser') {
+                            $nivel = 'Superusuário';
+                        }
+                    ?>
+                    <span class="badge bg-secondary"><?= $nivel ?></span>
+                </div>
+                <div class="content-card-soft text-start mt-4">
+                    <strong>Conta</strong>
                     <div class="text-muted"><?= esc($user->email ?? '') ?></div>
-                    <div class="mt-2">
-                        <?php
-                            $nivel = 'Usuário comum';
-                            if ($role === 'admin') {
-                                $nivel = 'Administrador';
-                            } elseif ($role === 'superuser') {
-                                $nivel = 'Superusuário';
-                            }
-                        ?>
-                        <span class="badge bg-secondary"><?= $nivel ?></span>
-                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-lg-8">
-            <div class="content-card">
-                <div class="card-body">
-                    <div class="content-card-header">
-                        <div>
-                            <h5>Dados de acesso</h5>
-                            <small>Avatar e alteração de senha</small>
-                        </div>
+            <div class="content-card access-card">
+                <div class="content-card-header">
+                    <div>
+                        <h5>Dados de acesso</h5>
+                        <small>Avatar e alteração de senha</small>
                     </div>
-                    <!-- Atualização de avatar e senha do usuário autenticado. -->
-                    <form method="post" action="<?= url_to('perfil.update');?>" enctype="multipart/form-data">
-                        <?= csrf_field(); ?>
+                </div>
+                <!-- Atualização de avatar e senha do usuário autenticado. -->
+                <form method="post" action="<?= url_to('perfil.update');?>" enctype="multipart/form-data">
+                    <?= csrf_field(); ?>
 
-                        <div class="mb-3">
-                            <label class="form-label">Atualizar foto</label>
-                            <input type="file" class="form-control" name="avatar">
-                        </div>
+                    <div class="content-card-soft mb-3">
+                        <label class="form-label fw-semibold">Atualizar foto</label>
+                        <input type="file" class="form-control" name="avatar">
+                    </div>
 
-                        <hr>
+                    <div class="security-section">
+                        <div class="form-section-title mt-0">Segurança</div>
 
                         <div class="mb-3">
                             <label class="form-label">Senha atual</label>
@@ -74,12 +101,12 @@
                             <input type="password" class="form-control" id="new_password_confirm" name="new_password_confirm" placeholder="Repita a nova senha">
                             <div id="password_match_feedback" class="form-text"></div>
                         </div>
+                    </div>
 
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary">Salvar alterações</button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-primary">Salvar alterações</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

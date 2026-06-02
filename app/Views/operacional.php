@@ -193,16 +193,13 @@ $hourOnly = static function (?string $hhmm): string {
         font-weight: 700;
     }
 
-    .chart {
-        padding: 0 1rem;
+    .dashboard-chart-grid {
+        padding: 0 1rem 1rem;
     }
 
-    .chart-box {
-        min-height: 320px;
-        border: 1px solid rgba(15, 23, 42, 0.08);
-        border-radius: 8px;
-        background: #fff;
-        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06) !important;
+    .dashboard-chart-grid .chart {
+        margin-left: 0;
+        margin-right: 0;
     }
 
     .dashboard-table-card {
@@ -252,8 +249,8 @@ $hourOnly = static function (?string $hhmm): string {
             flex-direction: column;
         }
 
-        .chart {
-            padding: 0 0.75rem;
+        .dashboard-chart-grid {
+            padding: 0 0.75rem 0.75rem;
         }
 
         .dashboard-table-card {
@@ -351,20 +348,26 @@ $hourOnly = static function (?string $hhmm): string {
 
 <div class="dashboard-modern-alerts">
     <?php if (!empty($generatorUsage['has_alert'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show text-start mb-3" role="alert">
-            Atenção: um ou mais geradores já atingiram 200 horas de uso e precisam de manutenção.
-            <a href="<?= base_url('operacional/geradores'); ?>" class="btn btn-sm btn-danger ms-2">Acessar Geradores</a>
+        <div class="app-banner app-banner-danger alert-dismissible fade show mb-3" role="alert">
+            <div>
+                <strong>Manutenção vencida</strong>
+                <p>Um ou mais geradores já atingiram 200 horas de uso e precisam de manutenção.</p>
+            </div>
+            <a href="<?= base_url('operacional/geradores'); ?>" class="btn btn-sm btn-danger">Acessar geradores</a>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     <?php endif; ?>
     <?php if (!empty($generatorUsage['has_warning'])): ?>
-        <div class="alert alert-warning alert-dismissible fade show text-start mb-3" role="alert">
-            Alerta: gerador próximo da manutenção (acima de 180 horas de uso).
+        <div class="app-banner app-banner-warning alert-dismissible fade show mb-3" role="alert">
+            <div>
+                <strong>Gerador próximo da manutenção</strong>
+                <p>Há gerador acima de 180 horas de uso. Programe a manutenção antes do limite.</p>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     <?php endif; ?>
     <?php if (!empty($cedaeAlert['is_alert'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show text-start mb-3" role="alert">
+        <div class="app-banner app-banner-danger alert-dismissible fade show mb-3" role="alert">
             <?php
                 // Lista de eventos com link direto para edição quando houver ID disponível.
                 $cedaeEvents = is_array($cedaeAlert['events'] ?? null) ? $cedaeAlert['events'] : [];
@@ -390,14 +393,17 @@ $hourOnly = static function (?string $hhmm): string {
                 }
                 $cedaeEventList = implode(', ', $cedaeLabels);
             ?>
-            Atenção CEDAE: variação de consumo acima de <?= br_number((float)$cedaeAlert['limit'], 0); ?> m³.
-            <?= $cedaeEventList !== '' ? (' ' . $cedaeEventList . '.') : ''; ?>
-            Possível vazamento ou consumo anormal de água.
+            <div>
+                <strong>Atenção CEDAE</strong>
+                <p>Variação de consumo acima de <?= br_number((float)$cedaeAlert['limit'], 0); ?> m³.
+                <?= $cedaeEventList !== '' ? (' ' . $cedaeEventList . '.') : ''; ?>
+                Possível vazamento ou consumo anormal de água.</p>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     <?php endif; ?>
     <?php if (!empty($pocoAlert['is_alert'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show text-start mb-3" role="alert">
+        <div class="app-banner app-banner-danger alert-dismissible fade show mb-3" role="alert">
             <?php
                 // Mesmo padrão do alerta CEDAE, mas usando consumo da água do poço.
                 $pocoEvents = is_array($pocoAlert['events'] ?? null) ? $pocoAlert['events'] : [];
@@ -423,9 +429,12 @@ $hourOnly = static function (?string $hhmm): string {
                 }
                 $pocoEventList = implode(', ', $pocoLabels);
             ?>
-            Atenção Água do Poço: variação de consumo acima de <?= br_number((float)$pocoAlert['limit'], 0); ?> m³.
-            <?= $pocoEventList !== '' ? (' ' . $pocoEventList . '.') : ''; ?>
-            Possível vazamento ou consumo anormal de água.
+            <div>
+                <strong>Atenção água do poço</strong>
+                <p>Variação de consumo acima de <?= br_number((float)$pocoAlert['limit'], 0); ?> m³.
+                <?= $pocoEventList !== '' ? (' ' . $pocoEventList . '.') : ''; ?>
+                Possível vazamento ou consumo anormal de água.</p>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     <?php endif; ?>
@@ -665,45 +674,59 @@ $hourOnly = static function (?string $hhmm): string {
 </div>
 </div>
 
-<div class="chart row g-3 mt-2 mb-2">
-    <div class="col-12 col-md-6">
-        <div class="chart-box shadow-lg" id="donut_chart"></div>
+<div class="dashboard-chart-grid">
+    <h5 class="chart-section-title">Distribuição e custos</h5>
+    <div class="chart row g-3 mt-2 mb-2">
+        <div class="col-12 col-md-6">
+            <div class="chart-box" id="donut_chart"></div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="chart-box" id="column_chart"></div>
+        </div>
     </div>
-    <div class="col-12 col-md-6">
-        <div class="chart-box shadow-lg" id="column_chart"></div>
-    </div>
-</div>
 
-<div class="chart row g-3 mt-2 mb-2">
-    <div class="col-12 col-lg-4">
-        <div class="chart-box shadow" id="column_chart2" ></div>
+    <h5 class="chart-section-title">Indicadores operacionais</h5>
+    <div class="chart row g-3 mt-2 mb-2">
+        <div class="col-12 col-lg-4">
+            <div class="chart-box" id="column_chart2"></div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="chart-box" id="public_category_chart"></div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="chart-box" id="taxa_cozinha_status_chart"></div>
+        </div>
     </div>
-    <div class="col-12 col-lg-4">
-        <div class="chart-box shadow" id="public_category_chart"></div>
-    </div>
-    <div class="col-12 col-lg-4">
-        <div class="chart-box shadow" id="taxa_cozinha_status_chart"></div>
-    </div>
-</div>
 
-<div class="chart row g-3 mt-2 mb-2">
-    <div class="col-12 col-md-6">
-        <?php if ($hasTopEvents): ?>
-            <div class="chart-box shadow" id="top_events_chart"></div>
-        <?php else: ?>
-            <div class="chart-box shadow d-flex align-items-center justify-content-center text-muted">
-                Ainda não há eventos suficientes para montar o ranking.
-            </div>
-        <?php endif; ?>
+    <h5 class="chart-section-title">Ranking e manutenção</h5>
+    <div class="chart row g-3 mt-2 mb-2">
+        <div class="col-12 col-md-6">
+            <?php if ($hasTopEvents): ?>
+                <div class="chart-box" id="top_events_chart"></div>
+            <?php else: ?>
+                <div class="chart-box d-flex align-items-center justify-content-center">
+                    <div class="empty-state w-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="empty-state-icon"><i class="bi bi-bar-chart"></i></span>
+                            <div>
+                                <h5>Ranking indisponível</h5>
+                                <p>Ainda não há eventos suficientes para montar o ranking.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="chart-box" id="line_generator_chart"></div>
+        </div>
     </div>
-     <div class="col-12 col-md-6">
-        <div class="chart-box shadow" id="line_generator_chart"></div>
-     </div>
-</div>
 
-<div class="chart row g-3 mt-2 mb-2">
-    <div class="col-12">
-        <div class="chart-box shadow" id="line_chart"></div>
+    <h5 class="chart-section-title">Custo anual</h5>
+    <div class="chart row g-3 mt-2 mb-2">
+        <div class="col-12">
+            <div class="chart-box" id="line_chart"></div>
+        </div>
     </div>
 </div>
 
@@ -733,7 +756,15 @@ $hourOnly = static function (?string $hhmm): string {
             </form>
         </div>
     <?php else:?>
-        <h4 class="mt-4">Sem informaçẽos para exibir!</h4>
+        <div class="empty-state mt-4">
+            <div class="d-flex align-items-center gap-3">
+                <span class="empty-state-icon"><i class="bi bi-calendar-x"></i></span>
+                <div>
+                    <h4>Sem informações para exibir</h4>
+                    <p>Cadastre o primeiro evento para alimentar o dashboard.</p>
+                </div>
+            </div>
+        </div>
     <?php endif;?>
  <div>
     <a href="<?= (isset($get))? base_url('operacional/planejamento/cadastro') : base_url('cadastro/operacional') ?>" class="btn btn-success">+ Cadastrar evento</a>
@@ -876,7 +907,15 @@ $hourOnly = static function (?string $hhmm): string {
             </div>
         </form>
     </div>
-    <div class="alert alert-info mt-4">Sem eventos no período selecionado.</div>
+    <div class="empty-state mt-4">
+        <div class="d-flex align-items-center gap-3">
+            <span class="empty-state-icon"><i class="bi bi-search"></i></span>
+            <div>
+                <h4>Sem eventos no período selecionado</h4>
+                <p>Ajuste os filtros ou cadastre um novo evento para este período.</p>
+            </div>
+        </div>
+    </div>
     <a href="<?= (isset($get))? base_url('operacional/planejamento/cadastro') : base_url('cadastro/operacional') ?>" class="btn btn-success px-4 mb-3 mt-2">+ Cadastrar evento</a>
 <?php endif ;?>
 

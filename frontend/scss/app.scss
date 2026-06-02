@@ -14,9 +14,17 @@
   --app-text: #172033;
   --app-muted: #64748b;
   --app-accent: #3197da;
+  --app-success: #198754;
+  --app-danger: #b4232f;
+  --app-warning: #b7791f;
 }
 
 .main {
+  background: var(--app-bg);
+  min-height: 100vh;
+}
+
+body {
   background: var(--app-bg);
 }
 
@@ -56,6 +64,13 @@
   border-radius: 8px !important;
   background: var(--app-surface);
   box-shadow: var(--app-shadow) !important;
+}
+
+.content-card-soft {
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: #f8fbff;
+  padding: 1rem;
 }
 
 .content-card-header {
@@ -107,6 +122,15 @@
   vertical-align: middle;
 }
 
+.app-table .money-cell,
+.app-table td[data-label*='Valor'],
+.app-table td[data-label*='Custo'],
+.app-table td[data-label='Pago'],
+.app-table td[data-label='Pagamento'] {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .app-table tbody tr:hover {
   background: #f8fbff;
 }
@@ -129,6 +153,12 @@
 .form-select {
   border-color: #dbe3ee;
   border-radius: 7px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: rgba(49, 151, 218, 0.65);
+  box-shadow: 0 0 0 0.18rem rgba(49, 151, 218, 0.14);
 }
 
 .modal-content {
@@ -161,6 +191,181 @@
   background: #f8fbff !important;
 }
 
+.app-banner {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--app-border);
+  border-left: 4px solid var(--app-accent);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+  color: var(--app-text);
+}
+
+.app-banner.alert-dismissible {
+  padding-right: 3.25rem;
+}
+
+.app-banner.alert-dismissible .btn-close {
+  position: absolute;
+  top: 50%;
+  right: 0.85rem;
+  padding: 0.45rem;
+  transform: translateY(-50%);
+}
+
+.app-banner strong {
+  display: block;
+  margin-bottom: 0.1rem;
+  color: var(--app-text);
+}
+
+.app-banner p {
+  margin: 0;
+  color: var(--app-muted);
+}
+
+.app-banner-warning {
+  border-left-color: var(--app-warning);
+  background: #fffaf0;
+}
+
+.app-banner-danger {
+  border-left-color: var(--app-danger);
+  background: #fff5f5;
+}
+
+.app-banner-info {
+  border-left-color: var(--app-accent);
+  background: #f1f8ff;
+}
+
+.subscription-banner {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  margin: 0.75rem 1rem 1rem;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.empty-state-icon {
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #e8f4fd;
+  color: var(--app-accent);
+  font-size: 1.35rem;
+}
+
+.empty-state h4,
+.empty-state h5 {
+  margin: 0;
+  color: var(--app-text);
+  font-weight: 800;
+}
+
+.empty-state p {
+  margin: 0.2rem 0 0;
+  color: var(--app-muted);
+}
+
+.chart-box {
+  width: 100%;
+  min-height: 360px;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow) !important;
+  padding: 0.75rem;
+  overflow: hidden;
+}
+
+.chart-section-title {
+  margin: 1.2rem 0 0.65rem;
+  color: var(--app-text);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.modal-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: #f8fbff;
+  border-bottom: 1px solid #e5edf6;
+}
+
+.modal-tabs .nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid #dbe3ee;
+  border-radius: 999px;
+  background: #fff;
+  color: #344054;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.45rem 0.65rem;
+}
+
+.modal-tabs .nav-link.active {
+  border-color: var(--app-accent);
+  background: var(--app-accent);
+  color: #fff;
+}
+
+@media (min-width: 1200px) {
+  .header {
+    width: 248px;
+  }
+
+  .header ~ main,
+  .header ~ #footer,
+  .main {
+    margin-left: 248px;
+    margin-right: 0;
+  }
+
+  .profile-img img {
+    width: 92px !important;
+    height: 92px !important;
+  }
+
+  .sitename {
+    font-size: 1.35rem;
+  }
+
+  .navmenu a,
+  .navmenu a:focus {
+    padding: 11px 16px;
+    gap: 10px;
+    font-size: 0.93rem;
+  }
+
+  .navmenu .navicon {
+    font-size: 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .page-shell {
     padding: 0 0.75rem 1rem;
@@ -170,5 +375,79 @@
   .content-card-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .app-banner,
+  .empty-state {
+    flex-direction: column;
+  }
+
+  .subscription-banner {
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
+  }
+
+  .table-responsive {
+    border: 0;
+  }
+
+  table.app-table,
+  table.dt-stack {
+    border-collapse: separate;
+    border-spacing: 0 0.75rem;
+  }
+
+  table.app-table thead,
+  table.dt-stack thead {
+    display: none;
+  }
+
+  table.app-table tbody tr,
+  table.dt-stack tbody tr {
+    display: block;
+    border: 1px solid var(--app-border);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+  }
+
+  table.app-table tbody td,
+  table.dt-stack tbody td {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100% !important;
+    padding: 0.7rem 0.85rem !important;
+    border-bottom: 1px solid #edf2f7;
+    text-align: right !important;
+  }
+
+  table.app-table tbody td:last-child,
+  table.dt-stack tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  table.app-table tbody td::before,
+  table.dt-stack tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 42%;
+    color: var(--app-muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  table.app-table tbody td.action-cell,
+  table.dt-stack tbody td.action-cell,
+  table.dt-stack tbody td.dashboard-actions-cell {
+    justify-content: flex-end !important;
+    flex-wrap: wrap;
+  }
+
+  .chart-box {
+    min-height: 300px;
   }
 }

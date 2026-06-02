@@ -2,38 +2,103 @@
 <?php $this->section('content');?>
 
 <style>
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px,1fr));
-  gap: 1.25rem;
-  padding: 1.5rem;
-}
-.calendar-box {
-  background:#fff;
-  border:1px solid rgba(15, 23, 42, 0.08);
-  border-radius:8px;
-  padding:.75rem;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
-}
-.calendar-box h3 {
-  font-size:1.1rem;
-  text-align:center;
-  margin:.25rem 0 .5rem;
-}
-#calendar-year-select { max-width:200px; margin: 1rem auto; }
-button{ height: 50%; }
-.table th, .table td { vertical-align: middle; }
-
-/* Fundo azul nos eventos */
-.fc .fc-daygrid-event {
-  background-color: #0d6efd !important;
-  border-color: #0d6efd !important;
-  color: #fff !important;
-}
-.fc .fc-daygrid-event .fc-event-title,
-.fc .fc-daygrid-event .fc-event-time {
-  color: #fff !important;
-}
+  .calendar-year-form {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 360px;
+  }
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 1rem;
+  }
+  .calendar-box {
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 8px;
+    padding: 0.85rem;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+  }
+  .calendar-box h3 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    margin: 0 0 0.65rem;
+    border-radius: 8px;
+    background: #f8fbff;
+    color: #172033;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+  .calendar-box .fc {
+    font-size: 0.88rem;
+  }
+  .calendar-box .fc-theme-standard td,
+  .calendar-box .fc-theme-standard th,
+  .calendar-box .fc-scrollgrid {
+    border-color: #e6edf5;
+  }
+  .calendar-box .fc-col-header-cell {
+    background: #f8fbff;
+  }
+  .calendar-box .fc-col-header-cell-cushion {
+    padding: 0.45rem 0.2rem;
+    color: #0f5f96;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-decoration: none;
+  }
+  .calendar-box .fc-daygrid-day-frame {
+    min-height: 76px;
+    padding: 0.2rem;
+  }
+  .calendar-box .fc-daygrid-day-number {
+    color: #0f7fc7;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .calendar-box .fc-day-other .fc-daygrid-day-number {
+    color: #b7d8ef;
+  }
+  .calendar-box .fc-day-today {
+    background: #fff8d8 !important;
+  }
+  .calendar-box .fc-daygrid-event {
+    margin-top: 0.18rem;
+    border: 0 !important;
+    border-radius: 6px;
+    padding: 0.12rem 0.35rem;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+  }
+  .calendar-box .fc-event-title,
+  .calendar-box .fc-event-time {
+    color: #fff !important;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .calendar-box .fc-daygrid-more-link {
+    color: #0f5f96;
+    font-size: 0.75rem;
+    font-weight: 800;
+  }
+  .table th,
+  .table td {
+    vertical-align: middle;
+  }
+  @media (max-width: 520px) {
+    .calendar-grid {
+      grid-template-columns: 1fr;
+    }
+    .calendar-year-form {
+      min-width: 0;
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
 </style>
 
 <div class="page-shell py-3">
@@ -42,11 +107,8 @@ button{ height: 50%; }
       <h2>Calendário operacional</h2>
       <p>Visão anual dos eventos operacionais de <?= esc($ano) ?>.</p>
     </div>
-  </div>
-
-  <!-- seletor de ano -->
-  <div class="content-card p-3 mb-3">
-    <form method="get" action="" class="d-flex justify-content-center align-items-center gap-2" id="formAno">
+    <form method="get" action="" class="calendar-year-form" id="formAno">
+      <label for="calendar-year-select" class="form-label mb-0 fw-bold">Ano</label>
       <input type="number" class="form-control" id="calendar-year-select" name="ano" value="<?= esc($ano) ?>" min="1970" max="2100">
       <button type="submit" class="btn btn-success">Pesquisar</button>
     </form>

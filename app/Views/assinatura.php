@@ -35,6 +35,9 @@ $openCharges = array_values(array_filter($charges, static function ($item): bool
 $paidCharges = array_values(array_filter($charges, static function ($item): bool {
     return (string)($item->status ?? '') === 'paid';
 }));
+$openAmount = array_reduce($openCharges, static fn (float $total, object $item): float => $total + (float)($item->amount ?? 0), 0.0);
+$paidAmount = array_reduce($paidCharges, static fn (float $total, object $item): float => $total + (float)($item->amount ?? 0), 0.0);
+$nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)$state['block_date'])) : '-';
 ?>
 
 <div class="page-shell mt-3 mb-5 subscription-page">
@@ -102,23 +105,34 @@ $paidCharges = array_values(array_filter($charges, static function ($item): bool
         <?php endif; ?>
     </div>
 
-    <?php if (!$enabled): ?>
-        <div class="alert alert-info">O controle de assinatura está desativado neste ambiente.</div>
+    <?php if (!$enabled && $canManualRelease): ?>
+        <div class="app-banner app-banner-info mb-3">
+            <div><strong>Assinatura desativada</strong><p>O controle de assinatura está desativado neste ambiente.</p></div>
+        </div>
     <?php endif; ?>
 
-    <?php if (!$tableReady): ?>
-        <div class="alert alert-warning">Execute as migrations para criar a tabela de mensalidades.</div>
+    <?php if (!$tableReady && $canManualRelease): ?>
+        <div class="app-banner app-banner-warning mb-3">
+            <div><strong>Tabela não encontrada</strong><p>Execute as migrations para criar a tabela de mensalidades.</p></div>
+        </div>
     <?php endif; ?>
 
-    <?php if (!$asaasConfigured && $enabled): ?>
-        <div class="alert alert-warning">
-            Configure <strong>ASAAS_API_KEY</strong> e <strong>ASAAS_CUSTOMER_ID</strong> no ambiente para gerar Pix automaticamente.
+    <?php if (!$asaasConfigured && $enabled && $canManualRelease): ?>
+        <div class="app-banner app-banner-warning mb-3">
+            <div>
+                <strong>Pix automático não configurado</strong>
+                <p>Configure ASAAS_API_KEY e ASAAS_CUSTOMER_ID no ambiente para gerar Pix automaticamente.</p>
+            </div>
         </div>
     <?php endif; ?>
 
     <?php if (!empty($state['message'])): ?>
-        <div class="alert <?= !empty($state['blocked']) ? 'alert-danger' : 'alert-warning'; ?>">
-            <?= esc((string)$state['message']); ?>
+        <div class="app-banner <?= !empty($state['blocked']) ? 'app-banner-danger' : 'app-banner-warning'; ?> mb-3">
+            <div>
+                <strong><?= !empty($state['blocked']) ? 'Acesso bloqueado' : 'Pagamento pendente'; ?></strong>
+                <p><?= esc((string)$state['message']); ?></p>
+            </div>
+            <span class="badge text-bg-light">Prazo: <?= esc($nextBlockDate); ?></span>
         </div>
     <?php endif; ?>
 
@@ -135,18 +149,50 @@ $paidCharges = array_values(array_filter($charges, static function ($item): bool
         <div class="col-12 col-md-4">
             <div class="status-tile">
                 <div class="label">Débitos em aberto</div>
-                <div class="value"><?= count($openCharges); ?></div>
-                <small class="text-muted">Mensalidades pendentes ou vencidas.</small>
+                <div class="value"><?= br_money($openAmount); ?></div>
+                <small class="text-muted"><?= count($openCharges); ?> mensalidade(s) pendente(s) ou vencida(s).</small>
             </div>
         </div>
         <div class="col-12 col-md-4">
             <div class="status-tile">
                 <div class="label">Mensalidades pagas</div>
-                <div class="value"><?= count($paidCharges); ?></div>
-                <small class="text-muted">Pagamentos reconhecidos no sistema.</small>
+                <div class="value"><?= br_money($paidAmount); ?></div>
+                <small class="text-muted"><?= count($paidCharges); ?> pagamento(s) reconhecido(s).</small>
             </div>
         </div>
     </div>
+
+    <?php if ($openCharges): ?>
+        <div class="content-card p-3 mb-3">
+            <div class="content-card-header">
+                <div>
+                    <h5>Débitos pendentes</h5>
+                    <small>Mensalidades que ainda precisam de confirmação de pagamento.</small>
+                </div>
+            </div>
+            <div class="row g-3">
+                <?php foreach ($openCharges as $openCharge): ?>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="content-card-soft h-100">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div>
+                                    <strong><?= esc((string)$openCharge->month_ref); ?></strong>
+                                    <div class="text-muted small">Vence em <?= !empty($openCharge->due_date) ? esc(date('d/m/Y', strtotime((string)$openCharge->due_date))) : '-'; ?></div>
+                                </div>
+                                <span class="badge text-bg-<?= $statusBadge((string)$openCharge->status); ?>"><?= esc($statusLabel((string)$openCharge->status)); ?></span>
+                            </div>
+                            <div class="fs-4 fw-bold mt-3"><?= br_money($openCharge->amount ?? 0); ?></div>
+                            <?php if (!empty($openCharge->invoice_url)): ?>
+                                <a href="<?= esc((string)$openCharge->invoice_url); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-success mt-2">
+                                    <i class="bi bi-box-arrow-up-right"></i> Pagar
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <?php if ($charge): ?>
         <div class="row g-3">
@@ -224,7 +270,15 @@ $paidCharges = array_values(array_filter($charges, static function ($item): bool
                             </div>
                         </div>
                     <?php else: ?>
-                        <p class="text-muted mb-0">O QR Code Pix ainda não foi gerado. Use o botão “Gerar Pix”.</p>
+                        <div class="empty-state">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="empty-state-icon"><i class="bi bi-qr-code"></i></span>
+                                <div>
+                                    <h5>Pix ainda não gerado</h5>
+                                    <p>Use o botão Gerar Pix para criar o QR Code desta mensalidade.</p>
+                                </div>
+                            </div>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -291,12 +345,12 @@ $paidCharges = array_values(array_filter($charges, static function ($item): bool
                     <tbody>
                         <?php foreach ($charges as $item): ?>
                             <tr>
-                                <td><?= esc((string)$item->month_ref); ?></td>
-                                <td><?= br_money($item->amount ?? 0); ?></td>
-                                <td><?= !empty($item->due_date) ? esc(date('d/m/Y', strtotime((string)$item->due_date))) : '-'; ?></td>
-                                <td><span class="badge text-bg-<?= $statusBadge((string)$item->status); ?>"><?= esc($statusLabel((string)$item->status)); ?></span></td>
-                                <td><?= !empty($item->paid_at) ? esc(date('d/m/Y H:i', strtotime((string)$item->paid_at))) : '-'; ?></td>
-                                <td>
+                                <td data-label="Referência"><?= esc((string)$item->month_ref); ?></td>
+                                <td data-label="Valor" class="money-cell"><?= br_money($item->amount ?? 0); ?></td>
+                                <td data-label="Vencimento"><?= !empty($item->due_date) ? esc(date('d/m/Y', strtotime((string)$item->due_date))) : '-'; ?></td>
+                                <td data-label="Status"><span class="badge text-bg-<?= $statusBadge((string)$item->status); ?>"><?= esc($statusLabel((string)$item->status)); ?></span></td>
+                                <td data-label="Pagamento"><?= !empty($item->paid_at) ? esc(date('d/m/Y H:i', strtotime((string)$item->paid_at))) : '-'; ?></td>
+                                <td data-label="Link">
                                     <?php if (!empty($item->invoice_url) && (string)$item->status !== 'paid'): ?>
                                         <a href="<?= esc((string)$item->invoice_url); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
                                             Pagar
@@ -311,7 +365,15 @@ $paidCharges = array_values(array_filter($charges, static function ($item): bool
                 </table>
             </div>
         <?php else: ?>
-            <p class="text-muted mb-0">Nenhuma mensalidade encontrada.</p>
+            <div class="empty-state">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="empty-state-icon"><i class="bi bi-receipt"></i></span>
+                    <div>
+                        <h5>Nenhuma mensalidade encontrada</h5>
+                        <p>Quando a primeira cobrança for gerada, ela aparecerá neste histórico.</p>
+                    </div>
+                </div>
+            </div>
         <?php endif; ?>
     </div>
 </div>

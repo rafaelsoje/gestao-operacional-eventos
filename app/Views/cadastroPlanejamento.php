@@ -14,6 +14,15 @@
 <div class="content-card p-3">
     <form class="row g-3" method="post" action="<?= url_to('cadastro.planejamento.store');?>" enctype="multipart/form-data">
         <?= csrf_field(); ?>
+        <div class="col-12">
+            <div class="content-card-soft d-flex flex-wrap align-items-center gap-2">
+                <span class="badge text-bg-primary">1. Evento</span>
+                <span class="badge text-bg-light">2. Equipe</span>
+                <span class="badge text-bg-light">3. Consumos</span>
+                <span class="badge text-bg-light">4. Custos</span>
+                <span class="badge text-bg-light">5. Observações</span>
+            </div>
+        </div>
         
         <?php if (session()->has('error')) : ?>
           <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>

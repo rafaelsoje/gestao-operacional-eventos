@@ -236,6 +236,8 @@ class SystemSubscriptionService
         $blockDate = $due->modify('+' . $this->graceDays() . ' days');
         $isOverdue = $today > $due;
         $blocked = $today > $blockDate;
+        $daysUntilBlock = (int)$today->diff($blockDate)->format('%r%a');
+        $daysOverdue = $isOverdue ? (int)$due->diff($today)->format('%a') : 0;
 
         $message = $blocked
             ? 'Mensalidade vencida. Regularize o pagamento para liberar o sistema.'
@@ -247,6 +249,10 @@ class SystemSubscriptionService
             'warning' => $isOverdue || !$this->isPaidStatus((string)$charge->status),
             'charge' => $charge,
             'message' => $message,
+            'due_date' => $due->format('Y-m-d'),
+            'block_date' => $blockDate->format('Y-m-d'),
+            'days_until_block' => $daysUntilBlock,
+            'days_overdue' => $daysOverdue,
         ];
     }
 
