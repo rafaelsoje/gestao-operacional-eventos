@@ -6,6 +6,26 @@ use App\Models\Settings;
 
 class TelegramService
 {
+    public const EVENT_GENERAL = 'general';
+    public const EVENT_LOGIN = 'login';
+    public const EVENT_USERS = 'users';
+    public const EVENT_OPERATIONAL = 'operational';
+    public const EVENT_SUBSCRIPTION_CHARGE_CREATED = 'subscription_charge_created';
+    public const EVENT_SUBSCRIPTION_PAYMENT_RECEIVED = 'subscription_payment_received';
+    public const EVENT_SUBSCRIPTION_OVERDUE = 'subscription_overdue';
+    public const EVENT_SUBSCRIPTION_CANCELLED = 'subscription_cancelled';
+
+    public const EVENT_LABELS = [
+        self::EVENT_GENERAL => 'Avisos gerais',
+        self::EVENT_LOGIN => 'Login de usuários',
+        self::EVENT_USERS => 'Cadastro e usuários',
+        self::EVENT_OPERATIONAL => 'Cadastros operacionais',
+        self::EVENT_SUBSCRIPTION_CHARGE_CREATED => 'Assinatura: cobrança gerada',
+        self::EVENT_SUBSCRIPTION_PAYMENT_RECEIVED => 'Assinatura: pagamento recebido',
+        self::EVENT_SUBSCRIPTION_OVERDUE => 'Assinatura: vencimento/inadimplência',
+        self::EVENT_SUBSCRIPTION_CANCELLED => 'Assinatura: cancelamento/estorno',
+    ];
+
     public function isEnabled(): bool
     {
         $enabled = env('TELEGRAM_ENABLED', true);
@@ -16,9 +36,35 @@ class TelegramService
         return (bool)$enabled;
     }
 
-    public function send(string $message): void
+    public function isEventEnabled(string $event): bool
     {
-        if (!$this->isEnabled()) {
+        $event = array_key_exists($event, self::EVENT_LABELS) ? $event : self::EVENT_GENERAL;
+        $dbValue = (new Settings())->getValue('telegram_event_' . $event, null);
+
+        if ($dbValue === null) {
+            return true;
+        }
+
+        return filter_var($dbValue, FILTER_VALIDATE_BOOL);
+    }
+
+    public function eventPreferences(): array
+    {
+        $preferences = [];
+
+        foreach (self::EVENT_LABELS as $event => $label) {
+            $preferences[$event] = [
+                'label' => $label,
+                'enabled' => $this->isEventEnabled($event),
+            ];
+        }
+
+        return $preferences;
+    }
+
+    public function send(string $message, string $event = self::EVENT_GENERAL): void
+    {
+        if (!$this->isEnabled() || !$this->isEventEnabled($event)) {
             return;
         }
 

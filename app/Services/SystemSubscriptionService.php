@@ -197,6 +197,15 @@ class SystemSubscriptionService
                 'raw_payload' => json_encode(['payment' => $payment, 'pixQrCode' => $qrCode], JSON_UNESCAPED_UNICODE),
             ]);
 
+            if (!empty($payment['id'])) {
+                $this->notifyTelegram(
+                    'Mensalidade do sistema gerada: ' . $this->monthLabel((string)$charge->month_ref)
+                    . ' - R$ ' . number_format((float)$charge->amount, 2, ',', '.')
+                    . ' - vencimento ' . date('d/m/Y', strtotime((string)$charge->due_date)),
+                    TelegramService::EVENT_SUBSCRIPTION_CHARGE_CREATED
+                );
+            }
+
             return true;
         } catch (Throwable $e) {
             log_message('error', 'Falha ao gerar cobrança Asaas: {message}', ['message' => $e->getMessage()]);
@@ -343,6 +352,7 @@ class SystemSubscriptionService
             return null;
         }
 
+        $previousStatus = (string)($charge->status ?? '');
         $status = $this->normalizeAsaasStatus((string)($payment['status'] ?? ''));
         $paidAt = $status === 'paid'
             ? (($payment['paymentDate'] ?? $payment['clientPaymentDate'] ?? date('Y-m-d')) . ' ' . date('H:i:s'))
@@ -358,7 +368,12 @@ class SystemSubscriptionService
             'raw_payload' => json_encode($rawWebhook ?? ['payment' => $payment], JSON_UNESCAPED_UNICODE),
         ]);
 
-        return $this->charges->find((int)$charge->id);
+        $updated = $this->charges->find((int)$charge->id);
+        if ($updated) {
+            $this->notifyStatusChange($updated, $previousStatus, $status);
+        }
+
+        return $updated;
     }
 
     private function dueDateForMonth(string $monthRef): string
@@ -403,6 +418,44 @@ class SystemSubscriptionService
                 'due_date' => $monthRef . '-' . str_pad((string)$dueDay, 2, '0', STR_PAD_LEFT),
             ]);
         }
+    }
+
+    private function notifyStatusChange(object $charge, string $previousStatus, string $status): void
+    {
+        if ($previousStatus === $status) {
+            return;
+        }
+
+        $month = $this->monthLabel((string)($charge->month_ref ?? ''));
+        $amount = number_format((float)($charge->amount ?? 0), 2, ',', '.');
+
+        if ($status === 'paid') {
+            $this->notifyTelegram(
+                'Mensalidade do sistema recebida: ' . $month . ' - R$ ' . $amount,
+                TelegramService::EVENT_SUBSCRIPTION_PAYMENT_RECEIVED
+            );
+            return;
+        }
+
+        if ($status === 'overdue') {
+            $this->notifyTelegram(
+                'Mensalidade do sistema vencida: ' . $month . ' - R$ ' . $amount,
+                TelegramService::EVENT_SUBSCRIPTION_OVERDUE
+            );
+            return;
+        }
+
+        if (in_array($status, ['cancelled', 'refunded'], true)) {
+            $this->notifyTelegram(
+                'Mensalidade do sistema ' . ($status === 'refunded' ? 'estornada' : 'cancelada') . ': ' . $month . ' - R$ ' . $amount,
+                TelegramService::EVENT_SUBSCRIPTION_CANCELLED
+            );
+        }
+    }
+
+    private function notifyTelegram(string $message, string $event): void
+    {
+        (new TelegramService())->send($message, $event);
     }
 
     private function setting(string $key, mixed $default = null): mixed

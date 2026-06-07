@@ -8,6 +8,7 @@ use App\Models\Operacional;
 use App\Models\TaxaCozinha;
 use App\Models\Users;
 use App\Services\OperacionalService;
+use App\Services\TelegramService;
 use App\Validation\FormRequest\GeradorManutencaoFormRequest;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -490,7 +491,7 @@ class OperacionalController extends Home
                 ];
 
                 (new Logs())->insert($log);
-                $this->notifyTelegram($user->name . " atualizou um cadastro operacional " . $data['nome']);
+                $this->notifyTelegram($user->name . " atualizou um cadastro operacional " . $data['nome'], TelegramService::EVENT_OPERATIONAL);
                 if($post['flag'] == 0){
                     return redirect()->route('planejamento.lista')->with('success', "Atualização realizada com sucesso!");
                 }
@@ -508,7 +509,7 @@ class OperacionalController extends Home
                 ];
 
                 (new Logs())->insert($log);
-                $this->notifyTelegram($user->name . " novo cadastro operacional " . $data['nome']);
+                $this->notifyTelegram($user->name . " novo cadastro operacional " . $data['nome'], TelegramService::EVENT_OPERATIONAL);
                 if($post['flag'] == 0){
                     return redirect()->route('planejamento.lista')->with('success', "Cadastro realizado com sucesso!");
                 }
@@ -1122,7 +1123,7 @@ class OperacionalController extends Home
 
             $info = new Logs();
             $info->insert($log);
-            $this->notifyTelegram($user->name . " apagou " . $data['nome']);
+            $this->notifyTelegram($user->name . " apagou " . $data['nome'], TelegramService::EVENT_OPERATIONAL);
 
 
             return redirect()->route('operacional.lista')->with('success', "Informação deletada com sucesso.");

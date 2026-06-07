@@ -191,7 +191,7 @@ class Login extends BaseController
 
             $log = (new Logs())->insert($data);
 
-            (new TelegramService())->send($user->name . " entrou no sistema");
+            (new TelegramService())->send($user->name . " entrou no sistema", TelegramService::EVENT_LOGIN);
 
             if (!empty($user->must_change_password)) {
                 return redirect()->route('password.force')->with('warning', 'Defina uma nova senha para continuar.');

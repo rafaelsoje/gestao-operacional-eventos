@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Logs;
+use App\Models\Settings;
 use App\Models\Users;
 use App\Services\AvatarService;
 use App\Services\TelegramService;
@@ -105,7 +106,7 @@ class AdminController extends Home
 
         if($result){
             $user = session()->get('user');
-            $this->notifyTelegram($user->name . " cadastrou um usuário " . $data['name']);
+            $this->notifyTelegram($user->name . " cadastrou um usuário " . $data['name'], TelegramService::EVENT_USERS);
             return redirect()->route('usuarios')->with('success', 'Usuário cadastrado. Senha padrão: ' . $defaultPassword);
         }
 
@@ -292,18 +293,20 @@ class AdminController extends Home
             return redirect()->route('home')->with('error', 'Acesso negado.');
         }
 
-        $enabled = (new TelegramService())->isEnabled();
+        $telegram = new TelegramService();
+        $enabled = $telegram->isEnabled();
         $onlineUsers = $this->getOnlineUsersSnapshot();
 
         return view('notifications', [
             'enabled' => $enabled,
+            'eventPreferences' => $telegram->eventPreferences(),
             'onlineUsers' => $onlineUsers,
             'onlineWindowSeconds' => $this->getOnlineWindowSeconds(),
         ]);
     }
 
     /**
-     * Atualiza a flag de envio para Telegram.
+     * Atualiza as preferências de envio para Telegram.
      */
     public function notificationsUpdate(): ResponseInterface
     {
@@ -312,7 +315,13 @@ class AdminController extends Home
         }
 
         $enabled = $this->request->getPost('telegram_enabled') === '1' ? 'true' : 'false';
-        (new \App\Models\Settings())->setValue('telegram_enabled', $enabled);
+        $selectedEvents = (array)($this->request->getPost('telegram_events') ?? []);
+        $settings = new Settings();
+        $settings->setValue('telegram_enabled', $enabled);
+
+        foreach (TelegramService::EVENT_LABELS as $event => $label) {
+            $settings->setValue('telegram_event_' . $event, in_array($event, $selectedEvents, true) ? 'true' : 'false');
+        }
 
         return redirect()->route('admin.notifications')->with('success', 'Configuração atualizada.');
     }

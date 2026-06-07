@@ -267,9 +267,9 @@ class Home extends BaseController
     /**
      * Envia notificação para Telegram respeitando configuração ativa.
      */
-    protected function notifyTelegram(string $message): void
+    protected function notifyTelegram(string $message, string $event = TelegramService::EVENT_GENERAL): void
     {
-        (new TelegramService())->send($message);
+        (new TelegramService())->send($message, $event);
     }
 
     /**

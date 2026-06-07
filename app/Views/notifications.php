@@ -21,15 +21,37 @@
     <div class="content-card-header">
       <div>
         <h5>Notificações Telegram</h5>
-        <small>Preferência global para alertas operacionais.</small>
+        <small>Escolha quais eventos devem gerar mensagens no Telegram.</small>
       </div>
     </div>
+    <?php $eventPreferences = $eventPreferences ?? []; ?>
     <form method="post" action="<?= url_to('admin.notifications.update');?>">
       <?= csrf_field(); ?>
       <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" role="switch" id="telegram_enabled" name="telegram_enabled" value="1" <?= !empty($enabled) ? 'checked' : ''; ?>>
         <label class="form-check-label" for="telegram_enabled">Ativar notificações Telegram</label>
       </div>
+      <?php if (!empty($eventPreferences)): ?>
+        <div class="row g-2 mt-3">
+          <?php foreach ($eventPreferences as $event => $preference): ?>
+            <div class="col-md-6 col-xl-4">
+              <div class="form-check border rounded bg-light px-3 py-2 h-100">
+                <input
+                  class="form-check-input ms-0 me-2"
+                  type="checkbox"
+                  id="telegram_event_<?= esc($event); ?>"
+                  name="telegram_events[]"
+                  value="<?= esc($event); ?>"
+                  <?= !empty($preference['enabled']) ? 'checked' : ''; ?>
+                >
+                <label class="form-check-label" for="telegram_event_<?= esc($event); ?>">
+                  <?= esc($preference['label'] ?? $event); ?>
+                </label>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
       <div class="mt-3">
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>

@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Models\Logs;
 use App\Services\SystemSubscriptionService;
-use App\Services\TelegramService;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class SubscriptionController extends Home
@@ -128,10 +127,6 @@ class SubscriptionController extends Home
         $charge = (new SystemSubscriptionService())->handleWebhook($payload);
         if (!$charge) {
             return $this->response->setJSON(['ok' => true, 'matched' => false]);
-        }
-
-        if ((string)$charge->status === 'paid') {
-            (new TelegramService())->send('Mensalidade do sistema recebida: ' . (string)$charge->month_ref . ' - R$ ' . number_format((float)$charge->amount, 2, ',', '.'));
         }
 
         return $this->response->setJSON(['ok' => true, 'matched' => true]);
