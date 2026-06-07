@@ -249,6 +249,8 @@
       <?php
         $subscriptionBlocked = !empty($subscriptionState['blocked']);
         $daysUntilBlock = (int)($subscriptionState['days_until_block'] ?? 0);
+        $subscriptionCharge = $subscriptionState['charge'] ?? null;
+        $subscriptionRef = (string)($subscriptionCharge->month_ref ?? date('Y-m'));
         $noticeTitle = $subscriptionBlocked ? 'Sistema bloqueado por mensalidade vencida' : 'Mensalidade do sistema pendente';
         $bannerDetail = $subscriptionBlocked
           ? 'Regularize o pagamento para liberar as funcionalidades.'
@@ -282,10 +284,12 @@
             return;
           }
           <?php if (!$subscriptionBlocked): ?>
-          if (sessionStorage.getItem('subscriptionPendingShown') === '1') {
+          const today = new Date().toISOString().slice(0, 10);
+          const noticeKey = 'subscriptionPendingShown:<?= esc($subscriptionRef, 'js'); ?>';
+          if (localStorage.getItem(noticeKey) === today) {
             return;
           }
-          sessionStorage.setItem('subscriptionPendingShown', '1');
+          localStorage.setItem(noticeKey, today);
           <?php endif; ?>
           new bootstrap.Modal(document.getElementById('subscriptionPendingModal')).show();
         });
