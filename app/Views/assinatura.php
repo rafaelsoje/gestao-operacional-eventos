@@ -9,7 +9,7 @@ $tableReady = (bool)($tableReady ?? false);
 $charge = $charge ?? null;
 $charges = $charges ?? [];
 $state = $state ?? [];
-$settings = $settings ?? ['enabled' => false, 'amount' => 60, 'due_day' => 10, 'grace_days' => 5];
+$settings = $settings ?? ['enabled' => false, 'amount' => 60, 'due_day' => 10, 'warning_day' => 5, 'grace_days' => 2];
 $asaasConfigured = (bool)($asaasConfigured ?? false);
 $canManualRelease = (bool)($canManualRelease ?? false);
 $statusBadge = static function (string $status): string {
@@ -28,6 +28,14 @@ $statusLabel = static function (string $status): string {
         'refunded' => 'Estornado',
         default => 'Pendente',
     };
+};
+$monthRefLabel = static function (?string $monthRef): string {
+    if (!$monthRef || !preg_match('/^\d{4}-\d{2}$/', $monthRef)) {
+        return $monthRef ?: '-';
+    }
+
+    [$year, $month] = explode('-', $monthRef);
+    return $month . '/' . $year;
 };
 $openCharges = array_values(array_filter($charges, static function ($item): bool {
     return in_array((string)($item->status ?? 'pending'), ['pending', 'overdue'], true);
@@ -96,7 +104,7 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
     <div class="page-hero">
         <div>
             <h2>Assinatura do sistema</h2>
-            <p>Consulte débitos em aberto, pague por Pix e acompanhe o histórico de mensalidades.</p>
+            <p>Consulte mensalidades, gere Pix e acompanhe pagamentos reconhecidos.</p>
         </div>
         <?php if ($charge): ?>
             <span class="badge text-bg-<?= $statusBadge((string)$charge->status); ?>">
@@ -143,7 +151,7 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
                 <div class="value">
                     <?= !empty($state['blocked']) ? 'Bloqueado' : 'Liberado'; ?>
                 </div>
-                <small class="text-muted"><?= !empty($state['blocked']) ? 'Regularize o pagamento para liberar.' : 'Funcionalidades disponíveis.'; ?></small>
+                <small class="text-muted"><?= !empty($state['blocked']) ? 'Regularize a mensalidade para liberar.' : 'Sem bloqueio ativo no momento.'; ?></small>
             </div>
         </div>
         <div class="col-12 col-md-4">
@@ -176,7 +184,7 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
                         <div class="content-card-soft h-100">
                             <div class="d-flex justify-content-between align-items-start gap-2">
                                 <div>
-                                    <strong><?= esc((string)$openCharge->month_ref); ?></strong>
+                                    <strong><?= esc($monthRefLabel((string)$openCharge->month_ref)); ?></strong>
                                     <div class="text-muted small">Vence em <?= !empty($openCharge->due_date) ? esc(date('d/m/Y', strtotime((string)$openCharge->due_date))) : '-'; ?></div>
                                 </div>
                                 <span class="badge text-bg-<?= $statusBadge((string)$openCharge->status); ?>"><?= esc($statusLabel((string)$openCharge->status)); ?></span>
@@ -201,13 +209,13 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
                     <div class="content-card-header">
                         <div>
                             <h5>Débito em aberto</h5>
-                            <small>Esta é a mensalidade que precisa ser regularizada.</small>
+                            <small>Mensalidade pendente para conferência ou pagamento.</small>
                         </div>
                     </div>
                     <div class="client-help mb-3">
-                        Pague pelo Pix ou pelo link do Asaas. Após a confirmação, o sistema atualiza automaticamente e libera o acesso.
+                        Gere o Pix ou use o link do Asaas quando disponível. Após o pagamento ser reconhecido, o status desta mensalidade será atualizado.
                     </div>
-                    <p class="mb-2"><strong>Referência:</strong> <?= esc((string)$charge->month_ref); ?></p>
+                    <p class="mb-2"><strong>Referência:</strong> <?= esc($monthRefLabel((string)$charge->month_ref)); ?></p>
                     <p class="mb-2"><strong>Valor:</strong> <?= br_money($charge->amount ?? 0); ?></p>
                     <p class="mb-2"><strong>Vencimento:</strong> <?= !empty($charge->due_date) ? esc(date('d/m/Y', strtotime((string)$charge->due_date))) : '-'; ?></p>
                     <p class="mb-2"><strong>Status:</strong> <?= esc($statusLabel((string)$charge->status)); ?></p>
@@ -275,7 +283,7 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
                                 <span class="empty-state-icon"><i class="bi bi-qr-code"></i></span>
                                 <div>
                                     <h5>Pix ainda não gerado</h5>
-                                    <p>Use o botão Gerar Pix para criar o QR Code desta mensalidade.</p>
+                                    <p>Use o botão Gerar Pix para solicitar o QR Code desta mensalidade.</p>
                                 </div>
                             </div>
                         </div>
@@ -295,27 +303,31 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
             </div>
             <form class="row g-3 align-items-end" method="post" action="<?= url_to('subscription.settings'); ?>">
                 <?= csrf_field(); ?>
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-2">
                     <label class="form-label d-block">Controle ativo</label>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="subscriptionEnabled" name="enabled" value="1" <?= !empty($settings['enabled']) ? 'checked' : ''; ?>>
                         <label class="form-check-label" for="subscriptionEnabled">Ativar cobrança/bloqueio</label>
                     </div>
                 </div>
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-2">
                     <label class="form-label">Valor mensal</label>
                     <input type="text" class="form-control" name="amount" value="<?= esc(number_format((float)($settings['amount'] ?? 60), 2, ',', '.')); ?>" required>
                 </div>
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-2">
+                    <label class="form-label">Alertar a partir do dia</label>
+                    <input type="number" class="form-control" name="warning_day" min="1" max="28" value="<?= esc((string)($settings['warning_day'] ?? 5)); ?>" required>
+                </div>
+                <div class="col-12 col-md-2">
                     <label class="form-label">Dia de vencimento</label>
                     <input type="number" class="form-control" name="due_day" min="1" max="28" value="<?= esc((string)($settings['due_day'] ?? 10)); ?>" required>
                     <div class="form-text">Use 1 a 28 para evitar problemas em fevereiro.</div>
                 </div>
                 <div class="col-12 col-md-2">
-                    <label class="form-label">Tolerância</label>
-                    <input type="number" class="form-control" name="grace_days" min="0" max="60" value="<?= esc((string)($settings['grace_days'] ?? 5)); ?>" required>
+                    <label class="form-label">Tolerância após vencimento</label>
+                    <input type="number" class="form-control" name="grace_days" min="0" max="60" value="<?= esc((string)($settings['grace_days'] ?? 2)); ?>" required>
                 </div>
-                <div class="col-12 col-md-1 d-grid">
+                <div class="col-12 col-md-2 d-grid">
                     <button type="submit" class="btn btn-primary">Salvar</button>
                 </div>
             </form>
@@ -326,7 +338,7 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
         <div class="content-card-header">
             <div>
                 <h5>Pagamentos e mensalidades</h5>
-                <small>Histórico de débitos gerados, vencimentos e pagamentos reconhecidos.</small>
+                <small>Mensalidades registradas, vencimentos e pagamentos reconhecidos.</small>
             </div>
         </div>
         <?php if ($charges): ?>
@@ -345,7 +357,7 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
                     <tbody>
                         <?php foreach ($charges as $item): ?>
                             <tr>
-                                <td data-label="Referência"><?= esc((string)$item->month_ref); ?></td>
+                                <td data-label="Referência"><?= esc($monthRefLabel((string)$item->month_ref)); ?></td>
                                 <td data-label="Valor" class="money-cell"><?= br_money($item->amount ?? 0); ?></td>
                                 <td data-label="Vencimento"><?= !empty($item->due_date) ? esc(date('d/m/Y', strtotime((string)$item->due_date))) : '-'; ?></td>
                                 <td data-label="Status"><span class="badge text-bg-<?= $statusBadge((string)$item->status); ?>"><?= esc($statusLabel((string)$item->status)); ?></span></td>

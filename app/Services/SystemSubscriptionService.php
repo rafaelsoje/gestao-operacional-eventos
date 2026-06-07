@@ -28,12 +28,18 @@ class SystemSubscriptionService
 
     public function graceDays(): int
     {
-        return max(0, (int)$this->setting('system_subscription_grace_days', env('SYSTEM_SUBSCRIPTION_GRACE_DAYS', 5)));
+        return max(0, (int)$this->setting('system_subscription_grace_days', env('SYSTEM_SUBSCRIPTION_GRACE_DAYS', 2)));
     }
 
     public function dueDay(): int
     {
         return min(28, max(1, (int)$this->setting('system_subscription_due_day', env('SYSTEM_SUBSCRIPTION_DUE_DAY', 10))));
+    }
+
+    public function warningDay(): int
+    {
+        $warningDay = min(28, max(1, (int)$this->setting('system_subscription_warning_day', env('SYSTEM_SUBSCRIPTION_WARNING_DAY', 5))));
+        return min($warningDay, $this->dueDay());
     }
 
     public function settings(): array
@@ -42,6 +48,7 @@ class SystemSubscriptionService
             'enabled' => $this->isEnabled(),
             'amount' => $this->amount(),
             'due_day' => $this->dueDay(),
+            'warning_day' => $this->warningDay(),
             'grace_days' => $this->graceDays(),
         ];
     }
@@ -62,7 +69,8 @@ class SystemSubscriptionService
             'system_subscription_enabled' => !empty($data['enabled']) ? '1' : '0',
             'system_subscription_amount' => number_format($amount, 2, '.', ''),
             'system_subscription_due_day' => (string)min(28, max(1, (int)($data['due_day'] ?? 10))),
-            'system_subscription_grace_days' => (string)max(0, (int)($data['grace_days'] ?? 5)),
+            'system_subscription_warning_day' => (string)min(28, max(1, (int)($data['warning_day'] ?? 5))),
+            'system_subscription_grace_days' => (string)max(0, (int)($data['grace_days'] ?? 2)),
         ];
 
         foreach ($payload as $key => $value) {
@@ -84,6 +92,7 @@ class SystemSubscriptionService
 
         $monthRef = date('Y-m');
         $charge = $this->charges->where('month_ref', $monthRef)->first();
+        $createdId = null;
         if (!$charge) {
             $id = $this->charges->insert([
                 'month_ref' => $monthRef,
@@ -91,11 +100,16 @@ class SystemSubscriptionService
                 'due_date' => $this->dueDateForMonth($monthRef),
                 'status' => 'pending',
             ]);
+            $createdId = (int)$id;
             $charge = $this->charges->find($id);
         }
 
         if ($createRemote) {
-            $this->ensureRemoteCharge($charge);
+            $remoteCreated = $this->ensureRemoteCharge($charge);
+            if (!$remoteCreated && $createdId !== null) {
+                $this->charges->delete($createdId);
+                return null;
+            }
             $charge = $this->charges->find((int)$charge->id);
         }
 
@@ -108,20 +122,22 @@ class SystemSubscriptionService
             return null;
         }
 
-        $this->currentCharge(false);
-
         $charge = $this->charges
             ->whereIn('status', ['pending', 'overdue'])
             ->orderBy('due_date', 'asc')
             ->first();
 
-        if (!$charge) {
-            $charge = $this->currentCharge(false);
+        if ($charge && $createRemote) {
+            $remoteCreated = $this->ensureRemoteCharge($charge);
+            if (!$remoteCreated && $this->isLocalOnlyOpenCharge($charge)) {
+                $this->charges->delete((int)$charge->id);
+                return null;
+            }
+            $charge = $this->charges->find((int)$charge->id);
         }
 
-        if ($charge && $createRemote) {
-            $this->ensureRemoteCharge($charge);
-            $charge = $this->charges->find((int)$charge->id);
+        if (!$charge && $createRemote) {
+            $charge = $this->currentCharge(true);
         }
 
         return $charge;
@@ -221,9 +237,9 @@ class SystemSubscriptionService
             return [
                 'enabled' => true,
                 'blocked' => false,
-                'warning' => true,
+                'warning' => false,
                 'charge' => null,
-                'message' => 'Execute as migrations para ativar o controle de assinatura.',
+                'message' => '',
             ];
         }
 
@@ -234,24 +250,34 @@ class SystemSubscriptionService
         $today = new DateTimeImmutable(date('Y-m-d'));
         $due = new DateTimeImmutable((string)$charge->due_date);
         $blockDate = $due->modify('+' . $this->graceDays() . ' days');
+        $warningStart = new DateTimeImmutable(substr((string)$charge->due_date, 0, 8) . str_pad((string)$this->warningDay(), 2, '0', STR_PAD_LEFT));
         $isOverdue = $today > $due;
         $blocked = $today > $blockDate;
+        $warning = $today >= $warningStart || $isOverdue || $blocked;
         $daysUntilBlock = (int)$today->diff($blockDate)->format('%r%a');
         $daysOverdue = $isOverdue ? (int)$due->diff($today)->format('%a') : 0;
+        $daysUntilDue = (int)$today->diff($due)->format('%r%a');
 
-        $message = $blocked
-            ? 'Mensalidade vencida. Regularize o pagamento para liberar o sistema.'
-            : 'Mensalidade pendente. Regularize até ' . $blockDate->format('d/m/Y') . ' para evitar bloqueio.';
+        $message = '';
+        if ($blocked) {
+            $message = 'Mensalidade vencida. Regularize o pagamento para liberar o sistema.';
+        } elseif ($isOverdue) {
+            $message = 'Mensalidade vencida. Regularize até ' . $blockDate->format('d/m/Y') . ' para evitar bloqueio.';
+        } elseif ($warning) {
+            $message = 'Mensalidade pendente. Vencimento em ' . $due->format('d/m/Y') . '.';
+        }
 
         return [
             'enabled' => true,
             'blocked' => $blocked,
-            'warning' => $isOverdue || !$this->isPaidStatus((string)$charge->status),
+            'warning' => $warning,
             'charge' => $charge,
             'message' => $message,
             'due_date' => $due->format('Y-m-d'),
             'block_date' => $blockDate->format('Y-m-d'),
+            'warning_start_date' => $warningStart->format('Y-m-d'),
             'days_until_block' => $daysUntilBlock,
+            'days_until_due' => $daysUntilDue,
             'days_overdue' => $daysOverdue,
         ];
     }
@@ -340,6 +366,15 @@ class SystemSubscriptionService
     private function isPaidStatus(string $status): bool
     {
         return $status === 'paid';
+    }
+
+    private function isLocalOnlyOpenCharge(object $charge): bool
+    {
+        return in_array((string)($charge->status ?? ''), ['pending', 'overdue'], true)
+            && empty($charge->asaas_payment_id)
+            && empty($charge->invoice_url)
+            && empty($charge->pix_payload)
+            && empty($charge->paid_at);
     }
 
     private function updateEditableOpenCharges(float $amount, int $dueDay): void

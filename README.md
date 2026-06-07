@@ -373,8 +373,9 @@ Configuração básica no `.env`:
 ```ini
 SYSTEM_SUBSCRIPTION_ENABLED = true
 SYSTEM_SUBSCRIPTION_AMOUNT = 60
+SYSTEM_SUBSCRIPTION_WARNING_DAY = 5
 SYSTEM_SUBSCRIPTION_DUE_DAY = 10
-SYSTEM_SUBSCRIPTION_GRACE_DAYS = 5
+SYSTEM_SUBSCRIPTION_GRACE_DAYS = 2
 
 ASAAS_BASE_URL = "https://api.asaas.com/v3"
 ASAAS_API_KEY = "sua_chave_asaas"
@@ -390,7 +391,7 @@ https://seu-dominio.com/webhooks/asaas
 
 Quando o Asaas enviar eventos como `PAYMENT_RECEIVED` ou `PAYMENT_OVERDUE`, o sistema atualiza a mensalidade automaticamente.
 
-Depois da primeira configuração, o superusuário pode alterar ativação, valor, dia de vencimento e dias de tolerância pela tela `/assinatura`, sem editar o `.env`.
+Depois da primeira configuração, o superusuário pode alterar ativação, valor, dia inicial de alerta, dia de vencimento e dias de tolerância pela tela `/assinatura`, sem editar o `.env`.
 
 Opcionalmente, agende a sincronização diária no cron do Linux:
 

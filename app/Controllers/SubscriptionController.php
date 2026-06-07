@@ -82,10 +82,11 @@ class SubscriptionController extends Home
         $post = $this->request->getPost();
         $amount = (string)($post['amount'] ?? '');
         $dueDay = (int)($post['due_day'] ?? 0);
+        $warningDay = (int)($post['warning_day'] ?? 0);
         $graceDays = (int)($post['grace_days'] ?? 0);
 
-        if (trim($amount) === '' || $dueDay < 1 || $dueDay > 28 || $graceDays < 0 || $graceDays > 60) {
-            return redirect()->route('subscription.index')->with('error', 'Configuração inválida. Use vencimento entre 1 e 28 e tolerância entre 0 e 60 dias.');
+        if (trim($amount) === '' || $dueDay < 1 || $dueDay > 28 || $warningDay < 1 || $warningDay > 28 || $warningDay > $dueDay || $graceDays < 0 || $graceDays > 60) {
+            return redirect()->route('subscription.index')->with('error', 'Configuração inválida. Use alerta e vencimento entre 1 e 28, alerta até o vencimento e tolerância entre 0 e 60 dias.');
         }
 
         $service = new SystemSubscriptionService();
@@ -93,6 +94,7 @@ class SubscriptionController extends Home
             'enabled' => $this->request->getPost('enabled') === '1',
             'amount' => $amount,
             'due_day' => $dueDay,
+            'warning_day' => $warningDay,
             'grace_days' => $graceDays,
         ]);
 
