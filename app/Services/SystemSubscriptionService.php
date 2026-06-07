@@ -178,7 +178,11 @@ class SystemSubscriptionService
 
             $qrCode = [];
             if (!empty($payment['id'])) {
-                $qrCode = $asaas->getPixQrCode((string)$payment['id']);
+                try {
+                    $qrCode = $asaas->getPixQrCode((string)$payment['id']);
+                } catch (Throwable $e) {
+                    log_message('error', 'Falha ao obter QR Code Pix Asaas: {message}', ['message' => $e->getMessage()]);
+                }
             }
 
             $this->charges->update((int)$charge->id, [
