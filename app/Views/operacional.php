@@ -1005,6 +1005,12 @@ function money(value) {
     });
 }
 
+function numberLabel(value) {
+    return numberValue(value).toLocaleString('pt-BR', {
+        maximumFractionDigits: 2,
+    });
+}
+
 function chartTheme() {
     return {
         mode: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light',
@@ -1184,6 +1190,7 @@ function renderAllCharts() {
             markers: { size: 4, hover: { size: 7 } },
             series: annualSeries,
             colors: annualColors,
+            dataLabels: { enabled: true, formatter: numberLabel },
             xaxis: { categories: tableCategories(line), labels: { style: { colors: cssVar('--app-muted') } } },
             yaxis: { labels: { formatter: money } },
             tooltip: { y: { formatter: money } },
