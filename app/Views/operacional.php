@@ -5,6 +5,7 @@
  $this->section('content');?>
 <?php helper('format'); ?>
 <?php
+$chartsJsV = is_file(FCPATH . 'assets/build/charts.js') ? filemtime(FCPATH . 'assets/build/charts.js') : time();
 $rows = $data ?? [];
 $hasRows = !empty($rows);
 $topEventsRows = json_decode($topEvents ?? '[]', true);
@@ -57,9 +58,11 @@ $hourOnly = static function (?string $hhmm): string {
 };
 ?>
 
+<script src="<?= base_url('assets/build/charts.js?v=' . $chartsJsV) ?>"></script>
+
 <style>
     .main {
-        background: #f5f7fb;
+        background: var(--app-bg);
     }
 
     .dashboard-shell {
@@ -73,15 +76,15 @@ $hourOnly = static function (?string $hhmm): string {
         gap: 1rem;
         padding: 1.1rem 1.25rem;
         margin: 0 0 1rem;
-        border: 1px solid rgba(15, 23, 42, 0.08);
+        border: 1px solid var(--app-border);
         border-radius: 8px;
-        background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+        background: linear-gradient(135deg, var(--app-surface) 0%, var(--app-surface-soft) 100%);
+        box-shadow: var(--app-shadow);
     }
 
     .dashboard-hero h2 {
         margin: 0;
-        color: #172033;
+        color: var(--app-heading);
         font-size: 1.45rem;
         font-weight: 800;
         letter-spacing: 0;
@@ -89,7 +92,7 @@ $hourOnly = static function (?string $hhmm): string {
 
     .dashboard-hero p {
         margin: 0.25rem 0 0;
-        color: #64748b;
+        color: var(--app-muted);
     }
 
     .dashboard-period {
@@ -98,8 +101,8 @@ $hourOnly = static function (?string $hhmm): string {
         gap: 0.4rem;
         padding: 0.35rem 0.6rem;
         border-radius: 999px;
-        background: #eef6ff;
-        color: #0f5f96;
+        background: var(--app-accent-soft);
+        color: var(--app-accent);
         font-size: 0.9rem;
         font-weight: 700;
     }
@@ -107,15 +110,15 @@ $hourOnly = static function (?string $hhmm): string {
     .dashboard-filter-wrap {
         padding: 0.85rem 1rem !important;
         margin: 0 0 1rem !important;
-        border: 1px solid rgba(15, 23, 42, 0.08);
+        border: 1px solid var(--app-border);
         border-radius: 8px;
-        background: #fff;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+        background: var(--app-surface);
+        box-shadow: var(--app-shadow);
     }
 
     .dashboard-filter-form .form-control {
         min-height: 42px;
-        border-color: #dbe3ee;
+        border-color: var(--app-input-border);
         border-radius: 7px;
     }
 
@@ -124,7 +127,7 @@ $hourOnly = static function (?string $hhmm): string {
     }
 
     .dashboard-filter-form .form-check-label {
-        color: #344054;
+        color: var(--app-table-head);
         font-weight: 600;
     }
 
@@ -147,27 +150,27 @@ $hourOnly = static function (?string $hhmm): string {
     }
 
     .dashboard-modern-alerts .alert-danger {
-        background: #fff1f2;
+        background: color-mix(in srgb, var(--app-danger) 12%, var(--app-surface));
         color: #8a1f2d;
     }
 
     .dashboard-modern-alerts .alert-warning {
-        background: #fff8e6;
+        background: color-mix(in srgb, var(--app-warning) 14%, var(--app-surface));
         color: #875a08;
     }
 
     .stat-card {
         position: relative;
         overflow: hidden;
-        border: 1px solid rgba(15, 23, 42, 0.08);
+        border: 1px solid var(--app-border);
         border-radius: 8px !important;
-        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06) !important;
+        box-shadow: var(--app-shadow) !important;
         transition: transform 160ms ease, box-shadow 160ms ease;
     }
 
     .stat-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 18px 32px rgba(15, 23, 42, 0.1) !important;
+        box-shadow: var(--app-shadow-hover) !important;
     }
 
     .kpi-card::before {
@@ -189,7 +192,7 @@ $hourOnly = static function (?string $hhmm): string {
     }
 
     .kpi-card .text-muted:first-child {
-        color: #526173 !important;
+        color: var(--app-muted) !important;
         font-weight: 700;
     }
 
@@ -204,9 +207,9 @@ $hourOnly = static function (?string $hhmm): string {
 
     .dashboard-table-card {
         margin: 1rem;
-        border: 1px solid rgba(15, 23, 42, 0.08);
+        border: 1px solid var(--app-border);
         border-radius: 8px;
-        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06) !important;
+        box-shadow: var(--app-shadow) !important;
     }
 
     .dashboard-table-card .table {
@@ -214,20 +217,20 @@ $hourOnly = static function (?string $hhmm): string {
     }
 
     .dashboard-table-card thead th {
-        border-bottom: 1px solid #dbe3ee;
-        color: #344054;
+        border-bottom: 1px solid var(--app-input-border);
+        color: var(--app-table-head);
         font-size: 0.88rem;
         font-weight: 800;
         white-space: nowrap;
     }
 
     .dashboard-table-card tbody td {
-        color: #27313f;
+        color: var(--app-table-text);
         vertical-align: middle;
     }
 
     .dashboard-table-card tbody tr:hover {
-        background: #f8fbff;
+        background: var(--app-surface-soft);
     }
 
     .dashboard-actions-cell .btn {
@@ -959,377 +962,244 @@ function validarDatas(form) {
 
 
 
-// GOOGLE CHARTS
-
-// Carregar os pacotes de gráficos
- google.charts.load('current', { packages: ['corechart', 'line', 'scatter'] });
-
- // Definir a função para desenhar os gráficos
- google.charts.setOnLoadCallback(drawCharts);
-
- function drawCharts() {
-    drawDonutChart();
-     drawColumnChart();
-     drawColumnChart2();
-	     drawPublicCategoryChart();
-	     drawTaxaCozinhaStatusChart();
-	     drawTopEventsChart();
-     drawLineChart();
-     drawLineGeneratorChart();
- }
-
-//  GRAFICO COLUNA
-
-// Dados passados do PHP para o JavaScript
-//
-//
-//
-var bar = <?= $bar ?? '[]' ?>;
-
-
- function drawColumnChart() {
-     if (!hasChartRows(bar) || !document.getElementById('column_chart')) {
-         return;
-     }
-    //   var data = google.visualization.arrayToDataTable([
-    //       ['ano', 'Vendas', 'Despesas', 'teste', 'teste2'],
-    //       ['Social', 1000, 400, 300, 100],
-    //       ['2020', 1170, 460, 200, 500],
-    //       ['2021', 660, 1120, 900, 600],
-    //       ['2022', 1030, 540, 450, 300]
-    //   ]);
-
-      var data = google.visualization.arrayToDataTable(bar);
-
-
-
-    //  var data = google.visualization.arrayToDataTable(columnChart);
-
-     var options = {
-         title: 'Comparação por tipo de evento',
-         hAxis: { title: '' },
-         vAxis: { title: 'Total'},
-         //backgroundColor: '#cccccc', // Cor de fundo
-         legend: { position: 'bottom' },
-         seriesType: 'bars'
-     };
-
-     var chart = new google.visualization.ComboChart(document.getElementById('column_chart'));
-     chart.draw(data, options);
- }
-
-
-//  GRAFICO PIZZA
-
- function drawPieChart() {
-      var data = google.visualization.arrayToDataTable([
-          ['Categoria', 'Valor'],
-          ['Alimentos', 30],
-          ['Transporte', 20],
-          ['Habitação', 25],
-          ['Saúde', 15],
-          ['Lazer', 10]
-      ]);
-
-    //  var data = google.visualization.arrayToDataTable(pieChart);
-
-     var options = {
-         title: 'Total de de eventos',
-         pieSliceText: 'label',
-         is3D: true
-     };
-
-     var chart = new google.visualization.PieChart(document.getElementById('pie_chart'));
-     chart.draw(data, options);
- }
-
-
-
-var line = <?= $line ?? '[]' ?>;
-var lineTitle = <?= json_encode($lineTitle ?? 'Custo anual') ?>;
-var lineGenerator = <?= $lineGenerator ?? '[]' ?>;
-var topEvents = <?= $topEvents ?? '[]' ?>;
-var publicByCategory = <?= $publicByCategory ?? '[]' ?>;
-var taxaCozinhaStatus = <?= $taxaCozinhaStatus ?? '[]' ?>;
+const bar = <?= $bar ?? '[]' ?>;
+const barChart = <?= $barChart ?? '[]' ?>;
+const line = <?= $line ?? '[]' ?>;
+const lineTitle = <?= json_encode($lineTitle ?? 'Custo anual') ?>;
+const lineGenerator = <?= $lineGenerator ?? '[]' ?>;
+const topEvents = <?= $topEvents ?? '[]' ?>;
+const publicByCategory = <?= $publicByCategory ?? '[]' ?>;
+const taxaCozinhaStatus = <?= $taxaCozinhaStatus ?? '[]' ?>;
+const donut = <?= $donut ?? '[]' ?>;
+const chartInstances = [];
 
 function hasChartRows(arr) {
     return Array.isArray(arr) && arr.length > 1;
 }
 
-function drawPublicCategoryChart() {
-    if (!hasChartRows(publicByCategory) || !document.getElementById('public_category_chart')) {
-        return;
-    }
-
-    var rawData = google.visualization.arrayToDataTable(publicByCategory);
-    var view = new google.visualization.DataView(rawData);
-    view.setColumns([
-        0,
-        1,
-        {
-            calc: function (dt, row) {
-                return Number(dt.getValue(row, 1) || 0).toLocaleString('pt-BR');
-            },
-            type: 'string',
-            role: 'annotation'
-        }
-    ]);
-
-    var options = {
-        title: 'Público por categoria',
-        legend: { position: 'none' },
-        bars: 'horizontal',
-        height: 320,
-        colors: ['#198754'],
-        chartArea: { left: 130, width: '68%' },
-        hAxis: { title: 'Público total', minValue: 0 },
-        vAxis: { title: '' },
-        annotations: {
-            textStyle: { color: '#1f2937', fontSize: 11, bold: true }
-        }
-    };
-
-    var chart = new google.visualization.BarChart(document.getElementById('public_category_chart'));
-    chart.draw(view, options);
-	}
-
-	function drawTaxaCozinhaStatusChart() {
-	    if (!hasChartRows(taxaCozinhaStatus) || !document.getElementById('taxa_cozinha_status_chart')) {
-	        return;
-	    }
-
-	    var data = google.visualization.arrayToDataTable(taxaCozinhaStatus);
-	    var options = {
-	        title: 'Status taxa de cozinha',
-	        pieHole: 0.45,
-	        legend: { position: 'bottom' },
-	        colors: ['#198754', '#ffc107', '#dc3545'],
-	        chartArea: { width: '92%', height: '72%' },
-	        pieSliceText: 'value'
-	    };
-
-	    var chart = new google.visualization.PieChart(document.getElementById('taxa_cozinha_status_chart'));
-	    chart.draw(data, options);
-	}
-	//  GRAFICO LINHA
- function drawLineChart() {
-     if (!hasChartRows(line) || !document.getElementById('line_chart')) {
-         return;
-     }
-     var lineSeriesCount = Array.isArray(line) && line[0] ? Math.max(0, line[0].length - 1) : 0;
-     var hasSinglePoint = lineSeriesCount === 1 && line.length === 2;
-     var data = null;
-
-     if (hasSinglePoint) {
-         var periodLabel = line[1][0];
-         var costValue = Number(line[1][1] || 0);
-         var formatted = costValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-         data = google.visualization.arrayToDataTable([
-             ['Período', 'Custo', { role: 'annotation' }],
-             [periodLabel, costValue, 'R$ ' + formatted]
-         ]);
-     } else {
-         data = google.visualization.arrayToDataTable(line);
-     }
-
-     var options = {
-         title: lineTitle,
-         vAxis: { title: 'Custo' },
-         legend: { position: 'bottom' },
-         colors: lineSeriesCount > 1 ? ['#999', '#f00'] : ['#0d6efd'],
-         pointSize: hasSinglePoint ? 8 : 4,
-         annotations: {
-             textStyle: { color: '#212529', fontSize: 12, bold: true }
-         }
-     };
-
-     var chart = new google.visualization.LineChart(document.getElementById('line_chart'));
-     chart.draw(data, options);
- }
-
- function drawLineGeneratorChart() {
-     if (!hasChartRows(lineGenerator) || !document.getElementById('line_generator_chart')) {
-         return;
-     }
-     var header = lineGenerator[0] || [];
-     var rows = lineGenerator.slice(1);
-     var data = new google.visualization.DataTable();
-     data.addColumn('string', String(header[0] || 'Data'));
-     for (var c = 1; c < header.length; c++) {
-         data.addColumn('number', String(header[c] || ('Série ' + c)));
-     }
-     data.addRows(rows.map(function (row) {
-         var out = [String(row[0] || '')];
-         for (var i = 1; i < header.length; i++) {
-             var raw = row[i];
-             if (raw === null || raw === undefined || raw === '') {
-                 out.push(null);
-                 continue;
-             }
-             var n = Number(raw);
-             out.push(Number.isFinite(n) ? n : null);
-         }
-         return out;
-     }));
-
-     var options = {
-         title: 'Acúmulo de uso dos geradores (horas)',
-         hAxis: { title: 'Data' },
-         vAxis: { title: 'Horas acumuladas' },
-         legend: { position: 'bottom' },
-         colors: ['#198754', '#0d6efd', '#dc3545', '#fd7e14'],
-         pointSize: 5,
-         series: {
-             0: { lineWidth: 2, pointSize: 5 },
-             1: { lineWidth: 2, pointSize: 5 },
-             2: { lineWidth: 0, pointSize: 8, pointShape: 'diamond' },
-             3: { lineWidth: 0, pointSize: 8, pointShape: 'diamond' }
-         }
-     };
-
-     var chart = new google.visualization.LineChart(document.getElementById('line_generator_chart'));
-     chart.draw(data, options);
- }
-
-//  Grafico de curva
-function drawChart() {
-    var data = google.visualization.arrayToDataTable([
-        ['Year', 'Sales', 'Expenses', 'teste'],
-        ['2004',  1000,      400, 300],
-        ['2005',  1170,      460, 500],
-        ['2006',  660,       1120, 100],
-        ['2007',  1030,      540, 900]
-    ]);
-
-    var options = {
-        title: 'Company Performance',
-        curveType: 'function',
-        legend: { position: 'bottom' }
-    };
-
-    var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
-
-    chart.draw(data, options);
+function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-var barChart = <?= $barChart ?? '[]' ?>;
-
- function drawColumnChart2() {
-    if (!hasChartRows(barChart) || !document.getElementById('column_chart2')) {
-        return;
-    }
-    //    var data = google.visualization.arrayToDataTable([
-    //        ['ano', 'Vendas', 'Despesas', 'teste', 'teste2'],
-    //        ['Social', 1000, 400, 300, 100],
-    //        ['2020', 1170, 460, 200, 500],
-    //        ['2021', 660, 1120, 900, 600],
-    //        ['2022', 1030, 540, 450, 300]
-    //    ]);
-
-    var data = google.visualization.arrayToDataTable(barChart);
-      
-     var options = {
-         //colors: ['#00f'],
-         title: 'Custo médio por evento por tipo',
-         hAxis: { title: '' },
-         vAxis: { title: 'Valor médio (R$)'},
-         //backgroundColor: '#cccccc', // Cor de fundo
-         legend: { position: 'bottom' },
-         seriesType: 'bars'
-         
-     };
-
-     var chart = new google.visualization.ComboChart(document.getElementById('column_chart2'));
-     chart.draw(data, options);
- }
-
-
-
-  function drawScatterChart() {
-      var data = google.visualization.arrayToDataTable([
-          ['X', 'Y'],
-          [1, 1],
-          [2, 4],
-          [3, 9],
-          [4, 16],
-          [5, 25]
-      ]);
-
-var options = {
-          title: 'Gráfico de Dispersão',
-          hAxis: { title: 'X' },
-          vAxis: { title: 'Y' },
-          legend: 'none'
-      };
-
-      var chart = new google.visualization.ScatterChart(document.getElementById('scatter_chart'));
-      chart.draw(data, options);
+function chartPalette() {
+    return [
+        cssVar('--app-chart-palette-1'),
+        cssVar('--app-chart-palette-2'),
+        cssVar('--app-chart-palette-3'),
+        cssVar('--app-chart-palette-4'),
+        cssVar('--app-chart-palette-5'),
+        cssVar('--app-chart-palette-6'),
+    ];
 }
 
-function drawTopEventsChart() {
-    if (!hasChartRows(topEvents) || !document.getElementById('top_events_chart')) {
-        return;
-    }
-    var data = google.visualization.arrayToDataTable(topEvents);
-    var view = new google.visualization.DataView(data);
-    view.setColumns([0, 1, 3, 4]);
+function numberValue(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
 
-    var options = {
-        title: 'Ranking de eventos por custo',
-        legend: { position: 'none' },
-        bars: 'horizontal',
-        height: 320,
-        colors: ['#3b82f6'],
-        chartArea: { left: 140, width: '70%' },
-        tooltip: { isHtml: false }
-    };
-    var chart = new google.visualization.BarChart(document.getElementById('top_events_chart'));
-    chart.draw(view, options);
-
-    google.visualization.events.addListener(chart, 'select', function () {
-        var selection = chart.getSelection();
-        if (!selection.length) return;
-        var row = selection[0].row;
-        var id = data.getValue(row, 5);
-        if (id) {
-            window.location.href = "<?= site_url('update/operacional') ?>/" + id;
-        }
+function money(value) {
+    return numberValue(value).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        maximumFractionDigits: 2,
     });
 }
 
-var donut = <?= $donut ?? '[]' ?>;
+function chartTheme() {
+    return {
+        mode: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light',
+        foreColor: cssVar('--app-text'),
+    };
+}
 
-function drawDonutChart() {
-    if (!hasChartRows(donut) || !document.getElementById('donut_chart')) {
+function baseOptions(extra) {
+    return Object.assign({
+        chart: {
+            fontFamily: 'Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            toolbar: { show: false },
+            foreColor: cssVar('--app-text'),
+            background: 'transparent',
+            animations: { enabled: true, speed: 420 },
+        },
+        theme: chartTheme(),
+        colors: chartPalette(),
+        dataLabels: { style: { fontWeight: 700 } },
+        grid: {
+            borderColor: cssVar('--app-chart-grid'),
+            strokeDashArray: 4,
+        },
+        legend: {
+            position: 'bottom',
+            labels: { colors: cssVar('--app-text') },
+        },
+        tooltip: {
+            theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light',
+        },
+        noData: {
+            text: 'Sem dados para exibir',
+            style: { color: cssVar('--app-muted') },
+        },
+    }, extra);
+}
+
+function renderChart(id, options) {
+    const el = document.getElementById(id);
+    if (!el || !window.ApexCharts) {
         return;
     }
-    // Dados do gráfico
-    // var data = google.visualization.arrayToDataTable([
-    //     ['Categoria', 'Valor'],
-    //     ['Categoria A', 1130.20],
-    //     ['Categoria B', 70.20],
-    //     ['Categoria C', 40.59],
-    //     ['Categoria D', 60.24]
-    // ]);
-    var data = google.visualization.arrayToDataTable(donut);
 
-    // Opções do gráfico
-    var options = {
-        title: 'Distribuição por Categorias',
-        pieHole: 0.4, // Tamanho do furo no meio
-        slices: {
-            0: { offset: 0.1 }, // Destacar a primeira fatia (opcional)
-            1: { offset: 0.1 }, // Destacar a segunda fatia (opcional)
-        },
-        legend: { position: 'right' },
-        pieSliceText: 'percentage', // Mostrar percentual nas fatias
-        is3D: false // Se deseja um efeito 3D (opcional)
-    };
-
-    // Criar e desenhar o gráfico
-    var chart = new google.visualization.PieChart(document.getElementById('donut_chart'));
-    chart.draw(data, options);
+    const chart = new ApexCharts(el, options);
+    chart.render();
+    chartInstances.push(chart);
 }
+
+function tableCategories(table) {
+    return table.slice(1).map((row) => String(row[0] ?? ''));
+}
+
+function tableSeries(table) {
+    const header = table[0] || [];
+    return header.slice(1).map((name, columnIndex) => ({
+        name: String(name),
+        data: table.slice(1).map((row) => numberValue(row[columnIndex + 1])),
+    }));
+}
+
+function renderAllCharts() {
+    while (chartInstances.length) {
+        chartInstances.pop().destroy();
+    }
+
+    if (hasChartRows(donut)) {
+        renderChart('donut_chart', baseOptions({
+            chart: { type: 'donut', height: 330, toolbar: { show: false }, background: 'transparent' },
+            labels: tableCategories(donut),
+            series: donut.slice(1).map((row) => numberValue(row[1])),
+            plotOptions: { pie: { donut: { size: '66%' } } },
+            dataLabels: {
+                formatter: (value) => `${Math.round(value)}%`,
+            },
+            tooltip: { y: { formatter: money } },
+        }));
+    }
+
+    if (hasChartRows(bar)) {
+        renderChart('column_chart', baseOptions({
+            chart: { type: 'bar', height: 330, toolbar: { show: false }, background: 'transparent' },
+            plotOptions: { bar: { borderRadius: 5, columnWidth: '58%' } },
+            series: tableSeries(bar),
+            xaxis: { categories: tableCategories(bar), labels: { style: { colors: cssVar('--app-muted') } } },
+            yaxis: { labels: { formatter: (value) => money(value).replace('R$', 'R$ ') } },
+            tooltip: { y: { formatter: money } },
+        }));
+    }
+
+    if (hasChartRows(barChart)) {
+        renderChart('column_chart2', baseOptions({
+            chart: { type: 'bar', height: 330, toolbar: { show: false }, background: 'transparent' },
+            plotOptions: { bar: { borderRadius: 5, columnWidth: '42%' } },
+            series: tableSeries(barChart),
+            xaxis: { categories: tableCategories(barChart), labels: { style: { colors: cssVar('--app-muted') } } },
+            yaxis: { labels: { formatter: money } },
+            tooltip: { y: { formatter: money } },
+        }));
+    }
+
+    if (hasChartRows(publicByCategory)) {
+        renderChart('public_category_chart', baseOptions({
+            chart: { type: 'bar', height: 330, toolbar: { show: false }, background: 'transparent' },
+            plotOptions: { bar: { horizontal: true, borderRadius: 5, barHeight: '56%' } },
+            series: [{ name: 'Público', data: publicByCategory.slice(1).map((row) => numberValue(row[1])) }],
+            xaxis: { categories: tableCategories(publicByCategory), labels: { formatter: (value) => Number(value).toLocaleString('pt-BR') } },
+            dataLabels: { enabled: true, formatter: (value) => Number(value).toLocaleString('pt-BR') },
+            tooltip: { y: { formatter: (value) => Number(value).toLocaleString('pt-BR') } },
+            colors: [cssVar('--app-chart-palette-2')],
+        }));
+    }
+
+    if (hasChartRows(taxaCozinhaStatus)) {
+        renderChart('taxa_cozinha_status_chart', baseOptions({
+            chart: { type: 'donut', height: 330, toolbar: { show: false }, background: 'transparent' },
+            labels: tableCategories(taxaCozinhaStatus),
+            series: taxaCozinhaStatus.slice(1).map((row) => numberValue(row[1])),
+            colors: [cssVar('--app-success'), cssVar('--app-warning'), cssVar('--app-danger')],
+            plotOptions: { pie: { donut: { size: '68%' } } },
+            tooltip: { y: { formatter: (value) => `${Number(value).toLocaleString('pt-BR')} registro(s)` } },
+        }));
+    }
+
+    if (hasChartRows(topEvents)) {
+        const rows = topEvents.slice(1);
+        renderChart('top_events_chart', baseOptions({
+            chart: {
+                type: 'bar',
+                height: 330,
+                toolbar: { show: false },
+                background: 'transparent',
+                events: {
+                    dataPointSelection: function (_event, _ctx, config) {
+                        const id = rows[config.dataPointIndex]?.[5];
+                        if (id) {
+                            window.location.href = "<?= site_url('update/operacional') ?>/" + id;
+                        }
+                    },
+                },
+            },
+            plotOptions: { bar: { horizontal: true, borderRadius: 5, barHeight: '58%' } },
+            series: [{ name: 'Custo total', data: rows.map((row) => numberValue(row[1])) }],
+            xaxis: { categories: rows.map((row) => String(row[0] ?? '')), labels: { formatter: money } },
+            tooltip: {
+                y: { formatter: money },
+                custom: function ({ dataPointIndex }) {
+                    const row = rows[dataPointIndex] || [];
+                    return `<div class="px-2 py-1"><strong>${row[0] || ''}</strong><br>${money(row[1])}<br><small>${String(row[3] || '').replace(/\\n/g, '<br>')}</small></div>`;
+                },
+            },
+            dataLabels: { enabled: false },
+        }));
+    }
+
+    if (hasChartRows(lineGenerator)) {
+        renderChart('line_generator_chart', baseOptions({
+            chart: { type: 'line', height: 330, toolbar: { show: false }, background: 'transparent' },
+            stroke: { curve: 'smooth', width: [3, 3, 0, 0] },
+            markers: { size: [3, 3, 6, 6], strokeWidth: 0 },
+            series: tableSeries(lineGenerator),
+            xaxis: { categories: tableCategories(lineGenerator), labels: { style: { colors: cssVar('--app-muted') } } },
+            yaxis: { title: { text: 'Horas acumuladas' } },
+            tooltip: { y: { formatter: (value) => `${Number(value || 0).toLocaleString('pt-BR')} h` } },
+        }));
+    }
+
+    if (hasChartRows(line)) {
+        renderChart('line_chart', baseOptions({
+            chart: { type: 'area', height: 340, toolbar: { show: false }, background: 'transparent' },
+            stroke: { curve: 'smooth', width: 3 },
+            fill: { type: 'gradient', gradient: { opacityFrom: 0.32, opacityTo: 0.04 } },
+            markers: { size: 4, hover: { size: 7 } },
+            series: tableSeries(line),
+            xaxis: { categories: tableCategories(line), labels: { style: { colors: cssVar('--app-muted') } } },
+            yaxis: { labels: { formatter: money } },
+            tooltip: { y: { formatter: money } },
+            title: { text: lineTitle, style: { color: cssVar('--app-heading'), fontSize: '15px' } },
+        }));
+    }
+}
+
+function initCharts() {
+    if (window.ApexCharts) {
+        renderAllCharts();
+        return;
+    }
+}
+
+window.addEventListener('load', initCharts);
+window.addEventListener('apexcharts:ready', initCharts);
+window.addEventListener('app:themechange', function () {
+    if (window.ApexCharts) {
+        renderAllCharts();
+    }
+});
 
 </script>
 

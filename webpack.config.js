@@ -5,6 +5,7 @@ module.exports = {
   entry: {
     app: path.resolve(__dirname, 'frontend/js/app.js'),
     auth: path.resolve(__dirname, 'frontend/js/auth.js'),
+    charts: path.resolve(__dirname, 'frontend/js/charts.js'),
     calendar: path.resolve(__dirname, 'frontend/js/chunks/calendar.js'),
   },
   output: {

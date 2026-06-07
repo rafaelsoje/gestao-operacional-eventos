@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="light">
 <head>
 <meta charset="UTF-8">
     <?php $isCalendarPage = isset($calendario) || isset($calendarioOp); ?>
@@ -18,6 +18,19 @@
     <meta property="og:image" content="<?= base_url('/assets/images/logo.png');?>">
     <meta property="og:url" content="<?= base_url();?>">
     <meta name="theme-color" content="#3197da">
+    <script>
+      (function () {
+        var key = 'audiovisual-theme';
+        var stored = localStorage.getItem(key);
+        var theme = stored === 'light' || stored === 'dark'
+          ? stored
+          : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.bsTheme = theme;
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
 
     <!-- Favicons -->
     <link rel="icon" href="<?= base_url('/favicon.ico'); ?>" sizes="any">
@@ -26,9 +39,6 @@
     <link rel="icon" href="<?= base_url('/assets/images/logo.png'); ?>" sizes="16x16" type="image/png">
     <link rel="icon" href="<?= base_url('/assets/images/logo.png'); ?>">
     <link rel="manifest" href="<?= base_url('/manifest.webmanifest'); ?>">
-
-    <!-- Google charts -->
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
     <!-- Pré-conexões para otimizar carregamento de fontes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -88,17 +98,17 @@
       .top-account-menu .dropdown-toggle {
         min-height: 46px;
         max-width: 220px;
-        border: 1px solid rgba(15, 23, 42, 0.12);
-        background: rgba(255, 255, 255, 0.96);
-        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
-        color: #27313f;
+        border: 1px solid var(--app-border);
+        background: var(--app-surface);
+        box-shadow: var(--app-shadow);
+        color: var(--app-text);
         text-align: left;
       }
 
       .top-account-menu .dropdown-toggle:hover,
       .top-account-menu .dropdown-toggle:focus {
-        background: #fff;
-        color: #111827;
+        background: var(--app-surface-soft);
+        color: var(--app-heading);
       }
 
       .top-account-menu .account-avatar {
@@ -121,7 +131,7 @@
 
       .top-account-menu .account-role {
         display: block;
-        color: #6b7280;
+        color: var(--app-muted);
         font-size: 12px;
         line-height: 1.2;
       }
@@ -129,6 +139,24 @@
       .top-account-menu .dropdown-menu {
         min-width: 220px;
         border-radius: 6px;
+      }
+
+      .top-theme-toggle {
+        width: 46px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--app-border);
+        background: var(--app-surface);
+        color: var(--app-text);
+        box-shadow: var(--app-shadow);
+      }
+
+      .top-theme-toggle:hover,
+      .top-theme-toggle:focus {
+        background: var(--app-surface-soft);
+        color: var(--app-heading);
       }
 
       .top-account-menu .dropdown-item {
@@ -208,33 +236,75 @@
    
   </header>
 <main class="main">
-    <div class="top-account-menu dropdown">
-      <button class="btn dropdown-toggle d-flex align-items-center gap-2" type="button" id="topAccountMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-        <img
-          src="<?= url_to('avatar.show', $logged->avatar ?? 'avatar.svg');?>"
-          alt="avatar"
-          class="account-avatar rounded-circle"
-        >
-        <span class="account-text flex-grow-1 min-w-0">
-          <span class="account-name"><?= esc($loggedFirstName); ?></span>
-          <span class="account-role"><?= esc($roleLabel); ?></span>
-        </span>
+    <div class="top-account-menu d-flex align-items-center gap-2">
+      <button
+        class="btn top-theme-toggle"
+        type="button"
+        data-theme-toggle
+        aria-label="Alternar tema"
+        title="Alternar tema"
+        onclick="event.preventDefault(); if (window.appTheme && window.appTheme.toggle) { window.appTheme.toggle(); } else if (window.appThemeFallbackToggle) { window.appThemeFallbackToggle(); }"
+      >
+        <i class="bi bi-moon-stars"></i>
       </button>
-      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="topAccountMenuButton">
-        <li><a class="dropdown-item" href="<?=base_url('perfil')?>"><i class="bi bi-person-circle"></i>Meu perfil</a></li>
-        <li><a class="dropdown-item" href="<?=base_url('assinatura')?>"><i class="bi bi-credit-card"></i>Assinatura</a></li>
-        <?php if($navRole === 'admin' || $navRole === 'superuser'):?>
-          <li><a class="dropdown-item" href="<?=base_url('usuarios')?>"><i class="bi bi-person-fill-check"></i>Usuários</a></li>
-        <?php endif;?>
-        <?php if($isSuperuser):?>
+      <div class="dropdown">
+        <button class="btn dropdown-toggle d-flex align-items-center gap-2" type="button" id="topAccountMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+          <img
+            src="<?= url_to('avatar.show', $logged->avatar ?? 'avatar.svg');?>"
+            alt="avatar"
+            class="account-avatar rounded-circle"
+          >
+          <span class="account-text flex-grow-1 min-w-0">
+            <span class="account-name"><?= esc($loggedFirstName); ?></span>
+            <span class="account-role"><?= esc($roleLabel); ?></span>
+          </span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="topAccountMenuButton">
+          <li><a class="dropdown-item" href="<?=base_url('perfil')?>"><i class="bi bi-person-circle"></i>Meu perfil</a></li>
+          <li><a class="dropdown-item" href="<?=base_url('assinatura')?>"><i class="bi bi-credit-card"></i>Assinatura</a></li>
+          <?php if($navRole === 'admin' || $navRole === 'superuser'):?>
+            <li><a class="dropdown-item" href="<?=base_url('usuarios')?>"><i class="bi bi-person-fill-check"></i>Usuários</a></li>
+          <?php endif;?>
+          <?php if($isSuperuser):?>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="<?=base_url('admin/notifications')?>"><i class="bi bi-bell"></i>Notificações</a></li>
+            <li><a class="dropdown-item" href="<?=base_url('logs')?>"><i class="bi bi-envelope"></i>Logs</a></li>
+          <?php endif;?>
           <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="<?=base_url('admin/notifications')?>"><i class="bi bi-bell"></i>Notificações</a></li>
-          <li><a class="dropdown-item" href="<?=base_url('logs')?>"><i class="bi bi-envelope"></i>Logs</a></li>
-        <?php endif;?>
-        <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="<?=base_url('logout')?>"><i class="bi bi-box-arrow-left"></i>Sair</a></li>
-      </ul>
+          <li><a class="dropdown-item" href="<?=base_url('logout')?>"><i class="bi bi-box-arrow-left"></i>Sair</a></li>
+        </ul>
+      </div>
     </div>
+    <script>
+      window.appThemeFallbackToggle = function () {
+        var root = document.documentElement;
+        var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('audiovisual-theme', next);
+        root.dataset.theme = next;
+        root.dataset.bsTheme = next;
+        root.classList.toggle('dark', next === 'dark');
+        root.style.colorScheme = next;
+        document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+          var dark = next === 'dark';
+          button.setAttribute('aria-label', dark ? 'Ativar tema claro' : 'Ativar tema escuro');
+          button.setAttribute('title', dark ? 'Tema claro' : 'Tema escuro');
+          button.innerHTML = '<i class="bi ' + (dark ? 'bi-sun' : 'bi-moon-stars') + '"></i>';
+        });
+        window.dispatchEvent(new CustomEvent('app:themechange', { detail: { theme: next } }));
+      };
+      document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+          if (event.defaultPrevented) {
+            return;
+          }
+          if (window.appTheme && window.appTheme.toggle) {
+            return;
+          }
+          event.preventDefault();
+          window.appThemeFallbackToggle();
+        });
+      });
+    </script>
     <?php
       $subscriptionState = null;
       if (session()->get('auth')) {
