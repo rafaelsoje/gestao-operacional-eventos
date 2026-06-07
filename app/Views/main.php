@@ -249,50 +249,44 @@
       <?php
         $subscriptionBlocked = !empty($subscriptionState['blocked']);
         $daysUntilBlock = (int)($subscriptionState['days_until_block'] ?? 0);
-        $bannerTitle = $subscriptionBlocked ? 'Sistema bloqueado por mensalidade vencida' : 'Mensalidade do sistema pendente';
+        $noticeTitle = $subscriptionBlocked ? 'Sistema bloqueado por mensalidade vencida' : 'Mensalidade do sistema pendente';
         $bannerDetail = $subscriptionBlocked
           ? 'Regularize o pagamento para liberar as funcionalidades.'
           : ($daysUntilBlock >= 0
               ? 'Bloqueio previsto em ' . $daysUntilBlock . ' dia(s), caso o pagamento não seja identificado.'
               : 'A tolerância terminou. Regularize para evitar bloqueio.');
       ?>
-      <div class="subscription-banner app-banner alert-dismissible fade show <?= $subscriptionBlocked ? 'app-banner-danger' : 'app-banner-warning'; ?>" role="alert">
-        <div class="subscription-banner-content d-flex align-items-start gap-2">
-          <i class="bi <?= $subscriptionBlocked ? 'bi-lock-fill text-danger' : 'bi-exclamation-triangle-fill text-warning'; ?> mt-1"></i>
-          <div>
-            <strong><?= esc($bannerTitle); ?></strong>
-            <p><?= esc((string)($subscriptionState['message'] ?? 'Mensalidade pendente.')); ?> <?= esc($bannerDetail); ?></p>
-          </div>
-        </div>
-        <a href="<?= base_url('assinatura'); ?>" class="subscription-banner-action btn <?= $subscriptionBlocked ? 'btn-outline-danger' : 'btn-outline-warning'; ?>">
-          <i class="bi bi-credit-card"></i>
-          Regularizar
-        </a>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-      </div>
       <div class="modal fade" id="subscriptionPendingModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Mensalidade pendente</h5>
+              <h5 class="modal-title"><?= esc($noticeTitle); ?></h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
-              <?= esc((string)($subscriptionState['message'] ?? 'Mensalidade pendente.')); ?>
+              <div class="d-flex align-items-start gap-2">
+                <i class="bi <?= $subscriptionBlocked ? 'bi-lock-fill text-danger' : 'bi-exclamation-triangle-fill text-warning'; ?> mt-1"></i>
+                <p class="mb-0"><?= esc((string)($subscriptionState['message'] ?? 'Mensalidade pendente.')); ?> <?= esc($bannerDetail); ?></p>
+              </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Depois</button>
-              <a href="<?= base_url('assinatura'); ?>" class="btn btn-primary">Ver pagamento</a>
+              <a href="<?= base_url('assinatura'); ?>" class="btn <?= $subscriptionBlocked ? 'btn-danger' : 'btn-primary'; ?>">Regularizar</a>
             </div>
           </div>
         </div>
       </div>
       <script>
         window.addEventListener('load', function () {
-          if (!window.bootstrap || !bootstrap.Modal || sessionStorage.getItem('subscriptionPendingShown') === '1') {
+          if (!window.bootstrap || !bootstrap.Modal) {
+            return;
+          }
+          <?php if (!$subscriptionBlocked): ?>
+          if (sessionStorage.getItem('subscriptionPendingShown') === '1') {
             return;
           }
           sessionStorage.setItem('subscriptionPendingShown', '1');
+          <?php endif; ?>
           new bootstrap.Modal(document.getElementById('subscriptionPendingModal')).show();
         });
       </script>
