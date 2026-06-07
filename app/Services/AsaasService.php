@@ -52,12 +52,14 @@ class AsaasService
         $headers = [
             'Content-Type: application/json',
             'Accept: application/json',
+            'User-Agent: Audiovisual/1.0 (+https://audiovisual.rafaelsoje.com)',
             'access_token: ' . $this->apiKey,
         ];
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Audiovisual/1.0 (+https://audiovisual.rafaelsoje.com)');
         curl_setopt($ch, CURLOPT_TIMEOUT, 20);
 
         if ($payload !== null) {
