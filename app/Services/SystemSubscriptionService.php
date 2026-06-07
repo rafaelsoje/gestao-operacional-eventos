@@ -23,7 +23,7 @@ class SystemSubscriptionService
 
     public function amount(): float
     {
-        return (float)$this->setting('system_subscription_amount', env('SYSTEM_SUBSCRIPTION_AMOUNT', 60));
+        return (float)$this->setting('system_subscription_amount', env('SYSTEM_SUBSCRIPTION_AMOUNT', 65));
     }
 
     public function graceDays(): int
@@ -62,7 +62,7 @@ class SystemSubscriptionService
         $settings = new Settings();
         $amount = (float)str_replace(',', '.', str_replace('.', '', (string)($data['amount'] ?? $this->amount())));
         if ($amount <= 0) {
-            $amount = 60;
+            $amount = 65;
         }
 
         $payload = [

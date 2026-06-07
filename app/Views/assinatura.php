@@ -9,7 +9,7 @@ $tableReady = (bool)($tableReady ?? false);
 $charge = $charge ?? null;
 $charges = $charges ?? [];
 $state = $state ?? [];
-$settings = $settings ?? ['enabled' => false, 'amount' => 60, 'due_day' => 10, 'warning_day' => 5, 'grace_days' => 2];
+$settings = $settings ?? ['enabled' => false, 'amount' => 65, 'due_day' => 10, 'warning_day' => 5, 'grace_days' => 2];
 $asaasConfigured = (bool)($asaasConfigured ?? false);
 $canManualRelease = (bool)($canManualRelease ?? false);
 $statusBadge = static function (string $status): string {
