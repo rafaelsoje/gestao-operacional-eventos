@@ -157,12 +157,12 @@ class SystemSubscriptionService
 
     public function ensureRemoteCharge(object $charge): bool
     {
-        if (!empty($charge->asaas_payment_id)) {
+        if (!empty($charge->asaas_payment_id) && !$this->isInactiveStatus((string)($charge->status ?? ''))) {
             return true;
         }
 
         $freshCharge = $this->charges->find((int)$charge->id);
-        if ($freshCharge && !empty($freshCharge->asaas_payment_id)) {
+        if ($freshCharge && !empty($freshCharge->asaas_payment_id) && !$this->isInactiveStatus((string)($freshCharge->status ?? ''))) {
             return true;
         }
         if ($freshCharge) {
@@ -541,6 +541,11 @@ class SystemSubscriptionService
     private function isPaidStatus(string $status): bool
     {
         return $status === 'paid';
+    }
+
+    private function isInactiveStatus(string $status): bool
+    {
+        return in_array($status, ['cancelled', 'refunded'], true);
     }
 
     private function isLocalOnlyOpenCharge(object $charge): bool
