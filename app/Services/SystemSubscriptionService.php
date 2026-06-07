@@ -225,14 +225,17 @@ class SystemSubscriptionService
             }
         }
 
+        $status = $this->normalizeAsaasPaymentStatus($payment);
+        $inactive = in_array($status, ['cancelled', 'refunded'], true);
+
         $this->charges->update((int)$charge->id, [
             'asaas_payment_id' => $payment['id'] ?? null,
             'asaas_customer_id' => $customerId,
-            'invoice_url' => $payment['invoiceUrl'] ?? null,
-            'bank_slip_url' => $payment['bankSlipUrl'] ?? null,
-            'pix_qr_code' => $qrCode['encodedImage'] ?? null,
-            'pix_payload' => $qrCode['payload'] ?? null,
-            'status' => $this->normalizeAsaasStatus((string)($payment['status'] ?? 'PENDING')),
+            'invoice_url' => $inactive ? null : ($payment['invoiceUrl'] ?? null),
+            'bank_slip_url' => $inactive ? null : ($payment['bankSlipUrl'] ?? null),
+            'pix_qr_code' => $inactive ? null : ($qrCode['encodedImage'] ?? null),
+            'pix_payload' => $inactive ? null : ($qrCode['payload'] ?? null),
+            'status' => $status,
             'last_webhook_event' => $event ?? ($createdNow ? 'asaas_created' : 'asaas_reused'),
             'last_sync_at' => date('Y-m-d H:i:s'),
             'raw_payload' => json_encode(['payment' => $payment, 'pixQrCode' => $qrCode], JSON_UNESCAPED_UNICODE),
@@ -398,9 +401,18 @@ class SystemSubscriptionService
             'RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH' => 'paid',
             'OVERDUE' => 'overdue',
             'REFUNDED', 'CHARGEBACK_REQUESTED', 'CHARGEBACK_DISPUTE' => 'refunded',
-            'DELETED', 'CANCELLED' => 'cancelled',
+            'DELETED', 'CANCELLED', 'REMOVED' => 'cancelled',
             default => 'pending',
         };
+    }
+
+    public function normalizeAsaasPaymentStatus(array $payment): string
+    {
+        if ($this->paymentPayloadIndicatesRemoval($payment)) {
+            return 'cancelled';
+        }
+
+        return $this->normalizeAsaasStatus((string)($payment['status'] ?? ''));
     }
 
     private function applyPaymentPayload(array $payment, string $event, ?array $rawWebhook = null): ?object
@@ -420,7 +432,7 @@ class SystemSubscriptionService
         }
 
         $previousStatus = (string)($charge->status ?? '');
-        $status = $this->normalizeAsaasStatus((string)($payment['status'] ?? ''));
+        $status = $this->normalizeAsaasPaymentStatus($payment);
         $paidAt = $status === 'paid'
             ? (($payment['paymentDate'] ?? $payment['clientPaymentDate'] ?? date('Y-m-d')) . ' ' . date('H:i:s'))
             : ($charge->paid_at ?? null);
@@ -478,6 +490,23 @@ class SystemSubscriptionService
             log_message('error', 'Falha ao vincular cobrança substituta no Asaas: {message}', ['message' => $e->getMessage()]);
             return null;
         }
+    }
+
+    private function paymentPayloadIndicatesRemoval(array $payment): bool
+    {
+        foreach (['deleted', 'removed', 'cancelled', 'canceled'] as $field) {
+            if (array_key_exists($field, $payment) && filter_var($payment[$field], FILTER_VALIDATE_BOOL)) {
+                return true;
+            }
+        }
+
+        foreach (['deletedAt', 'removedAt', 'cancelledAt', 'canceledAt', 'cancellationDate', 'deletedDate'] as $field) {
+            if (!empty($payment[$field])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function markChargeAsCancelled(object $charge, string $event, array $context = []): ?object

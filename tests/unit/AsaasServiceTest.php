@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\AsaasService;
+use App\Services\SystemSubscriptionService;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
@@ -38,6 +39,17 @@ final class AsaasServiceTest extends CIUnitTestCase
         ], 65.00, '2026-06-10', 'cus_123'));
     }
 
+    public function testDoesNotMatchDeletedPaymentEvenWhenStatusIsPending(): void
+    {
+        $this->assertFalse(AsaasService::paymentMatchesCharge([
+            'customer' => 'cus_123',
+            'value' => 65.00,
+            'dueDate' => '2026-06-10',
+            'status' => 'PENDING',
+            'deleted' => true,
+        ], 65.00, '2026-06-10', 'cus_123'));
+    }
+
     public function testDoesNotMatchDifferentDueDate(): void
     {
         $this->assertFalse(AsaasService::paymentMatchesCharge([
@@ -46,5 +58,15 @@ final class AsaasServiceTest extends CIUnitTestCase
             'dueDate' => '2026-06-11',
             'status' => 'PENDING',
         ], 65.00, '2026-06-10', 'cus_123'));
+    }
+
+    public function testNormalizesDeletedPendingPaymentAsCancelled(): void
+    {
+        $service = new SystemSubscriptionService();
+
+        $this->assertSame('cancelled', $service->normalizeAsaasPaymentStatus([
+            'status' => 'PENDING',
+            'deleted' => true,
+        ]));
     }
 }

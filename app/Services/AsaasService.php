@@ -134,7 +134,7 @@ class AsaasService
     public static function paymentMatchesCharge(array $payment, float $value, string $dueDate, ?string $customerId = null): bool
     {
         $status = strtoupper((string)($payment['status'] ?? ''));
-        if (in_array($status, ['DELETED', 'CANCELLED', 'REFUNDED'], true)) {
+        if (self::paymentPayloadIndicatesRemoval($payment) || in_array($status, ['DELETED', 'CANCELLED', 'REFUNDED', 'REMOVED'], true)) {
             return false;
         }
 
@@ -155,6 +155,23 @@ class AsaasService
         }
 
         return abs(((float)($payment['value'] ?? 0)) - $value) < 0.01;
+    }
+
+    private static function paymentPayloadIndicatesRemoval(array $payment): bool
+    {
+        foreach (['deleted', 'removed', 'cancelled', 'canceled'] as $field) {
+            if (array_key_exists($field, $payment) && filter_var($payment[$field], FILTER_VALIDATE_BOOL)) {
+                return true;
+            }
+        }
+
+        foreach (['deletedAt', 'removedAt', 'cancelledAt', 'canceledAt', 'cancellationDate', 'deletedDate'] as $field) {
+            if (!empty($payment[$field])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function request(string $method, string $path, ?array $payload = null): array
