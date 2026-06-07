@@ -26,6 +26,16 @@ class SubscriptionSync extends BaseCommand
             return;
         }
 
+        $sync = $service->syncOpenCharges();
+        if ($sync['checked'] > 0) {
+            CLI::write(
+                'Cobranças abertas revisadas no Asaas: '
+                . $sync['synced'] . ' sincronizada(s), '
+                . $sync['failed'] . ' com falha.',
+                $sync['failed'] > 0 ? 'yellow' : 'green'
+            );
+        }
+
         $charge = $service->payableCharge(true);
         if (!$charge) {
             CLI::error('Não foi possível localizar ou criar cobrança.');

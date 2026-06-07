@@ -250,9 +250,40 @@ class SystemSubscriptionService
             $this->applyPaymentPayload($payment, 'manual_sync');
             return true;
         } catch (Throwable $e) {
+            if (AsaasService::isNotFound($e)) {
+                $this->markChargeAsCancelled($charge, 'manual_sync_missing_remote', [
+                    'asaas_payment_id' => (string)$charge->asaas_payment_id,
+                    'error' => $e->getMessage(),
+                ]);
+                return true;
+            }
+
             log_message('error', 'Falha ao sincronizar cobrança Asaas: {message}', ['message' => $e->getMessage()]);
             return false;
         }
+    }
+
+    public function syncOpenCharges(): array
+    {
+        if (!$this->tableReady()) {
+            return ['checked' => 0, 'synced' => 0, 'failed' => 0];
+        }
+
+        $charges = $this->charges
+            ->whereIn('status', ['pending', 'overdue'])
+            ->where('asaas_payment_id IS NOT NULL', null, false)
+            ->findAll();
+
+        $result = ['checked' => count($charges), 'synced' => 0, 'failed' => 0];
+        foreach ($charges as $charge) {
+            if ($this->syncCharge($charge)) {
+                $result['synced']++;
+            } else {
+                $result['failed']++;
+            }
+        }
+
+        return $result;
     }
 
     public function handleWebhook(array $payload): ?object
@@ -383,11 +414,14 @@ class SystemSubscriptionService
         $paidAt = $status === 'paid'
             ? (($payment['paymentDate'] ?? $payment['clientPaymentDate'] ?? date('Y-m-d')) . ' ' . date('H:i:s'))
             : ($charge->paid_at ?? null);
+        $inactive = in_array($status, ['cancelled', 'refunded'], true);
 
         $this->charges->update((int)$charge->id, [
             'status' => $status,
-            'invoice_url' => $payment['invoiceUrl'] ?? ($charge->invoice_url ?? null),
-            'bank_slip_url' => $payment['bankSlipUrl'] ?? ($charge->bank_slip_url ?? null),
+            'invoice_url' => $inactive ? null : ($payment['invoiceUrl'] ?? ($charge->invoice_url ?? null)),
+            'bank_slip_url' => $inactive ? null : ($payment['bankSlipUrl'] ?? ($charge->bank_slip_url ?? null)),
+            'pix_qr_code' => $inactive ? null : ($charge->pix_qr_code ?? null),
+            'pix_payload' => $inactive ? null : ($charge->pix_payload ?? null),
             'paid_at' => $paidAt,
             'last_webhook_event' => $event,
             'last_sync_at' => date('Y-m-d H:i:s'),
@@ -397,6 +431,29 @@ class SystemSubscriptionService
         $updated = $this->charges->find((int)$charge->id);
         if ($updated) {
             $this->notifyStatusChange($updated, $previousStatus, $status);
+        }
+
+        return $updated;
+    }
+
+    private function markChargeAsCancelled(object $charge, string $event, array $context = []): ?object
+    {
+        $previousStatus = (string)($charge->status ?? '');
+        $this->charges->update((int)$charge->id, [
+            'status' => 'cancelled',
+            'invoice_url' => null,
+            'bank_slip_url' => null,
+            'pix_qr_code' => null,
+            'pix_payload' => null,
+            'paid_at' => null,
+            'last_webhook_event' => $event,
+            'last_sync_at' => date('Y-m-d H:i:s'),
+            'raw_payload' => json_encode(['remote_missing' => true] + $context, JSON_UNESCAPED_UNICODE),
+        ]);
+
+        $updated = $this->charges->find((int)$charge->id);
+        if ($updated) {
+            $this->notifyStatusChange($updated, $previousStatus, 'cancelled');
         }
 
         return $updated;

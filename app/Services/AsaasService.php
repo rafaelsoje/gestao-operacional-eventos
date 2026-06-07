@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use RuntimeException;
+use Throwable;
 
 class AsaasService
 {
@@ -79,6 +80,21 @@ class AsaasService
         return $this->request('GET', '/payments/' . rawurlencode($paymentId));
     }
 
+    public static function isNotFound(Throwable $e): bool
+    {
+        if ((int)$e->getCode() === 404) {
+            return true;
+        }
+
+        $message = mb_strtolower($e->getMessage());
+        return str_contains($message, 'not found')
+            || str_contains($message, 'não encontrada')
+            || str_contains($message, 'nao encontrada')
+            || str_contains($message, 'não encontrado')
+            || str_contains($message, 'nao encontrado')
+            || str_contains($message, 'inexistente');
+    }
+
     private function request(string $method, string $path, ?array $payload = null): array
     {
         if (!$this->isConfigured()) {
@@ -119,7 +135,7 @@ class AsaasService
 
         if ($statusCode < 200 || $statusCode >= 300) {
             $message = $decoded['errors'][0]['description'] ?? $decoded['message'] ?? 'Erro ao chamar API do Asaas.';
-            throw new RuntimeException((string)$message);
+            throw new RuntimeException((string)$message, $statusCode);
         }
 
         return $decoded;
