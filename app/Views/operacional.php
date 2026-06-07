@@ -1172,12 +1172,18 @@ function renderAllCharts() {
     }
 
     if (hasChartRows(line)) {
+        const annualSeries = tableSeries(line);
+        const annualColors = annualSeries.length > 1
+            ? [cssVar('--app-chart-previous-year'), cssVar('--app-chart-palette-2')]
+            : [cssVar('--app-chart-palette-2')];
+
         renderChart('line_chart', baseOptions({
             chart: { type: 'area', height: 340, toolbar: { show: false }, background: 'transparent' },
             stroke: { curve: 'smooth', width: 3 },
             fill: { type: 'gradient', gradient: { opacityFrom: 0.32, opacityTo: 0.04 } },
             markers: { size: 4, hover: { size: 7 } },
-            series: tableSeries(line),
+            series: annualSeries,
+            colors: annualColors,
             xaxis: { categories: tableCategories(line), labels: { style: { colors: cssVar('--app-muted') } } },
             yaxis: { labels: { formatter: money } },
             tooltip: { y: { formatter: money } },

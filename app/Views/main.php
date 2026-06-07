@@ -24,7 +24,7 @@
         var stored = localStorage.getItem(key);
         var theme = stored === 'light' || stored === 'dark'
           ? stored
-          : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          : 'light';
         document.documentElement.dataset.theme = theme;
         document.documentElement.dataset.bsTheme = theme;
         document.documentElement.classList.toggle('dark', theme === 'dark');
