@@ -32,6 +32,43 @@ class AsaasService
         ]);
     }
 
+    public function findPaymentByExternalReference(string $externalReference, ?string $customerId = null): ?array
+    {
+        $query = [
+            'externalReference' => $externalReference,
+            'limit' => 100,
+        ];
+
+        if ($customerId !== null && $customerId !== '') {
+            $query['customer'] = $customerId;
+        }
+
+        $response = $this->request('GET', '/payments?' . http_build_query($query));
+        $payments = $response['data'] ?? [];
+        if (!is_array($payments)) {
+            return null;
+        }
+
+        foreach ($payments as $payment) {
+            if (!is_array($payment)) {
+                continue;
+            }
+
+            if (($payment['externalReference'] ?? '') !== $externalReference) {
+                continue;
+            }
+
+            $status = strtoupper((string)($payment['status'] ?? ''));
+            if (in_array($status, ['DELETED', 'CANCELLED', 'REFUNDED'], true)) {
+                continue;
+            }
+
+            return $payment;
+        }
+
+        return null;
+    }
+
     public function getPixQrCode(string $paymentId): array
     {
         return $this->request('GET', '/payments/' . rawurlencode($paymentId) . '/pixQrCode');

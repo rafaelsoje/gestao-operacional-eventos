@@ -161,6 +161,14 @@ class SystemSubscriptionService
             return true;
         }
 
+        $freshCharge = $this->charges->find((int)$charge->id);
+        if ($freshCharge && !empty($freshCharge->asaas_payment_id)) {
+            return true;
+        }
+        if ($freshCharge) {
+            $charge = $freshCharge;
+        }
+
         $customerId = trim((string)$this->setting('asaas_customer_id', env('ASAAS_CUSTOMER_ID', '')));
         if ($customerId === '') {
             return false;
@@ -168,36 +176,29 @@ class SystemSubscriptionService
 
         try {
             $asaas = new AsaasService();
-            $payment = $asaas->createPixCharge([
-                'customer' => $customerId,
-                'value' => (float)$charge->amount,
-                'dueDate' => (string)$charge->due_date,
-                'description' => 'Mensalidade do sistema - ' . $this->monthLabel((string)$charge->month_ref),
-                'externalReference' => 'system-subscription-' . $charge->month_ref,
-            ]);
+            $externalReference = 'system-subscription-' . $charge->month_ref;
+            $payment = $asaas->findPaymentByExternalReference($externalReference, $customerId);
+            $createdNow = false;
 
-            $qrCode = [];
-            if (!empty($payment['id'])) {
-                try {
-                    $qrCode = $asaas->getPixQrCode((string)$payment['id']);
-                } catch (Throwable $e) {
-                    log_message('error', 'Falha ao obter QR Code Pix Asaas: {message}', ['message' => $e->getMessage()]);
-                }
+            if ($payment === null) {
+                $payment = $asaas->createPixCharge([
+                    'customer' => $customerId,
+                    'value' => (float)$charge->amount,
+                    'dueDate' => (string)$charge->due_date,
+                    'description' => 'Mensalidade do sistema - ' . $this->monthLabel((string)$charge->month_ref),
+                    'externalReference' => $externalReference,
+                ]);
+                $createdNow = true;
             }
 
-            $this->charges->update((int)$charge->id, [
-                'asaas_payment_id' => $payment['id'] ?? null,
-                'asaas_customer_id' => $customerId,
-                'invoice_url' => $payment['invoiceUrl'] ?? null,
-                'bank_slip_url' => $payment['bankSlipUrl'] ?? null,
-                'pix_qr_code' => $qrCode['encodedImage'] ?? null,
-                'pix_payload' => $qrCode['payload'] ?? null,
-                'status' => $this->normalizeAsaasStatus((string)($payment['status'] ?? 'PENDING')),
-                'last_sync_at' => date('Y-m-d H:i:s'),
-                'raw_payload' => json_encode(['payment' => $payment, 'pixQrCode' => $qrCode], JSON_UNESCAPED_UNICODE),
-            ]);
+            if (empty($payment['id'])) {
+                return false;
+            }
 
-            if (!empty($payment['id'])) {
+            $payment = $asaas->getPayment((string)$payment['id']);
+            $this->updateChargeFromPayment($charge, $payment, $customerId, $createdNow);
+
+            if ($createdNow) {
                 $this->notifyTelegram(
                     'Mensalidade do sistema gerada: ' . $this->monthLabel((string)$charge->month_ref)
                     . ' - R$ ' . number_format((float)$charge->amount, 2, ',', '.')
@@ -211,6 +212,31 @@ class SystemSubscriptionService
             log_message('error', 'Falha ao gerar cobrança Asaas: {message}', ['message' => $e->getMessage()]);
             return false;
         }
+    }
+
+    private function updateChargeFromPayment(object $charge, array $payment, string $customerId, bool $createdNow): void
+    {
+        $qrCode = [];
+        if (!empty($payment['id'])) {
+            try {
+                $qrCode = (new AsaasService())->getPixQrCode((string)$payment['id']);
+            } catch (Throwable $e) {
+                log_message('error', 'Falha ao obter QR Code Pix Asaas: {message}', ['message' => $e->getMessage()]);
+            }
+        }
+
+        $this->charges->update((int)$charge->id, [
+            'asaas_payment_id' => $payment['id'] ?? null,
+            'asaas_customer_id' => $customerId,
+            'invoice_url' => $payment['invoiceUrl'] ?? null,
+            'bank_slip_url' => $payment['bankSlipUrl'] ?? null,
+            'pix_qr_code' => $qrCode['encodedImage'] ?? null,
+            'pix_payload' => $qrCode['payload'] ?? null,
+            'status' => $this->normalizeAsaasStatus((string)($payment['status'] ?? 'PENDING')),
+            'last_webhook_event' => $createdNow ? 'asaas_created' : 'asaas_reused',
+            'last_sync_at' => date('Y-m-d H:i:s'),
+            'raw_payload' => json_encode(['payment' => $payment, 'pixQrCode' => $qrCode], JSON_UNESCAPED_UNICODE),
+        ]);
     }
 
     public function syncCharge(object $charge): bool
