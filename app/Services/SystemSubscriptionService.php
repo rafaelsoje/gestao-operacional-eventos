@@ -214,7 +214,7 @@ class SystemSubscriptionService
         }
     }
 
-    private function updateChargeFromPayment(object $charge, array $payment, string $customerId, bool $createdNow): void
+    private function updateChargeFromPayment(object $charge, array $payment, string $customerId, bool $createdNow, ?string $event = null): void
     {
         $qrCode = [];
         if (!empty($payment['id'])) {
@@ -233,7 +233,7 @@ class SystemSubscriptionService
             'pix_qr_code' => $qrCode['encodedImage'] ?? null,
             'pix_payload' => $qrCode['payload'] ?? null,
             'status' => $this->normalizeAsaasStatus((string)($payment['status'] ?? 'PENDING')),
-            'last_webhook_event' => $createdNow ? 'asaas_created' : 'asaas_reused',
+            'last_webhook_event' => $event ?? ($createdNow ? 'asaas_created' : 'asaas_reused'),
             'last_sync_at' => date('Y-m-d H:i:s'),
             'raw_payload' => json_encode(['payment' => $payment, 'pixQrCode' => $qrCode], JSON_UNESCAPED_UNICODE),
         ]);
@@ -251,6 +251,16 @@ class SystemSubscriptionService
             return true;
         } catch (Throwable $e) {
             if (AsaasService::isNotFound($e)) {
+                $relinked = $this->relinkMissingRemoteCharge($charge);
+                if ($relinked === true) {
+                    return true;
+                }
+
+                if ($relinked === null) {
+                    log_message('error', 'Falha ao procurar cobrança substituta no Asaas: {message}', ['message' => $e->getMessage()]);
+                    return false;
+                }
+
                 $this->markChargeAsCancelled($charge, 'manual_sync_missing_remote', [
                     'asaas_payment_id' => (string)$charge->asaas_payment_id,
                     'error' => $e->getMessage(),
@@ -434,6 +444,40 @@ class SystemSubscriptionService
         }
 
         return $updated;
+    }
+
+    private function relinkMissingRemoteCharge(object $charge): ?bool
+    {
+        $customerId = trim((string)($charge->asaas_customer_id ?? ''));
+        if ($customerId === '') {
+            $customerId = trim((string)$this->setting('asaas_customer_id', env('ASAAS_CUSTOMER_ID', '')));
+        }
+
+        if ($customerId === '') {
+            return false;
+        }
+
+        try {
+            $asaas = new AsaasService();
+            $payment = $asaas->findMatchingPayment(
+                $customerId,
+                (float)$charge->amount,
+                (string)$charge->due_date,
+                'system-subscription-' . (string)$charge->month_ref
+            );
+
+            if ($payment === null || empty($payment['id'])) {
+                return false;
+            }
+
+            $payment = $asaas->getPayment((string)$payment['id']);
+            $this->updateChargeFromPayment($charge, $payment, $customerId, false, 'manual_sync_relinked_remote');
+
+            return true;
+        } catch (Throwable $e) {
+            log_message('error', 'Falha ao vincular cobrança substituta no Asaas: {message}', ['message' => $e->getMessage()]);
+            return null;
+        }
     }
 
     private function markChargeAsCancelled(object $charge, string $event, array $context = []): ?object

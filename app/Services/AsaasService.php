@@ -70,6 +70,42 @@ class AsaasService
         return null;
     }
 
+    public function findMatchingPayment(string $customerId, float $value, string $dueDate, ?string $preferredExternalReference = null): ?array
+    {
+        $fallback = null;
+        $limit = 100;
+
+        for ($offset = 0; $offset <= 500; $offset += $limit) {
+            $response = $this->request('GET', '/payments?' . http_build_query([
+                'customer' => $customerId,
+                'limit' => $limit,
+                'offset' => $offset,
+            ]));
+            $payments = $response['data'] ?? [];
+            if (!is_array($payments) || $payments === []) {
+                return $fallback;
+            }
+
+            foreach ($payments as $payment) {
+                if (!is_array($payment) || !self::paymentMatchesCharge($payment, $value, $dueDate, $customerId)) {
+                    continue;
+                }
+
+                if ($preferredExternalReference !== null && ($payment['externalReference'] ?? null) === $preferredExternalReference) {
+                    return $payment;
+                }
+
+                $fallback ??= $payment;
+            }
+
+            if (empty($response['hasMore']) || count($payments) < $limit) {
+                return $fallback;
+            }
+        }
+
+        return $fallback;
+    }
+
     public function getPixQrCode(string $paymentId): array
     {
         return $this->request('GET', '/payments/' . rawurlencode($paymentId) . '/pixQrCode');
@@ -93,6 +129,32 @@ class AsaasService
             || str_contains($message, 'não encontrado')
             || str_contains($message, 'nao encontrado')
             || str_contains($message, 'inexistente');
+    }
+
+    public static function paymentMatchesCharge(array $payment, float $value, string $dueDate, ?string $customerId = null): bool
+    {
+        $status = strtoupper((string)($payment['status'] ?? ''));
+        if (in_array($status, ['DELETED', 'CANCELLED', 'REFUNDED'], true)) {
+            return false;
+        }
+
+        if ($customerId !== null && $customerId !== '') {
+            $paymentCustomer = $payment['customer'] ?? '';
+            if (is_array($paymentCustomer)) {
+                $paymentCustomer = $paymentCustomer['id'] ?? '';
+            }
+
+            if ((string)$paymentCustomer !== $customerId) {
+                return false;
+            }
+        }
+
+        $paymentDueDate = (string)($payment['dueDate'] ?? $payment['originalDueDate'] ?? '');
+        if ($paymentDueDate !== $dueDate) {
+            return false;
+        }
+
+        return abs(((float)($payment['value'] ?? 0)) - $value) < 0.01;
     }
 
     private function request(string $method, string $path, ?array $payload = null): array
