@@ -256,7 +256,7 @@
               ? 'Bloqueio previsto em ' . $daysUntilBlock . ' dia(s), caso o pagamento não seja identificado.'
               : 'A tolerância terminou. Regularize para evitar bloqueio.');
       ?>
-      <div class="subscription-banner app-banner <?= $subscriptionBlocked ? 'app-banner-danger' : 'app-banner-warning'; ?>">
+      <div class="subscription-banner app-banner alert-dismissible fade show <?= $subscriptionBlocked ? 'app-banner-danger' : 'app-banner-warning'; ?>" role="alert">
         <div class="subscription-banner-content d-flex align-items-start gap-2">
           <i class="bi <?= $subscriptionBlocked ? 'bi-lock-fill text-danger' : 'bi-exclamation-triangle-fill text-warning'; ?> mt-1"></i>
           <div>
@@ -264,10 +264,11 @@
             <p><?= esc((string)($subscriptionState['message'] ?? 'Mensalidade pendente.')); ?> <?= esc($bannerDetail); ?></p>
           </div>
         </div>
-        <a href="<?= base_url('assinatura'); ?>" class="subscription-banner-action btn <?= $subscriptionBlocked ? 'btn-danger' : 'btn-warning'; ?>">
+        <a href="<?= base_url('assinatura'); ?>" class="subscription-banner-action btn <?= $subscriptionBlocked ? 'btn-outline-danger' : 'btn-outline-warning'; ?>">
           <i class="bi bi-credit-card"></i>
           Regularizar
         </a>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
       </div>
       <div class="modal fade" id="subscriptionPendingModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
