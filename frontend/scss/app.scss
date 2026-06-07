@@ -248,7 +248,27 @@ body {
   position: sticky;
   top: 0;
   z-index: 30;
+  align-items: center;
   margin: 0.75rem 1rem 1rem;
+}
+
+.subscription-banner-content {
+  min-width: 0;
+}
+
+.subscription-banner-action {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  padding: 0.5rem 0.85rem;
+  border-radius: 7px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .empty-state {
@@ -385,6 +405,10 @@ body {
   .subscription-banner {
     margin-left: 0.75rem;
     margin-right: 0.75rem;
+  }
+
+  .subscription-banner-action {
+    width: 100%;
   }
 
   .table-responsive {

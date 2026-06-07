@@ -257,15 +257,16 @@
               : 'A tolerância terminou. Regularize para evitar bloqueio.');
       ?>
       <div class="subscription-banner app-banner <?= $subscriptionBlocked ? 'app-banner-danger' : 'app-banner-warning'; ?>">
-        <div class="d-flex align-items-start gap-2">
+        <div class="subscription-banner-content d-flex align-items-start gap-2">
           <i class="bi <?= $subscriptionBlocked ? 'bi-lock-fill text-danger' : 'bi-exclamation-triangle-fill text-warning'; ?> mt-1"></i>
           <div>
             <strong><?= esc($bannerTitle); ?></strong>
             <p><?= esc((string)($subscriptionState['message'] ?? 'Mensalidade pendente.')); ?> <?= esc($bannerDetail); ?></p>
           </div>
         </div>
-        <a href="<?= base_url('assinatura'); ?>" class="btn btn-sm <?= $subscriptionBlocked ? 'btn-danger' : 'btn-warning'; ?>">
-          Ver pagamento
+        <a href="<?= base_url('assinatura'); ?>" class="subscription-banner-action btn <?= $subscriptionBlocked ? 'btn-danger' : 'btn-warning'; ?>">
+          <i class="bi bi-credit-card"></i>
+          Regularizar
         </a>
       </div>
       <div class="modal fade" id="subscriptionPendingModal" tabindex="-1" aria-hidden="true">
