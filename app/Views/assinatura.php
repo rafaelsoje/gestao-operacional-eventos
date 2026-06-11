@@ -40,6 +40,7 @@ $monthRefLabel = static function (?string $monthRef): string {
 $openCharges = array_values(array_filter($charges, static function ($item): bool {
     return in_array((string)($item->status ?? 'pending'), ['pending', 'overdue'], true);
 }));
+$payableCharge = ($charge && in_array((string)($charge->status ?? ''), ['pending', 'overdue'], true)) ? $charge : null;
 $paidCharges = array_values(array_filter($charges, static function ($item): bool {
     return (string)($item->status ?? '') === 'paid';
 }));
@@ -106,9 +107,9 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
             <h2>Assinatura do sistema</h2>
             <p>Consulte mensalidades, gere Pix e acompanhe pagamentos reconhecidos.</p>
         </div>
-        <?php if ($charge): ?>
-            <span class="badge text-bg-<?= $statusBadge((string)$charge->status); ?>">
-                <?= esc($statusLabel((string)$charge->status)); ?>
+        <?php if ($payableCharge): ?>
+            <span class="badge text-bg-<?= $statusBadge((string)$payableCharge->status); ?>">
+                <?= esc($statusLabel((string)$payableCharge->status)); ?>
             </span>
         <?php endif; ?>
     </div>
@@ -202,7 +203,7 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
         </div>
     <?php endif; ?>
 
-    <?php if ($charge): ?>
+    <?php if ($payableCharge): ?>
         <div class="row g-3">
             <div class="col-12 col-lg-5">
                 <div class="payment-box h-100">
@@ -215,17 +216,17 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
                     <div class="client-help mb-3">
                         Gere o Pix ou use o link do Asaas quando disponível. Após o pagamento ser reconhecido, o status desta mensalidade será atualizado.
                     </div>
-                    <p class="mb-2"><strong>Referência:</strong> <?= esc($monthRefLabel((string)$charge->month_ref)); ?></p>
-                    <p class="mb-2"><strong>Valor:</strong> <?= br_money($charge->amount ?? 0); ?></p>
-                    <p class="mb-2"><strong>Vencimento:</strong> <?= !empty($charge->due_date) ? esc(date('d/m/Y', strtotime((string)$charge->due_date))) : '-'; ?></p>
-                    <p class="mb-2"><strong>Status:</strong> <?= esc($statusLabel((string)$charge->status)); ?></p>
-                    <?php if (!empty($charge->paid_at)): ?>
-                        <p class="mb-2"><strong>Pago em:</strong> <?= esc(date('d/m/Y H:i', strtotime((string)$charge->paid_at))); ?></p>
+                    <p class="mb-2"><strong>Referência:</strong> <?= esc($monthRefLabel((string)$payableCharge->month_ref)); ?></p>
+                    <p class="mb-2"><strong>Valor:</strong> <?= br_money($payableCharge->amount ?? 0); ?></p>
+                    <p class="mb-2"><strong>Vencimento:</strong> <?= !empty($payableCharge->due_date) ? esc(date('d/m/Y', strtotime((string)$payableCharge->due_date))) : '-'; ?></p>
+                    <p class="mb-2"><strong>Status:</strong> <?= esc($statusLabel((string)$payableCharge->status)); ?></p>
+                    <?php if (!empty($payableCharge->paid_at)): ?>
+                        <p class="mb-2"><strong>Pago em:</strong> <?= esc(date('d/m/Y H:i', strtotime((string)$payableCharge->paid_at))); ?></p>
                     <?php endif; ?>
 
                     <div class="d-flex flex-wrap gap-2 mt-3">
-                        <?php if (!empty($charge->invoice_url)): ?>
-                            <a class="btn btn-success" href="<?= esc((string)$charge->invoice_url); ?>" target="_blank" rel="noopener noreferrer">
+                        <?php if (!empty($payableCharge->invoice_url)): ?>
+                            <a class="btn btn-success" href="<?= esc((string)$payableCharge->invoice_url); ?>" target="_blank" rel="noopener noreferrer">
                                 <i class="bi bi-box-arrow-up-right"></i> Pagar agora
                             </a>
                         <?php endif; ?>
@@ -235,7 +236,7 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
                                 <i class="bi bi-qr-code"></i> Gerar Pix
                             </button>
                         </form>
-                        <?php if (!empty($charge->asaas_payment_id)): ?>
+                        <?php if (!empty($payableCharge->asaas_payment_id)): ?>
                             <form method="post" action="<?= url_to('subscription.sync'); ?>">
                                 <?= csrf_field(); ?>
                                 <button type="submit" class="btn btn-outline-secondary">
@@ -264,14 +265,14 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
                             <small>Use o QR Code ou copie o código Pix.</small>
                         </div>
                     </div>
-                    <?php if (!empty($charge->pix_qr_code)): ?>
+                    <?php if (!empty($payableCharge->pix_qr_code)): ?>
                         <div class="row g-3 align-items-start">
                             <div class="col-12 col-md-5 text-center">
-                                <img class="qr-image" src="data:image/png;base64,<?= esc((string)$charge->pix_qr_code); ?>" alt="QR Code Pix">
+                                <img class="qr-image" src="data:image/png;base64,<?= esc((string)$payableCharge->pix_qr_code); ?>" alt="QR Code Pix">
                             </div>
                             <div class="col-12 col-md-7">
                                 <label class="form-label">Pix copia e cola</label>
-                                <textarea class="form-control pix-code" readonly><?= esc((string)($charge->pix_payload ?? '')); ?></textarea>
+                                <textarea class="form-control pix-code" readonly><?= esc((string)($payableCharge->pix_payload ?? '')); ?></textarea>
                                 <button type="button" class="btn btn-outline-secondary mt-2" id="copyPixBtn">
                                     <i class="bi bi-clipboard"></i> Copiar Pix
                                 </button>

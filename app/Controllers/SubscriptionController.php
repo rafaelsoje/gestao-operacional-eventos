@@ -12,6 +12,9 @@ class SubscriptionController extends Home
     {
         $service = new SystemSubscriptionService();
         $charge = $service->payableCharge(true);
+        if ($charge && !in_array((string)($charge->status ?? ''), ['pending', 'overdue'], true)) {
+            $charge = null;
+        }
 
         return view('assinatura', [
             'subscriptionPage' => true,
