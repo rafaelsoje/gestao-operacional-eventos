@@ -318,15 +318,10 @@
     <?php if (!empty($subscriptionState['enabled']) && !empty($subscriptionState['warning']) && empty($subscriptionPage)): ?>
       <?php
         $subscriptionBlocked = !empty($subscriptionState['blocked']);
-        $daysUntilBlock = (int)($subscriptionState['days_until_block'] ?? 0);
         $subscriptionCharge = $subscriptionState['charge'] ?? null;
         $subscriptionRef = (string)($subscriptionCharge->month_ref ?? date('Y-m'));
         $noticeTitle = $subscriptionBlocked ? 'Sistema bloqueado por mensalidade vencida' : 'Mensalidade do sistema pendente';
-        $bannerDetail = $subscriptionBlocked
-          ? 'Regularize o pagamento para liberar as funcionalidades.'
-          : ($daysUntilBlock >= 0
-              ? 'Bloqueio previsto em ' . $daysUntilBlock . ' dia(s), caso o pagamento não seja identificado.'
-              : 'A tolerância terminou. Regularize para evitar bloqueio.');
+        $noticeMessage = (string)($subscriptionState['message'] ?? 'Mensalidade pendente.');
       ?>
       <div class="modal fade" id="subscriptionPendingModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -338,7 +333,7 @@
             <div class="modal-body">
               <div class="d-flex align-items-start gap-2">
                 <i class="bi <?= $subscriptionBlocked ? 'bi-lock-fill text-danger' : 'bi-exclamation-triangle-fill text-warning'; ?> mt-1"></i>
-                <p class="mb-0"><?= esc((string)($subscriptionState['message'] ?? 'Mensalidade pendente.')); ?> <?= esc($bannerDetail); ?></p>
+                <p class="mb-0"><?= esc($noticeMessage); ?></p>
               </div>
             </div>
             <div class="modal-footer">

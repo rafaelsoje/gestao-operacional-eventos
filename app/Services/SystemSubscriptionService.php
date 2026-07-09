@@ -343,9 +343,9 @@ class SystemSubscriptionService
 
         $message = '';
         if ($blocked) {
-            $message = 'Mensalidade vencida. Regularize o pagamento para liberar o sistema.';
+            $message = 'Mensalidade vencida. Vencimento em ' . $due->format('d/m/Y') . '.';
         } elseif ($isOverdue) {
-            $message = 'Mensalidade vencida. Regularize até ' . $blockDate->format('d/m/Y') . ' para evitar bloqueio.';
+            $message = 'Mensalidade vencida. Vencimento em ' . $due->format('d/m/Y') . '.';
         } elseif ($warning) {
             $message = 'Mensalidade pendente. Vencimento em ' . $due->format('d/m/Y') . '.';
         }
