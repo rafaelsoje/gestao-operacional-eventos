@@ -28,7 +28,7 @@ class SystemSubscriptionService
 
     public function graceDays(): int
     {
-        return max(0, (int)$this->setting('system_subscription_grace_days', env('SYSTEM_SUBSCRIPTION_GRACE_DAYS', 2)));
+        return max(0, (int)$this->setting('system_subscription_grace_days', env('SYSTEM_SUBSCRIPTION_GRACE_DAYS', 5)));
     }
 
     public function dueDay(): int
@@ -70,7 +70,7 @@ class SystemSubscriptionService
             'system_subscription_amount' => number_format($amount, 2, '.', ''),
             'system_subscription_due_day' => (string)min(28, max(1, (int)($data['due_day'] ?? 10))),
             'system_subscription_warning_day' => (string)min(28, max(1, (int)($data['warning_day'] ?? 5))),
-            'system_subscription_grace_days' => (string)max(0, (int)($data['grace_days'] ?? 2)),
+            'system_subscription_grace_days' => (string)max(0, (int)($data['grace_days'] ?? 5)),
         ];
 
         foreach ($payload as $key => $value) {

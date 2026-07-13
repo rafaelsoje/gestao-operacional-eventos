@@ -9,7 +9,7 @@ $tableReady = (bool)($tableReady ?? false);
 $charge = $charge ?? null;
 $charges = $charges ?? [];
 $state = $state ?? [];
-$settings = $settings ?? ['enabled' => false, 'amount' => 65, 'due_day' => 10, 'warning_day' => 5, 'grace_days' => 2];
+$settings = $settings ?? ['enabled' => false, 'amount' => 65, 'due_day' => 10, 'warning_day' => 5, 'grace_days' => 5];
 $asaasConfigured = (bool)($asaasConfigured ?? false);
 $canManualRelease = (bool)($canManualRelease ?? false);
 $statusBadge = static function (string $status): string {
@@ -326,7 +326,7 @@ $nextBlockDate = !empty($state['block_date']) ? date('d/m/Y', strtotime((string)
                 </div>
                 <div class="col-12 col-md-2">
                     <label class="form-label">Tolerância após vencimento</label>
-                    <input type="number" class="form-control" name="grace_days" min="0" max="60" value="<?= esc((string)($settings['grace_days'] ?? 2)); ?>" required>
+                    <input type="number" class="form-control" name="grace_days" min="0" max="60" value="<?= esc((string)($settings['grace_days'] ?? 5)); ?>" required>
                 </div>
                 <div class="col-12 col-md-2 d-grid">
                     <button type="submit" class="btn btn-primary">Salvar</button>
