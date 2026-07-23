@@ -76,5 +76,7 @@
 # TELEGRAM_CHAT_ID =
 # TELEGRAM_ENABLED = true
 # TELEGRAM_ADMIN_EMAIL =
+# E-mails separados por virgula cujas acoes nao geram notificacoes no Telegram.
+# TELEGRAM_MUTED_EMAILS = rafaelsoje@gmail.com
 # SUPERUSER_EMAIL =
 # DEFAULT_USER_PASSWORD =

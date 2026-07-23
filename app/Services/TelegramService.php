@@ -64,6 +64,10 @@ class TelegramService
 
     public function send(string $message, string $event = self::EVENT_GENERAL): void
     {
+        if ($this->isCurrentUserMuted()) {
+            return;
+        }
+
         if (!$this->isEnabled() || !$this->isEventEnabled($event)) {
             return;
         }
@@ -89,5 +93,27 @@ class TelegramService
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_exec($ch);
         curl_close($ch);
+    }
+
+    /**
+     * Não envia ao Telegram ações feitas por usuários configurados como silenciosos.
+     * Eventos sem um usuário autenticado (webhooks, tarefas agendadas etc.) continuam ativos.
+     */
+    private function isCurrentUserMuted(): bool
+    {
+        $user = session()->get('user');
+        $email = mb_strtolower(trim((string) ($user->email ?? '')));
+
+        if ($email === '') {
+            return false;
+        }
+
+        $configuredEmails = (string) env('TELEGRAM_MUTED_EMAILS', 'rafaelsoje@gmail.com');
+        $mutedEmails = array_filter(array_map(
+            static fn (string $item): string => mb_strtolower(trim($item)),
+            explode(',', $configuredEmails)
+        ));
+
+        return in_array($email, $mutedEmails, true);
     }
 }

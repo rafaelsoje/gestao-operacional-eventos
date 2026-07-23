@@ -329,6 +329,7 @@ cp .env.example .env
 - `CI_ENVIRONMENT`
 - `database.default.*`
 - `TELEGRAM_*` (se usar notificações)
+- `TELEGRAM_MUTED_EMAILS` (e-mails cujas ações não notificam o Telegram, separados por vírgula)
 - `SUPERUSER_EMAIL`
 - `DEFAULT_USER_PASSWORD`
 - `SYSTEM_SUBSCRIPTION_*` e `ASAAS_*` (se usar assinatura mensal)
