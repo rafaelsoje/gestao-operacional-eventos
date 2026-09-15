@@ -159,4 +159,6 @@ class Cache extends BaseConfig
      * @var bool|list<string>
      */
     public $cacheQueryString = false;
+    // Defaults required by CodeIgniter 4.7.4.
+    public array $cacheStatusCodes = [];
 }

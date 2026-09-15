@@ -119,7 +119,11 @@ class SubscriptionController extends Home
             return $this->response->setStatusCode(401)->setJSON(['error' => 'unauthorized']);
         }
 
-        $payload = $this->request->getJSON(true);
+        try {
+            $payload = $this->request->getJSON(true);
+        } catch (\Throwable $e) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'invalid_payload']);
+        }
         if (!is_array($payload)) {
             $payload = json_decode((string)$this->request->getBody(), true);
         }
@@ -139,15 +143,12 @@ class SubscriptionController extends Home
     {
         $expected = trim((string)env('ASAAS_WEBHOOK_TOKEN', ''));
         if ($expected === '') {
-            return true;
+            return false;
         }
 
         $received = trim($this->request->getHeaderLine('asaas-access-token'));
         if ($received === '') {
             $received = trim($this->request->getHeaderLine('Asaas-Access-Token'));
-        }
-        if ($received === '') {
-            $received = trim((string)$this->request->getGet('token'));
         }
 
         return $received !== '' && hash_equals($expected, $received);

@@ -89,4 +89,6 @@ class Encryption extends BaseConfig
      * by CI3 Encryption default configuration.
      */
     public string $cipher = 'AES-256-CTR';
+    // Defaults required by CodeIgniter 4.7.4.
+    public array|string $previousKeys = '';
 }

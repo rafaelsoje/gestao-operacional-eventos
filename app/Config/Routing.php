@@ -137,4 +137,6 @@ class Routing extends BaseRouting
      * Default: false
      */
     public bool $translateUriToCamelCase = true;
+    // Defaults required by CodeIgniter 4.7.4.
+    public bool $useControllerAttributes = true;
 }

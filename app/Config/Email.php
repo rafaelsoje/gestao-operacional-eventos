@@ -118,4 +118,6 @@ class Email extends BaseConfig
      * Enable notify message from server
      */
     public bool $DSN = false;
+    // Defaults required by CodeIgniter 4.7.4.
+    public string $SMTPAuthMethod = 'login';
 }

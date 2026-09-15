@@ -72,4 +72,6 @@ class Paths
      * is used when no value is provided to `Services::renderer()`.
      */
     public string $viewDirectory = __DIR__ . '/../Views';
+    // Defaults required by CodeIgniter 4.7.4.
+    public string $envDirectory = __DIR__ . '/../../';
 }

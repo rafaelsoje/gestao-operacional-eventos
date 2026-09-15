@@ -173,4 +173,16 @@ class ContentSecurityPolicy extends BaseConfig
      * Replace nonce tag automatically
      */
     public bool $autoNonce = true;
+    // Defaults required by CodeIgniter 4.7.4.
+    public ?string $reportTo = null;
+
+    public array|string $scriptSrcAttr = 'self';
+
+    public array|string $scriptSrcElem = 'self';
+
+    public array|string $styleSrcAttr = 'self';
+
+    public array|string $styleSrcElem = 'self';
+
+    public array|string $workerSrc = [];
 }
