@@ -203,9 +203,12 @@ class AdminController extends Home
                 if (strlen((string)$data['password']) < 8) {
                     return redirect()->route('usuarios')->with('error', 'A senha deve ter pelo menos 8 caracteres.');
                 }
-                (new Users())->update($data['id'], [
-                    'password' => password_hash($data['password'], PASSWORD_DEFAULT)
-                ]);
+                $hash = password_hash($data['password'], PASSWORD_DEFAULT);
+                if (!(new Users())->update($data['id'], ['password' => $hash])) {
+                    return redirect()->route('usuarios')->with('error', 'Erro ao atualizar a senha.');
+                }
+                session()->regenerate(true);
+                session()->set('password_fingerprint', hash('sha256', $hash));
             }
         }
 

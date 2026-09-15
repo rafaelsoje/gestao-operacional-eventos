@@ -1,5 +1,5 @@
-const STATIC_CACHE = 'operacional-static-v3';
-const RUNTIME_CACHE = 'operacional-runtime-v3';
+const STATIC_CACHE = 'operacional-static-v4';
+const RUNTIME_CACHE = 'operacional-runtime-v4';
 const BASE_PATH = new URL(self.registration.scope).pathname;
 const OFFLINE_URL = `${BASE_PATH}offline.html`;
 const MANIFEST_URL = `${BASE_PATH}manifest.webmanifest`;
@@ -20,15 +20,13 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== STATIC_CACHE && key !== RUNTIME_CACHE)
-          .map((key) => caches.delete(key))
-      )
-    )
+    caches.keys().then(async (keys) => {
+      await Promise.all(keys
+        .filter((key) => key.startsWith('operacional-') && key !== STATIC_CACHE && key !== RUNTIME_CACHE)
+        .map((key) => caches.delete(key)));
+      await self.clients.claim();
+    })
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -39,54 +37,33 @@ self.addEventListener('fetch', (event) => {
 
   if (url.origin !== self.location.origin) return;
 
-  // Páginas HTML: rede primeiro para evitar conteúdo antigo em telas autenticadas.
+  // Private pages must never be stored or recovered from a previous session.
   if (req.mode === 'navigate' || req.destination === 'document') {
     event.respondWith(
-      fetch(req)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => cache.put(req, copy));
-          return response;
-        })
-        .catch(async () => {
-          const cached = await caches.match(req);
-          return cached || caches.match(OFFLINE_URL);
-        })
+      fetch(req, { cache: 'no-store' })
+        .catch(() => caches.match(OFFLINE_URL))
     );
     return;
   }
 
-  // Scripts/estilos: rede primeiro para evitar bundle antigo quebrando páginas dinâmicas.
-  if (['style', 'script'].includes(req.destination)) {
+  const publicAsset = url.pathname.startsWith(`${BASE_PATH}assets/build/`)
+    || [OFFLINE_URL, MANIFEST_URL, ICON_URL].includes(url.pathname);
+  if (!publicAsset) return;
+
+  if (['style', 'script', 'image', 'font'].includes(req.destination)) {
     event.respondWith(
       fetch(req)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => cache.put(req, copy));
+          if (response.ok && !response.redirected && !response.headers.get('Content-Type')?.includes('text/html')) {
+            const copy = response.clone();
+            event.waitUntil(caches.open(RUNTIME_CACHE).then((cache) => cache.put(req, copy)));
+          }
           return response;
         })
         .catch(async () => {
           const cached = await caches.match(req);
           return cached || fetch(req);
         })
-    );
-    return;
-  }
-
-  // Imagens e fontes: cache primeiro.
-  if (['image', 'font'].includes(req.destination)) {
-    event.respondWith(
-      caches.match(req).then((cached) => {
-        const networkFetch = fetch(req)
-          .then((response) => {
-            const copy = response.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => cache.put(req, copy));
-            return response;
-          })
-          .catch(() => cached);
-
-        return cached || networkFetch;
-      })
     );
   }
 });

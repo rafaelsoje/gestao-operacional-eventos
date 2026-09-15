@@ -58,7 +58,7 @@ class RoleFilter implements FilterInterface
         ];
 
         $roleLevel = $order[$role] ?? 0;
-        $requiredLevel = $order[$required] ?? 0;
+        $requiredLevel = $order[$required] ?? PHP_INT_MAX;
 
         return $roleLevel >= $requiredLevel;
     }

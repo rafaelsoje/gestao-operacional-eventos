@@ -25,22 +25,22 @@
         </div>
         
         <?php if (session()->has('error')) : ?>
-          <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
+          <div class="flash text-center alert alert-danger text-danger"><?php echo esc((string)(session()->get('error') ?? '')); ?></div>
         <?php endif; ?>
         <?php if (session()->has('success')) : ?>
-          <div class="flash text-center alert alert-success text-success"><?php echo session()->get('success') ?? ''; ?></div>
+          <div class="flash text-center alert alert-success text-success"><?php echo esc((string)(session()->get('success') ?? '')); ?></div>
         <?php endif; ?>
         <?php if(isset($item)):?>
-        <input type="hidden" class="form-control" name="id" <?= isset($item) ? 'value="' . $item->id . '"' : '';?>>                      
+        <input type="hidden" class="form-control" name="id" <?= isset($item) ? 'value="' . esc((string)($item->id), 'attr') . '"' : '';?>>
         <?php endif;?>
         <input type="hidden" class="form-control" name="flag" value="1">
         <div class="col-md-12">
             <label class="form-label">Nome do evento</label>
-            <input type="text" class="form-control" name="nome" <?= isset($item) ? 'value="' . $item->nome . '"' : ''; ?> required>
+            <input type="text" class="form-control" name="nome" <?= isset($item) ? 'value="' . esc((string)($item->nome), 'attr') . '"' : ''; ?> required>
         </div>
         <div class="col-md-2">
             <label class="form-label">Data do evento</label>
-            <input type="date" class="form-control" name="data" <?= isset($item) ? 'value="' . $item->data . '"' : ''; ?> required>
+            <input type="date" class="form-control" name="data" <?= isset($item) ? 'value="' . esc((string)($item->data), 'attr') . '"' : ''; ?> required>
         </div>
         <div class="col-md-2">
             <?php if(isset($item)):?>
@@ -63,39 +63,39 @@
         </div>
         <div class="col-md-2">
             <label class="form-label">Hora início</label>
-            <input type="time" class="form-control" name="hora_inicio" <?= isset($item) ? 'value="' . $item->hora_inicio . '"' : ''; ?> required>
+            <input type="time" class="form-control" name="hora_inicio" <?= isset($item) ? 'value="' . esc((string)($item->hora_inicio), 'attr') . '"' : ''; ?> required>
         </div>
         <div class="col-md-2">
             <label class="form-label">Hora término</label>
-            <input type="time" class="form-control" name="hora_fim" <?= isset($item) ? 'value="' . $item->hora_fim . '"' : ''; ?> required>
+            <input type="time" class="form-control" name="hora_fim" <?= isset($item) ? 'value="' . esc((string)($item->hora_fim), 'attr') . '"' : ''; ?> required>
         </div>
         <div class="col-md-4">
             <label class="form-label">Hora extra</label>
-            <input type="number" class="form-control" name="hora_extra" <?= isset($item) ? 'value="' . $item->hora_extra . '"' : ''; ?>>
+            <input type="number" class="form-control" name="hora_extra" <?= isset($item) ? 'value="' . esc((string)($item->hora_extra), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-4">
             <label class="form-label">Temperatura entrada</label>
-            <input type="number" step="0.1" class="form-control" name="temp_inicio" <?= isset($item) ? 'value="' . $item->temp_inicio . '"' : ''; ?>>
+            <input type="number" step="0.1" class="form-control" name="temp_inicio" <?= isset($item) ? 'value="' . esc((string)($item->temp_inicio), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-4">
             <label class="form-label">Temperatura saída</label>
-            <input type="number" step="0.1" class="form-control" name="temp_fim" <?= isset($item) ? 'value="' . $item->temp_fim . '"' : ''; ?>>
+            <input type="number" step="0.1" class="form-control" name="temp_fim" <?= isset($item) ? 'value="' . esc((string)($item->temp_fim), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-4">
             <label class="form-label">Numero de fornecedores</label>
-            <input type="number" class="form-control" name="qtd_fornecedor" <?= isset($item) ? 'value="' . $item->qtd_fornecedor . '"' : ''; ?>>
+            <input type="number" class="form-control" name="qtd_fornecedor" <?= isset($item) ? 'value="' . esc((string)($item->qtd_fornecedor), 'attr') . '"' : ''; ?>>
         </div>        
         <div class="col-md-3">
             <label class="form-label">Ruído Tribuna C</label>
-            <input type="number" step="0.1" class="form-control" name="ruido_tribuna_c" <?= isset($item) ? 'value="' . ($item->ruido_tribuna_c ?? '') . '"' : ''; ?>>
+            <input type="number" step="0.1" class="form-control" name="ruido_tribuna_c" <?= isset($item) ? 'value="' . esc((string)(($item->ruido_tribuna_c ?? '')), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-3">
             <label class="form-label">Ruído Pista de Cavalo</label>
-            <input type="number" step="0.1" class="form-control" name="ruido_pista_cavalo" <?= isset($item) ? 'value="' . ($item->ruido_pista_cavalo ?? '') . '"' : ''; ?>>
+            <input type="number" step="0.1" class="form-control" name="ruido_pista_cavalo" <?= isset($item) ? 'value="' . esc((string)(($item->ruido_pista_cavalo ?? '')), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-3">
             <label class="form-label">Ruído Corredor JB</label>
-            <input type="number" step="0.1" class="form-control" name="ruido_corredor_jb" <?= isset($item) ? 'value="' . ($item->ruido_corredor_jb ?? '') . '"' : ''; ?>>
+            <input type="number" step="0.1" class="form-control" name="ruido_corredor_jb" <?= isset($item) ? 'value="' . esc((string)(($item->ruido_corredor_jb ?? '')), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-3">
             <label class="form-label">Média ruído</label>
@@ -109,28 +109,28 @@
                     }
                 }
             ?>
-            <input type="number" step="0.01" class="form-control" name="ruido_media" readonly <?= $ruidoMediaInicial !== '' ? 'value="' . $ruidoMediaInicial . '"' : ''; ?>>
+            <input type="number" step="0.01" class="form-control" name="ruido_media" readonly <?= $ruidoMediaInicial !== '' ? 'value="' . esc((string)$ruidoMediaInicial, 'attr') . '"' : ''; ?>>
         </div>       
         <div class="form-section-title">Gerador 1</div>
         <div class="col-12 col-md-4">
             <label class="form-label">Gerador 1 ligado</label>
-            <input type="time" class="form-control" name="liga_g1" <?= isset($item) ? 'value="' . $item->liga_g1 . '"' : ''; ?>>
+            <input type="time" class="form-control" name="liga_g1" <?= isset($item) ? 'value="' . esc((string)($item->liga_g1), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-12 col-md-4">
             <label for="inputAddress2" class="form-label">Gerador 1 desligado</label>
-            <input type="time" class="form-control" name="desliga_g1" <?= isset($item) ? 'value="' . $item->desliga_g1 . '"' : ''; ?>>
+            <input type="time" class="form-control" name="desliga_g1" <?= isset($item) ? 'value="' . esc((string)($item->desliga_g1), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-12 col-md-4">
             <label for="inputAddress2" class="form-label">Tempo gerador 1</label>
-            <input type="time" class="form-control" name="tempo_g1" <?= isset($item) ? 'value="' . $item->tempo_g1 . '"' : ''; ?>>
+            <input type="time" class="form-control" name="tempo_g1" <?= isset($item) ? 'value="' . esc((string)($item->tempo_g1), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Hora gerador entrada G1</label>
-            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_g1" placeholder="0000:00" <?= isset($item) ? 'value="' . $item->leitura_g1 . '"' : ''; ?>>
+            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_g1" placeholder="0000:00" <?= isset($item) ? 'value="' . esc((string)($item->leitura_g1), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Hora gerador saída G1</label>
-            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_saida_g1" placeholder="0000:00" <?= isset($item) ? 'value="' . ($item->leitura_saida_g1 ?? '') . '"' : ''; ?>>
+            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_saida_g1" placeholder="0000:00" <?= isset($item) ? 'value="' . esc((string)(($item->leitura_saida_g1 ?? '')), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Horas de uso G1</label>
@@ -152,23 +152,23 @@
         <div class="form-section-title">Gerador 2</div>
         <div class="col-12 col-md-4">
             <label class="form-label">Gerador 2 ligado</label>
-            <input type="time" class="form-control" name="liga_g2" <?= isset($item) ? 'value="' . $item->liga_g2 . '"' : ''; ?>>
+            <input type="time" class="form-control" name="liga_g2" <?= isset($item) ? 'value="' . esc((string)($item->liga_g2), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-12 col-md-4">
             <label for="inputAddress2" class="form-label">Gerador 2 desligado</label>
-            <input type="time" class="form-control" name="desliga_g2" <?= isset($item) ? 'value="' . $item->desliga_g2 . '"' : ''; ?>>
+            <input type="time" class="form-control" name="desliga_g2" <?= isset($item) ? 'value="' . esc((string)($item->desliga_g2), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-12 col-md-4">
             <label for="inputAddress2" class="form-label">Tempo gerador 2</label>
-            <input type="time" class="form-control" name="tempo_g2" <?= isset($item) ? 'value="' . $item->tempo_g2 . '"' : ''; ?>>
+            <input type="time" class="form-control" name="tempo_g2" <?= isset($item) ? 'value="' . esc((string)($item->tempo_g2), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Hora gerador entrada G2</label>
-            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_g2" placeholder="0000:00" <?= isset($item) ? 'value="' . $item->leitura_g2 . '"' : ''; ?>>
+            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_g2" placeholder="0000:00" <?= isset($item) ? 'value="' . esc((string)($item->leitura_g2), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Hora gerador saída G2</label>
-            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_saida_g2" placeholder="0000:00" <?= isset($item) ? 'value="' . ($item->leitura_saida_g2 ?? '') . '"' : ''; ?>>
+            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_saida_g2" placeholder="0000:00" <?= isset($item) ? 'value="' . esc((string)(($item->leitura_saida_g2 ?? '')), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Horas de uso G2</label>
@@ -190,15 +190,15 @@
         <div class="form-section-title">Público</div>
         <div class="col-md-3">
             <label class="form-label">Público final</label>
-            <input type="number" class="form-control" name="publico_final" <?= isset($item) ? 'value="' . $item->publico_final . '"' : ''; ?>>
+            <input type="number" class="form-control" name="publico_final" <?= isset($item) ? 'value="' . esc((string)($item->publico_final), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-3">
             <label class="form-label">Público final tribuna</label>
-            <input type="number" class="form-control" name="publico_tribuna" <?= isset($item) ? 'value="' . $item->publico_tribuna . '"' : ''; ?>>            
+            <input type="number" class="form-control" name="publico_tribuna" <?= isset($item) ? 'value="' . esc((string)($item->publico_tribuna), 'attr') . '"' : ''; ?>>
         </div>               
         <div class="col-md-3">
             <label class="form-label">Público final saída</label>
-            <input type="number" class="form-control" name="publico_saida" <?= isset($item) ? 'value="' . $item->publico_saida . '"' : ''; ?>>
+            <input type="number" class="form-control" name="publico_saida" <?= isset($item) ? 'value="' . esc((string)($item->publico_saida), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-3">
             <label class="form-label">Público total</label>
@@ -210,15 +210,15 @@
         <div class="form-section-title">Equipe operacional</div>
         <div class="col-12 col-md-4">
             <label for="inputAddress2" class="form-label">Segurança</label>
-            <input type="number" class="form-control" name="seguranca" <?= isset($item) ? 'value="' . $item->seguranca . '"' : ''; ?>>
+            <input type="number" class="form-control" name="seguranca" <?= isset($item) ? 'value="' . esc((string)($item->seguranca), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Bombeiro</label>
-            <input type="number" class="form-control" name="bombeiro" <?= isset($item) ? 'value="' . $item->bombeiro . '"' : ''; ?>>
+            <input type="number" class="form-control" name="bombeiro" <?= isset($item) ? 'value="' . esc((string)($item->bombeiro), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-12 col-md-4">
             <label for="inputAddress2" class="form-label">Limpeza</label>
-            <input type="number" class="form-control" name="limpeza" <?= isset($item) ? 'value="' . $item->limpeza . '"' : ''; ?>>
+            <input type="number" class="form-control" name="limpeza" <?= isset($item) ? 'value="' . esc((string)($item->limpeza), 'attr') . '"' : ''; ?>>
         </div> 
         <div class="w-100"></div>
         <div class="col-12 col-md-6">
@@ -271,113 +271,113 @@
         </div>
         <div class="col-md-1">
             <label class="form-label">Montagem</label>
-            <input type="number" class="form-control" name="premontagem" <?= isset($item) ? 'value="' . $item->premontagem . '"' : ''; ?>>
+            <input type="number" class="form-control" name="premontagem" <?= isset($item) ? 'value="' . esc((string)($item->premontagem), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-2">
             <label class="form-label">Valor cachê</label>
-            <input type="text" class="form-control money" name="cache_premontagem" <?= isset($item) ? 'value="' . $item->cache_premontagem . '"' : ''; ?>>
+            <input type="text" class="form-control money" name="cache_premontagem" <?= isset($item) ? 'value="' . esc((string)($item->cache_premontagem), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-2">
             <label class="form-label">Total</label>
-            <input type="text" class="form-control money" name="valor_premontagem" <?= isset($item) ? 'value="' . $item->valor_premontagem . '"' : ''; ?>>
+            <input type="text" class="form-control money" name="valor_premontagem" <?= isset($item) ? 'value="' . esc((string)($item->valor_premontagem), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-1">
             <label class="form-label">Evento</label>
-            <input type="number" class="form-control" name="operacional" <?= isset($item) ? 'value="' . $item->operacional . '"' : ''; ?>>
+            <input type="number" class="form-control" name="operacional" <?= isset($item) ? 'value="' . esc((string)($item->operacional), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-2">
             <label class="form-label">Valor cachê</label>
-            <input type="text" class="form-control money" name="valor_operacional" <?= isset($item) ? 'value="' . $item->valor_operacional . '"' : ''; ?>>
+            <input type="text" class="form-control money" name="valor_operacional" <?= isset($item) ? 'value="' . esc((string)($item->valor_operacional), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-2">
             <label class="form-label">Total</label>
-            <input type="text" class="form-control money" name="super_op" <?= isset($item) ? 'value="' . $item->super_op . '"' : ''; ?>>            
+            <input type="text" class="form-control money" name="super_op" <?= isset($item) ? 'value="' . esc((string)($item->super_op), 'attr') . '"' : ''; ?>>
         </div>  
         <div class="col-md-2">
             <label class="form-label">Total</label>
-            <input type="text" class="form-control money" name="total_operacional" <?= isset($item) ? 'value="' . $item->total_operacional . '"' : ''; ?>>            
+            <input type="text" class="form-control money" name="total_operacional" <?= isset($item) ? 'value="' . esc((string)($item->total_operacional), 'attr') . '"' : ''; ?>>
         </div> 
 
         <div class="form-section-title">Consumo</div>
         <div class="col-md-3">
             <label class="form-label">Valor Diesel</label>
-            <input type="text" class="form-control money" name="valor_diesel" <?= isset($item) ? 'value="' . $item->valor_diesel . '"' : ''; ?>>
+            <input type="text" class="form-control money" name="valor_diesel" <?= isset($item) ? 'value="' . esc((string)($item->valor_diesel), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-2">
             <label class="form-label">Diesel entrada</label>
-            <input type="number" class="form-control" name="diesel_inicio" <?= isset($item) ? 'value="' . $item->diesel_inicio . '"' : ''; ?>>
+            <input type="number" class="form-control" name="diesel_inicio" <?= isset($item) ? 'value="' . esc((string)($item->diesel_inicio), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-2">
             <label class="form-label">Diesel saída</label>
-            <input type="number" class="form-control" name="diesel_fim" <?= isset($item) ? 'value="' . $item->diesel_fim . '"' : ''; ?>>            
+            <input type="number" class="form-control" name="diesel_fim" <?= isset($item) ? 'value="' . esc((string)($item->diesel_fim), 'attr') . '"' : ''; ?>>
         </div>               
         <div class="col-md-2">
             <label class="form-label">Consumo (litros)</label>
-            <input type="number" class="form-control" name="diesel_litros" <?= isset($item) ? 'value="' . $item->diesel_litros . '"' : ''; ?>>
+            <input type="number" class="form-control" name="diesel_litros" <?= isset($item) ? 'value="' . esc((string)($item->diesel_litros), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-3">
             <label class="form-label">Consumo (valor)</label>
-            <input type="text" class="form-control money" name="diesel_total" <?= isset($item) ? 'value="' . $item->diesel_total . '"' : ''; ?>>
+            <input type="text" class="form-control money" name="diesel_total" <?= isset($item) ? 'value="' . esc((string)($item->diesel_total), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-3">
             <label class="form-label">Valor água Cedae</label>
-            <input type="text" class="form-control money" name="cedae_valor" <?= isset($item) ? 'value="' . $item->cedae_valor . '"' : ''; ?>>
+            <input type="text" class="form-control money" name="cedae_valor" <?= isset($item) ? 'value="' . esc((string)($item->cedae_valor), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-2">
             <label class="form-label">Água Cedae entrada</label>
-            <input type="number" class="form-control" name="cedae_inicio" <?= isset($item) ? 'value="' . $item->cedae_inicio . '"' : ''; ?>>
+            <input type="number" class="form-control" name="cedae_inicio" <?= isset($item) ? 'value="' . esc((string)($item->cedae_inicio), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-2">
             <label class="form-label">Água Cedae saída</label>
-            <input type="number" class="form-control" name="cedae_fim"<?= isset($item) ? 'value="' . $item->cedae_fim . '"' : ''; ?>>            
+            <input type="number" class="form-control" name="cedae_fim"<?= isset($item) ? 'value="' . esc((string)($item->cedae_fim), 'attr') . '"' : ''; ?>>
         </div>               
         <div class="col-md-2">
             <label class="form-label">Consumo</label>
-            <input type="number" class="form-control" name="cedae_consumo" <?= isset($item) ? 'value="' . $item->cedae_consumo . '"' : ''; ?>>
+            <input type="number" class="form-control" name="cedae_consumo" <?= isset($item) ? 'value="' . esc((string)($item->cedae_consumo), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-3">
             <label class="form-label">Consumo (valor)</label>
-            <input type="text" class="form-control money" name="cedae_total"<?= isset($item) ? 'value="' . $item->cedae_total . '"' : ''; ?>>
+            <input type="text" class="form-control money" name="cedae_total"<?= isset($item) ? 'value="' . esc((string)($item->cedae_total), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-3">
             <label class="form-label">Valor Light (KWH)</label>
-            <input type="text" class="form-control money" name="light_valor" <?= isset($item) ? 'value="' . $item->light_valor . '"' : ''; ?>>
+            <input type="text" class="form-control money" name="light_valor" <?= isset($item) ? 'value="' . esc((string)($item->light_valor), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-2">
             <label class="form-label">Light inicio</label>
-            <input type="number" class="form-control" name="light_inicio" <?= isset($item) ? 'value="' . $item->light_inicio . '"' : ''; ?>>
+            <input type="number" class="form-control" name="light_inicio" <?= isset($item) ? 'value="' . esc((string)($item->light_inicio), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-2">
             <label class="form-label">Light fim</label>
-            <input type="number" class="form-control" name="light_fim" <?= isset($item) ? 'value="' . $item->light_fim . '"' : ''; ?>>
+            <input type="number" class="form-control" name="light_fim" <?= isset($item) ? 'value="' . esc((string)($item->light_fim), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-2">
             <label class="form-label">Light consumo (KWH)</label>
-            <input type="number" class="form-control" name="light_consumo" <?= isset($item) ? 'value="' . $item->light_consumo . '"' : ''; ?>>            
+            <input type="number" class="form-control" name="light_consumo" <?= isset($item) ? 'value="' . esc((string)($item->light_consumo), 'attr') . '"' : ''; ?>>
         </div>               
         <div class="col-md-3">
             <label class="form-label">Light Total</label>
-            <input type="text" class="form-control money" name="light_total" <?= isset($item) ? 'value="' . $item->light_total . '"' : ''; ?>>
+            <input type="text" class="form-control money" name="light_total" <?= isset($item) ? 'value="' . esc((string)($item->light_total), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-4">
             <label class="form-label">Água poço entrada</label>
-            <input type="number" class="form-control" name="poco_inicio" <?= isset($item) ? 'value="' . $item->poco_inicio . '"' : ''; ?>>
+            <input type="number" class="form-control" name="poco_inicio" <?= isset($item) ? 'value="' . esc((string)($item->poco_inicio), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-4">
             <label class="form-label">Água poço saída</label>
-            <input type="number" class="form-control" name="poco_fim" <?= isset($item) ? 'value="' . $item->poco_fim . '"' : ''; ?>>
+            <input type="number" class="form-control" name="poco_fim" <?= isset($item) ? 'value="' . esc((string)($item->poco_fim), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-4">
             <label class="form-label">Consumo</label>
-            <input type="number" class="form-control" name="poco_consumo" readonly <?= isset($item) ? 'value="' . $item->poco_consumo . '"' : ''; ?>>
+            <input type="number" class="form-control" name="poco_consumo" readonly <?= isset($item) ? 'value="' . esc((string)($item->poco_consumo), 'attr') . '"' : ''; ?>>
         </div>
         <div class="col-md-12 text-end">
             <label class="form-label">Total Consumo</label>
-            <input type="text" class="form-control text-end money" name="total_consumo" <?= isset($item) ? 'value="' . $item->total_consumo . '"' : ''; ?>>
+            <input type="text" class="form-control text-end money" name="total_consumo" <?= isset($item) ? 'value="' . esc((string)($item->total_consumo), 'attr') . '"' : ''; ?>>
         </div>
         <div class="mb-12">
             <label for="exampleFormControlTextarea1" class="form-label">Observação</label>
-            <textarea class="form-control" id="exampleFormControlTextarea1" rows="4" name="descricao" ><?= isset($item) ? $item->descricao : ''; ?></textarea>
+            <textarea class="form-control" id="exampleFormControlTextarea1" rows="4" name="descricao" ><?= isset($item) ? esc((string)$item->descricao) : ''; ?></textarea>
         </div>        
         <div class="col-12 d-flex justify-content-end">
             <button type="submit" class="btn btn-primary"><?= (isset($item)? "Atualizar cadastro operacional" : "Cadastrar dados operacionais" )?></button>

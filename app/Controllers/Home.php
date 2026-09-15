@@ -122,6 +122,11 @@ class Home extends BaseController
             return redirect()->route('perfil')->with('error', 'Erro ao atualizar perfil.');
         }
 
+        if (isset($items['password'])) {
+            session()->regenerate(true);
+            session()->set('password_fingerprint', hash('sha256', $items['password']));
+        }
+
         if (isset($items['avatar'])) {
             $userInfo = session()->get('user');
             $userInfo->avatar = $items['avatar'];

@@ -13,10 +13,10 @@
     </div>
 
     <?php if (session()->has('error')) : ?>
-        <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
+        <div class="flash text-center alert alert-danger text-danger"><?php echo esc((string)(session()->get('error') ?? '')); ?></div>
     <?php endif; ?>
     <?php if (session()->has('cuccess')) : ?>
-        <div class="flash text-center alert alert-success text-success"><?php echo session()->get('success') ?? ''; ?></div>
+        <div class="flash text-center alert alert-success text-success"><?php echo esc((string)(session()->get('success') ?? '')); ?></div>
     <?php endif; ?>
 
     <div class="row g-3">
@@ -45,11 +45,11 @@
 
                         <div class="col-md-6">
                             <label class="form-label">Nome</label>
-                            <input type="text" class="form-control" name="name" value="<?= $user->name;?>" required>
+                            <input type="text" class="form-control" name="name" value="<?= esc((string)$user->name); ?>" required>
                         </div>        
                         <div class="col-md-6">
                             <label class="form-label">Email</label>
-                            <input type="email" class="form-control" name="email" value="<?= $user->email;?>" disabled>
+                            <input type="email" class="form-control" name="email" value="<?= esc((string)$user->email); ?>" disabled>
                         </div>
 
                         <div class="col-12 col-md-6">

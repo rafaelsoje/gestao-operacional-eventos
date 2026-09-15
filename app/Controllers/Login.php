@@ -153,7 +153,9 @@ class Login extends BaseController
                     'password' => $hash
                 ];
 
-                (new Users())->update($user->id, $data);
+                if ((new Users())->update($user->id, $data)) {
+                    $user->password = $hash;
+                }
             }
          
             $this->session->remove('login_attempts');
@@ -170,7 +172,8 @@ class Login extends BaseController
 
             $this->session->regenerate(true);
             session()->set('auth', true);
-            session()->set('user', $userInfo);            
+            session()->set('user', $userInfo);
+            session()->set('password_fingerprint', hash('sha256', $user->password));
 
             if ($userInfo->role === 'admin' || $userInfo->role === 'superuser') {
                 session()->set('admin', true);
@@ -396,6 +399,8 @@ class Login extends BaseController
             return redirect()->back()->with('error', 'Erro ao atualizar a senha.');
         }
 
+        session()->regenerate(true);
+        session()->set('password_fingerprint', hash('sha256', $hash));
         return redirect()->route('home')->with('success', 'Senha atualizada com sucesso.');
     }
 

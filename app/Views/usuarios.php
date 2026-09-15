@@ -27,11 +27,11 @@
 
 <div class="content-card p-3">
     <?php if (session()->has('error')) : ?>
-        <div class="flash text-center alert alert-danger text-danger"><?php echo session()->get('error') ?? ''; ?></div>
+        <div class="flash text-center alert alert-danger text-danger"><?php echo esc((string)(session()->get('error') ?? '')); ?></div>
     <?php endif; ?>
     
     <?php if (session()->has('success')) : ?>
-        <div class="flash text-center alert alert-success text-success"><?php echo session()->get('success') ?? ''; ?></div>
+        <div class="flash text-center alert alert-success text-success"><?php echo esc((string)(session()->get('success') ?? '')); ?></div>
     <?php endif; ?>
   <?php if(isset($users) && !empty($users)): ?>
     <?php $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com')); ?>
@@ -55,8 +55,8 @@
       <tbody>  
         <?php foreach ($users as $user) :?>
           <tr>
-            <td><?= $user->name;?></td>
-            <td><?=$user->email;?></td>                
+            <td><?= esc((string)$user->name); ?></td>
+            <td><?= esc((string)$user->email); ?></td>
               <?php
                 $role = $user->role ?? (($user->admin ?? 0) == 1 ? 'admin' : 'user');
                 if ($role === 'admin') {
@@ -114,7 +114,7 @@
                     <div class="modal-body p-4">
                       <div class="row align-items-center g-3">
                         <div class="col-12 col-md-4 text-center">
-                          <img class="rounded-circle shadow-sm" src="<?= url_to('avatar.show', $user->avatar ?? 'avatar.svg');?>" style="width:120px;height:120px;object-fit:cover;" alt="Foto de <?=$user->name;?>"/>
+                          <img class="rounded-circle shadow-sm" src="<?= url_to('avatar.show', $user->avatar ?? 'avatar.svg');?>" style="width:120px;height:120px;object-fit:cover;" alt="Foto de <?= esc((string)$user->name); ?>"/>
                           <div class="mt-3">
                             <span class="badge bg-secondary"><?=$nivel;?></span>
                           </div>
@@ -122,11 +122,11 @@
                         <div class="col-12 col-md-8">
                           <div class="mb-2">
                             <small class="text-muted">Nome</small>
-                            <div class="fw-semibold"><?=$user->name;?></div>
+                            <div class="fw-semibold"><?= esc((string)$user->name); ?></div>
                           </div>
                           <div class="mb-2">
                             <small class="text-muted">E-mail</small>
-                            <div class="fw-semibold"><?=$user->email;?></div>
+                            <div class="fw-semibold"><?= esc((string)$user->email); ?></div>
                           </div>
                           <div class="mb-2">
                             <small class="text-muted">Nível de acesso</small>
@@ -167,9 +167,9 @@
                     </div>
                     <div class="modal-body">                      
                       <?php if($user->email != $superEmail):?>                        
-                      <p>Tem certeza de que deseja excluir  <strong><?=$user->name;?></strong>?</p>
+                      <p>Tem certeza de que deseja excluir  <strong><?= esc((string)$user->name); ?></strong>?</p>
                       <?php else:?>
-                        <p>Você não tem permissão para excluir  <strong><?=$user->name;?></strong>?</p>
+                        <p>Você não tem permissão para excluir  <strong><?= esc((string)$user->name); ?></strong>?</p>
                       <?php endif;?>
                     </div>
                     <div class="modal-footer">

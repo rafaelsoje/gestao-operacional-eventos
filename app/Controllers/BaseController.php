@@ -53,6 +53,8 @@ abstract class BaseController extends Controller
         // Do Not Edit This Line
         parent::initController($request, $response, $logger);
 
+        $response->setHeader('Cache-Control', 'no-store, private');
+
         // Preload any models, libraries, etc, here.
 
         // E.g.: $this->session = service('session');
