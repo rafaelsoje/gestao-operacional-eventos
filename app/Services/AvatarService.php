@@ -19,6 +19,15 @@ class AvatarService
 
     public function save(UploadedFile $file): string
     {
+        $extension = strtolower($file->getClientExtension());
+        $expectedMime = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png'];
+        $info = @getimagesize($file->getTempName());
+        if (!isset($expectedMime[$extension]) || $file->getMimeType() !== $expectedMime[$extension]
+            || $info === false || ($info['mime'] ?? '') !== $expectedMime[$extension]
+            || $file->getSize() > 5 * 1024 * 1024
+            || $info[0] * $info[1] > 20000000) {
+            throw new \InvalidArgumentException('Avatar inválido ou acima do limite permitido.');
+        }
         // Garante diretório local antes de qualquer manipulação de imagem.
         $this->ensureUploadDir();
 
@@ -41,10 +50,7 @@ class AvatarService
             }
         }
 
-        $ext = strtolower((string)$file->getClientExtension());
-        if (!in_array($ext, ['jpg', 'jpeg', 'png'], true)) {
-            $ext = 'jpg';
-        }
+        $ext = $extension;
 
         $fallbackName = $baseName . '.' . $ext;
         // Fallback para upload original quando não houver suporte/erro no GD->WEBP.

@@ -33,5 +33,5 @@ module.exports = {
       filename: '[name].css',
     }),
   ],
-  devtool: 'source-map',
+  devtool: false,
 };

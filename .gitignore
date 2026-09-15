@@ -129,7 +129,8 @@ _modules/*
 
 
 #codeigniter
-/app/Config/App.php
 public/uploads/
 /public/uploads/
-public/assets/build/
+
+# Legacy user avatars are runtime data, never source.
+/public/media/*.webp

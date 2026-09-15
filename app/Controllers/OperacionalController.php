@@ -969,7 +969,10 @@ class OperacionalController extends Home
         }
 
         $extension = strtolower($file->getClientExtension());
-        if (!in_array($extension, ['pdf', 'jpg', 'jpeg', 'png', 'webp'], true)) {
+        $allowedMime = ['pdf' => 'application/pdf', 'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp'];
+        if (!isset($allowedMime[$extension]) || $file->getMimeType() !== $allowedMime[$extension]
+            || $file->getSize() > 20 * 1024 * 1024) {
             return false;
         }
 
