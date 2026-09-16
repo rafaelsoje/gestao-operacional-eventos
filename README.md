@@ -215,6 +215,7 @@ copy .env.example .env
 ```ini
 CI_ENVIRONMENT = development
 app.baseURL = 'http://localhost/audiovisual/'
+cookie.secure = false
 
 database.default.hostname = localhost
 database.default.database = audiovisual
@@ -225,6 +226,8 @@ database.default.port = 3306
 ```
 
 Se o MySQL do XAMPP tiver senha para `root`, preencha `database.default.password`.
+
+Use `cookie.secure = false` somente no desenvolvimento local por HTTP. Em produção, use HTTPS, `CI_ENVIRONMENT = production` e mantenha `cookie.secure = true`, que já é o padrão do código.
 
 7. Configure o Apache para usar `public/` como raiz do site.
 
@@ -315,7 +318,7 @@ composer install
 2. Instale dependências frontend:
 
 ```bash
-npm install
+npm ci
 ```
 
 3. Crie seu arquivo de ambiente:
@@ -327,12 +330,17 @@ cp .env.example .env
 4. Configure no `.env`:
 
 - `CI_ENVIRONMENT`
+- `app.baseURL` e `cookie.secure` (use `false` apenas no desenvolvimento local por HTTP)
 - `database.default.*`
 - `TELEGRAM_*` (se usar notificações)
 - `TELEGRAM_MUTED_EMAILS` (e-mails cujas ações não notificam o Telegram, separados por vírgula)
 - `SUPERUSER_EMAIL`
 - `DEFAULT_USER_PASSWORD`
 - `SYSTEM_SUBSCRIPTION_*` e `ASAAS_*` (se usar assinatura mensal)
+
+Deixe `DEFAULT_USER_PASSWORD` vazio para gerar uma senha aleatória por usuário cadastrado pela interface. A senha inicial aparece na confirmação do cadastro, e o usuário precisa trocá-la antes de acessar o sistema. Se configurar um valor, ele será usado literalmente como senha inicial; não utilize `CHANGE_ME` como senha real. Essa variável não altera as senhas dos usuários criados pelo seeder.
+
+Em `TELEGRAM_MUTED_EMAILS`, informe e-mails separados por vírgula ou deixe vazio para não silenciar ninguém. Quando a variável não existe, o código usa `rafaelsoje@gmail.com` como padrão. Eventos sem usuário autenticado, como webhooks e tarefas agendadas, não são silenciados por essa lista.
 
 5. Execute migrações:
 
@@ -376,7 +384,7 @@ SYSTEM_SUBSCRIPTION_ENABLED = true
 SYSTEM_SUBSCRIPTION_AMOUNT = 65
 SYSTEM_SUBSCRIPTION_WARNING_DAY = 5
 SYSTEM_SUBSCRIPTION_DUE_DAY = 10
-SYSTEM_SUBSCRIPTION_GRACE_DAYS = 2
+SYSTEM_SUBSCRIPTION_GRACE_DAYS = 5
 
 ASAAS_BASE_URL = "https://api.asaas.com/v3"
 ASAAS_API_KEY = "sua_chave_asaas"
@@ -390,9 +398,11 @@ No Asaas, configure o webhook de cobranças para:
 https://seu-dominio.com/webhooks/asaas
 ```
 
-Quando o Asaas enviar eventos como `PAYMENT_RECEIVED` ou `PAYMENT_OVERDUE`, o sistema atualiza a mensalidade automaticamente.
+Configure no Asaas o mesmo token definido em `ASAAS_WEBHOOK_TOKEN`, enviado no cabeçalho `asaas-access-token`. Webhooks com token ausente, incorreto ou não configurado são rejeitados. Quando o Asaas enviar eventos como `PAYMENT_RECEIVED` ou `PAYMENT_OVERDUE`, o sistema atualiza a mensalidade automaticamente.
 
 Depois da primeira configuração, o superusuário pode alterar ativação, valor, dia inicial de alerta, dia de vencimento e dias de tolerância pela tela `/assinatura`, sem editar o `.env`.
+
+Os valores salvos no banco pela tela de assinatura prevalecem sobre o `.env`. O padrão do código é de 5 dias de tolerância: com vencimento no dia 10, o bloqueio começa no dia 16, se a cobrança continuar pendente.
 
 Opcionalmente, agende a sincronização diária no cron do Linux:
 
@@ -415,6 +425,35 @@ Produção:
 ```bash
 npm run build
 ```
+
+## Testes e verificações
+
+Com as dependências de desenvolvimento instaladas:
+
+```bash
+vendor/bin/phpunit --no-coverage
+node --test tests/service-worker.test.cjs
+composer audit --locked
+npm audit
+```
+
+Os testes PHP utilizam SQLite em memória. Para a suíte, habilite a extensão `sqlite3` e o GD com suporte a WebP, usado nos testes de avatar. Os testes JavaScript verificam o cache público, a limpeza de versões antigas e a proteção de páginas privadas no service worker.
+
+## Segurança e sessões
+
+- O sistema revalida a conta e suas permissões no banco a cada requisição autenticada. Contas excluídas perdem acesso e mudanças de perfil passam a valer na próxima requisição.
+- A alteração de senha invalida as outras sessões. A sessão que realiza uma troca autenticada é renovada; sessões anteriores à implantação dessa validação precisam fazer login novamente.
+- Usuários com troca obrigatória de senha pendente não podem acessar as demais rotas protegidas antes de concluir a troca.
+- Os formulários de eventos e as telas de usuários escapam os valores exibidos para impedir a execução de HTML ou JavaScript armazenado nesses campos.
+- As respostas dos controladores usam `Cache-Control: no-store, private`. O service worker armazena apenas recursos públicos permitidos e remove seus caches antigos ao ativar a nova versão. Sem conexão, as páginas exibem a tela offline, sem recuperar dados de uma sessão anterior.
+
+## Publicação na VPS
+
+O procedimento completo está em [DEPLOY.md](DEPLOY.md). A publicação da branch `master` no remoto `vps` aciona o processo de instalação e validação da nova versão. Confira a saída da publicação e o arquivo `REVISION` da versão ativa; o sucesso do envio Git sozinho não garante que a publicação foi concluída.
+
+Na VPS, o servidor aponta para `/var/www/audiovisual/current/public`. O `.env` e o diretório `writable` são persistentes, fora das versões publicadas. Use `CI_ENVIRONMENT = production` e HTTPS. Não versione o `.env`, credenciais, sessões ou dados de usuários.
+
+As mensagens de commit devem ser em português e sem prefixos como `fix:`, `feat:` ou `chore:`. Exemplo: `Atualiza a documentação e o exemplo de configuração`.
 
 ## Estrutura principal
 
