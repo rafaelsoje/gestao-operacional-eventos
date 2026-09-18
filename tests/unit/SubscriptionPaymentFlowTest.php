@@ -32,6 +32,7 @@ final class SubscriptionPaymentFlowTest extends CIUnitTestCase
 
     protected function tearDown(): void
     {
+        session()->remove(['auth', 'user']);
         $forge = \Config\Database::forge();
         $forge->dropTable('system_subscription_charges', true);
         $forge->dropTable('settings', true);
@@ -75,5 +76,31 @@ final class SubscriptionPaymentFlowTest extends CIUnitTestCase
             'due_date' => date('Y-m-d', strtotime('-5 days')), 'status' => 'overdue',
         ]);
         $this->assertFalse((new SystemSubscriptionService())->subscriptionState()['blocked']);
+    }
+
+    public function testOverdueSubscriptionAllowsOnlyAuthenticatedSuperuser(): void
+    {
+        (new SystemSubscriptionCharge())->insert([
+            'month_ref' => date('Y-m'), 'amount' => 65,
+            'due_date' => date('Y-m-d', strtotime('-6 days')), 'status' => 'overdue',
+        ]);
+        $request = service('request');
+        $request->getUri()->setPath('/usuarios');
+        $filter = new \App\Filters\SubscriptionFilter();
+
+        foreach (['admin', 'user', 'superuser'] as $role) {
+            session()->set(['auth' => true, 'user' => (object)['role' => $role]]);
+            $response = $filter->before($request);
+            if ($role === 'superuser') {
+                $this->assertNull($response);
+            } else {
+                $this->assertInstanceOf(\CodeIgniter\HTTP\RedirectResponse::class, $response);
+                $this->assertStringEndsWith('/assinatura', $response->getHeaderLine('Location'));
+            }
+        }
+
+        session()->remove('auth');
+        $this->assertInstanceOf(\CodeIgniter\HTTP\RedirectResponse::class, $filter->before($request));
+        $this->assertTrue((new SystemSubscriptionService())->subscriptionState()['blocked']);
     }
 }

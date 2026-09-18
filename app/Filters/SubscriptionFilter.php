@@ -11,6 +11,12 @@ class SubscriptionFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null): ?ResponseInterface
     {
+        // AuthFilter validates the session and refreshes the effective role first.
+        $user = session()->get('user');
+        if (session()->get('auth') && ($user->role ?? '') === 'superuser') {
+            return null;
+        }
+
         $service = new SystemSubscriptionService();
         if (!$service->isEnabled()) {
             return null;

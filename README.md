@@ -375,7 +375,7 @@ Acesse: `http://localhost:8080`
 
 ## Assinatura mensal do sistema
 
-O sistema possui um módulo para cobrar a mensalidade de manutenção/VPS do administrador. Quando ativo, ele cria uma cobrança mensal, exibe aviso de pendência e bloqueia as funcionalidades após o período de tolerância. A tela `/assinatura` continua liberada para consulta e pagamento.
+O sistema possui um módulo para cobrar a mensalidade de manutenção/VPS do administrador. Quando ativo, ele cria uma cobrança mensal, exibe aviso de pendência e bloqueia as funcionalidades após o período de tolerância. A tela `/assinatura` continua liberada para consulta e pagamento. O superusuário autenticado (`superuser`, incluindo a conta definida em `SUPERUSER_EMAIL`) mantém acesso ao sistema mesmo durante o bloqueio, para administração e manutenção.
 
 Configuração básica no `.env`:
 
