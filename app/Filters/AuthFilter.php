@@ -27,7 +27,7 @@ class AuthFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null): ?ResponseInterface
     {
         if (!session()->get('auth')) {
-            return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
+            return $this->unauthorizedResponse($request);
         }
 
         $user = session()->get('user');
@@ -38,7 +38,7 @@ class AuthFilter implements FilterInterface
             || !hash_equals(hash('sha256', $current->password), $fingerprint)) {
             session()->remove(['auth', 'user', 'admin', 'password_fingerprint']);
             session()->destroy();
-            return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
+            return $this->unauthorizedResponse($request);
         }
 
         $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', ''));
@@ -80,5 +80,15 @@ class AuthFilter implements FilterInterface
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null): void
     {
         //
+    }
+
+    private function unauthorizedResponse(RequestInterface $request): ResponseInterface
+    {
+        if ((method_exists($request, 'isAJAX') && $request->isAJAX())
+            || str_contains((string)$request->getHeaderLine('Accept'), 'application/json')) {
+            return service('response')->setStatusCode(401)->setJSON(['error' => 'Sessão expirada ou não autenticada.']);
+        }
+
+        return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
     }
 }

@@ -10,12 +10,21 @@ class RoleFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null): ?ResponseInterface
     {
+        $isJson = (method_exists($request, 'isAJAX') && $request->isAJAX())
+            || str_contains((string)$request->getHeaderLine('Accept'), 'application/json');
+
         if (!session()->has('auth')) {
+            if ($isJson) {
+                return service('response')->setStatusCode(401)->setJSON(['error' => 'Sessão expirada ou não autenticada.']);
+            }
             return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
         }
 
         $user = session()->get('user');
         if (!$user) {
+            if ($isJson) {
+                return service('response')->setStatusCode(401)->setJSON(['error' => 'Sessão expirada ou não autenticada.']);
+            }
             return redirect()->route('login')->with('error', 'Sessão expirada ou não autenticada.');
         }
 
@@ -23,6 +32,9 @@ class RoleFilter implements FilterInterface
         $role = $this->resolveRole($user);
 
         if (!$this->isAllowed($role, $required)) {
+            if ($isJson) {
+                return service('response')->setStatusCode(403)->setJSON(['error' => 'Acesso negado.']);
+            }
             return redirect()->route('home')->with('error', 'Acesso negado.');
         }
 
