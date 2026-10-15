@@ -196,11 +196,37 @@
 
       try {
         const response = await fetch(previewUrlBase + '?days=' + encodeURIComponent(days), {
-          credentials: 'same-origin'
+          credentials: 'same-origin',
+          headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
         });
+
+        if (response.redirected && response.url.includes('/login')) {
+          setPreviewMessage('Sessão expirada. Recarregue a página e faça login novamente.', 'alert-warning');
+          return;
+        }
+
+        if (!response.ok) {
+          let errorMsg = 'Falha ao consultar os logs no servidor (HTTP ' + response.status + ').';
+          try {
+            const errPayload = await response.json();
+            if (errPayload && errPayload.error) {
+              errorMsg = errPayload.error;
+            }
+          } catch (_) {}
+          throw new Error(errorMsg);
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          throw new Error('Resposta inválida recebida do servidor.');
+        }
+
         const payload = await response.json();
 
-        if (!response.ok || typeof payload.count === 'undefined') {
+        if (typeof payload.count === 'undefined') {
           throw new Error(payload.error || 'Falha ao consultar os logs.');
         }
 
