@@ -1,6 +1,6 @@
 {
-    "name": "rafaelsoje/audiovisual",
-    "description": "app para estatísticas e controle de eventos",
+    "name": "rafaelsoje/gestao-operacional-eventos",
+    "description": "Sistema de gestão operacional de eventos, custos, insumos e manutenção de geradores",
     "license": "MIT",
     "type": "project",
     "homepage": "https://audiovisual.rafaelsoje.com",    
