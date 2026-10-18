@@ -25,7 +25,7 @@ Sistema interno para gestão operacional de eventos, com foco em custos, consumo
 
 ## Stack
 
-- Backend: PHP 8.2+ / CodeIgniter 4
+- Backend: PHP 8.2+
 - Banco: MySQL (driver `MySQLi`)
 - Frontend: Bootstrap, jQuery, DataTables, FullCalendar
 - Build de assets: Webpack (Node.js)
