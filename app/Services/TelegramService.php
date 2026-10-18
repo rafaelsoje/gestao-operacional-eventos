@@ -108,7 +108,7 @@ class TelegramService
             return false;
         }
 
-        $configuredEmails = (string) env('TELEGRAM_MUTED_EMAILS', 'rafaelsoje@gmail.com');
+        $configuredEmails = (string) env('TELEGRAM_MUTED_EMAILS', '');
         $mutedEmails = array_filter(array_map(
             static fn (string $item): string => mb_strtolower(trim($item)),
             explode(',', $configuredEmails)

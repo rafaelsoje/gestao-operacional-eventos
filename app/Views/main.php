@@ -9,7 +9,7 @@
     <?php $calendarJsV = is_file(FCPATH . 'assets/build/calendar.js') ? filemtime(FCPATH . 'assets/build/calendar.js') : time(); ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="#">
-    <meta name="author" content="Rafael Soje - rafaelsoje@gmail.com">
+    <meta name="author" content="Rafael Soje - contato@rafaelsoje.com">
     <meta name="keywords" content="#">
 
     <!-- <meta name="robots" content="index, follow"> -->
@@ -194,7 +194,7 @@
     <?php $loggedName = trim((string)($logged->name ?? 'Usuário')); ?>
     <?php $loggedFirstName = explode(' ', $loggedName)[0] ?? 'Usuário'; ?>
     <?php $navRole = $logged->role ?? (($logged->admin ?? 0) == 1 ? 'admin' : 'user'); ?>
-    <?php $isSuperuser = ($logged->email ?? '') == env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com')); ?>
+    <?php $isSuperuser = ($logged->email ?? '') == env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'admin@example.com')); ?>
     <?php $roleLabel = match ($navRole) {
         'superuser' => 'Superusuário',
         'admin' => 'Administrador',

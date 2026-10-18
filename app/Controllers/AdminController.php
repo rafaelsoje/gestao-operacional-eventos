@@ -20,7 +20,7 @@ class AdminController extends Home
     public function usuarios(): string
     {
         $list = new Users();
-        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'admin@example.com'));
         $users = $list->select()->where('email !=', $superEmail)->findAll();
         $onlineSnapshot = $this->getOnlineUsersSnapshot();
         $onlineMap = [];
@@ -128,7 +128,7 @@ class AdminController extends Home
             }
             unset($user->password);
 
-            $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+            $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'admin@example.com'));
             if ($user && $user->email === $superEmail) {
                 return redirect()->route('usuarios')->with('error', 'Superusuário não pode ser editado.');
             }
@@ -153,7 +153,7 @@ class AdminController extends Home
 
         $data = $this->request->getPost();
         $data['name'] = trim((string)($data['name'] ?? ''));
-        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'admin@example.com'));
         $target = (new Users())->select('id,email,admin,role,avatar')->where('id', $data['id'])->first();
         if (!$target) {
             return redirect()->route('usuarios')->with('error', 'Usuário não encontrado.');
@@ -270,7 +270,7 @@ class AdminController extends Home
         $id = $id ?? $this->request->getPost('id');
 
         if(is_int(intval($id))){
-            $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+            $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'admin@example.com'));
             $target = (new Users())->select('id,email,avatar')->where('id', $id)->first();
             if ($target && $target->email === $superEmail) {
                 return redirect('usuarios')->with('error', 'Superusuário não pode ser removido.');

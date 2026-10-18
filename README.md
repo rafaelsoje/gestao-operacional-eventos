@@ -340,7 +340,7 @@ cp .env.example .env
 
 Deixe `DEFAULT_USER_PASSWORD` vazio para gerar uma senha aleatória por usuário cadastrado pela interface. A senha inicial aparece na confirmação do cadastro, e o usuário precisa trocá-la antes de acessar o sistema. Se configurar um valor, ele será usado literalmente como senha inicial; não utilize `CHANGE_ME` como senha real. Essa variável não altera as senhas dos usuários criados pelo seeder.
 
-Em `TELEGRAM_MUTED_EMAILS`, informe e-mails separados por vírgula ou deixe vazio para não silenciar ninguém. Quando a variável não existe, o código usa `rafaelsoje@gmail.com` como padrão. Eventos sem usuário autenticado, como webhooks e tarefas agendadas, não são silenciados por essa lista.
+Em `TELEGRAM_MUTED_EMAILS`, informe e-mails separados por vírgula ou deixe vazio para não silenciar ninguém. Quando a variável não existe ou está vazia, o sistema não silencia nenhum usuário. Eventos sem usuário autenticado, como webhooks e tarefas agendadas, não são silenciados por essa lista.
 
 5. Execute migrações:
 
@@ -354,10 +354,10 @@ php spark migrate
 php spark db:seed UsersFromSqlSeeder
 ```
 
-Esse seeder cria/atualiza:
+Esse seeder cria/atualiza os usuários demonstrativos para desenvolvimento local:
 
-- Rafael Soje (`superuser`)
-- Guilherme Batista (`admin`)
+- Administrador (`superuser` - `admin@example.com` / senha: `Admin@123456`)
+- Operador de Eventos (`admin` - `operador@example.com` / senha: `Operador@123456`)
 
 Se você precisar sincronizar manualmente com SQL legado, use os scripts em:
 

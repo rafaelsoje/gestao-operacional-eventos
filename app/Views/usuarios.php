@@ -34,7 +34,7 @@
         <div class="flash text-center alert alert-success text-success"><?php echo esc((string)(session()->get('success') ?? '')); ?></div>
     <?php endif; ?>
   <?php if(isset($users) && !empty($users)): ?>
-    <?php $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com')); ?>
+    <?php $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'admin@example.com')); ?>
     <div class="content-card-header">
       <div>
         <h5>Usuários cadastrados</h5>

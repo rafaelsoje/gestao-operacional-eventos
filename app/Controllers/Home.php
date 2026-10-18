@@ -193,7 +193,7 @@ class Home extends BaseController
     protected function canManageNotifications(): bool
     {
         $user = session()->get('user');
-        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'admin@example.com'));
         return $user && $user->email === $superEmail;
     }
 

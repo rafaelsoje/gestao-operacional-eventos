@@ -409,7 +409,7 @@ class Login extends BaseController
      */
     private function resolveUserRole($user): string
     {
-        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'rafaelsoje@gmail.com'));
+        $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'admin@example.com'));
         if (!empty($user->email) && $user->email === $superEmail) {
             return 'superuser';
         }
