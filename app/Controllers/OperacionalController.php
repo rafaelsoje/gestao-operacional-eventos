@@ -456,8 +456,8 @@ class OperacionalController extends Home
             'nome' => $post['nome'],
             'data' => $post['data'],
             'tipo' => $post['tipo'],
-            'hora_inicio' => isset($post['hora_inicio']) ? $post['hora_inicio'].':00' : null,
-            'hora_fim' => isset($post['hora_fim'])? $post['hora_fim'].':00' : null,
+            'hora_inicio' => !empty($post['hora_inicio']) ? $post['hora_inicio'].':00' : null,
+            'hora_fim' => !empty($post['hora_fim']) ? $post['hora_fim'].':00' : null,
             'hora_extra' => intval(isset($post['hora_extra'])? $post['hora_extra'] : null),
             'temp_inicio' => isset($post['temp_inicio']) ? $post['temp_inicio'] : null,
             'temp_fim' => isset($post['temp_fim'])? $post['temp_fim'] : null,
@@ -519,6 +519,8 @@ class OperacionalController extends Home
         $this->appendNoiseMonitoringData($data, $post);
 
         $user = session()->get('user');
+        $userName = $user->name ?? 'Usuário';
+        $nomeEvento = (string)($data['nome'] ?? 'Evento');
 
         if(isset($post['id'])){
 
@@ -526,11 +528,11 @@ class OperacionalController extends Home
 
                 $log = [
                     'title' => 'ATUALIZAÇÃO OPERACIONAL',
-                    'description' => "$user->name atualizou um cadastro operacional. " . $data['nome'] . " em " . date('Y-m-d H:i:s'),
+                    'description' => "{$userName} atualizou um cadastro operacional. " . $nomeEvento . " em " . date('Y-m-d H:i:s'),
                 ];
 
                 (new Logs())->insert($log);
-                $this->notifyTelegram($user->name . " atualizou um cadastro operacional " . $data['nome'], TelegramService::EVENT_OPERATIONAL);
+                $this->notifyTelegram($userName . " atualizou um cadastro operacional " . $nomeEvento, TelegramService::EVENT_OPERATIONAL);
                 if($post['flag'] == 0){
                     return redirect()->route('planejamento.lista')->with('success', "Atualização realizada com sucesso!");
                 }
@@ -544,11 +546,11 @@ class OperacionalController extends Home
 
                 $log = [
                     'title' => 'CADASTRO OPERACIONAL',
-                    'description' => "$user->name realizou um novo cadastro operacional. " . $data['nome'] . " em " . date('Y-m-d H:i:s'),
+                    'description' => "{$userName} realizou um novo cadastro operacional. " . $nomeEvento . " em " . date('Y-m-d H:i:s'),
                 ];
 
                 (new Logs())->insert($log);
-                $this->notifyTelegram($user->name . " novo cadastro operacional " . $data['nome'], TelegramService::EVENT_OPERATIONAL);
+                $this->notifyTelegram($userName . " novo cadastro operacional " . $nomeEvento, TelegramService::EVENT_OPERATIONAL);
                 if($post['flag'] == 0){
                     return redirect()->route('planejamento.lista')->with('success', "Cadastro realizado com sucesso!");
                 }
@@ -1132,6 +1134,10 @@ class OperacionalController extends Home
             $temp = new Operacional();
             $item = $temp->select()->where('id', $id)->first();
 
+            if (!$item) {
+                return redirect()->route('operacional.lista')->with('error', 'Cadastro operacional não encontrado.');
+            }
+
             if($item->flag == 0){
                 return view('cadastroPlanejamento', ['item' => $item]);
             }
@@ -1153,19 +1159,22 @@ class OperacionalController extends Home
         }
 
         $data = $this->request->getPost();
+        $id = (int)($data['id'] ?? 0);
+        $nome = (string)($data['nome'] ?? 'Evento');
 
         $user = session()->get('user');
+        $userName = $user->name ?? 'Usuário';
 
         $log=[
             'title' => "INFORMAÇÂO DELETADA",
-            'description' => "$user->name apagou um cadastro operacional. " . $data['nome'] . " em " . date('Y-m-d H:i:s'),
+            'description' => "{$userName} apagou um cadastro operacional. " . $nome . " em " . date('Y-m-d H:i:s'),
         ];
 
-        if($temp = (new Operacional())->delete($data['id'])){
+        if($id > 0 && (new Operacional())->delete($id)){
 
             $info = new Logs();
             $info->insert($log);
-            $this->notifyTelegram($user->name . " apagou " . $data['nome'], TelegramService::EVENT_OPERATIONAL);
+            $this->notifyTelegram($userName . " apagou " . $nome, TelegramService::EVENT_OPERATIONAL);
 
 
             return redirect()->route('operacional.lista')->with('success', "Informação deletada com sucesso.");

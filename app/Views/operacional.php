@@ -804,8 +804,11 @@ $hourOnly = static function (?string $hhmm): string {
         <?php foreach($rows as $item):?>
             <?php
                 $rowDate = br_date($item->data);
-                $kwhGerador = (float)$item->kwh_saida_g1 - (float)$item->kwh_entrada_g1;
-                $kwhGerador += (float)$item->kwh_saida_g2 - (float)$item->kwh_entrada_g2;
+                $kwhG1 = (!empty($item->kwh_saida_g1) && !empty($item->kwh_entrada_g1) && (float)$item->kwh_saida_g1 >= (float)$item->kwh_entrada_g1)
+                    ? (float)$item->kwh_saida_g1 - (float)$item->kwh_entrada_g1 : 0;
+                $kwhG2 = (!empty($item->kwh_saida_g2) && !empty($item->kwh_entrada_g2) && (float)$item->kwh_saida_g2 >= (float)$item->kwh_entrada_g2)
+                    ? (float)$item->kwh_saida_g2 - (float)$item->kwh_entrada_g2 : 0;
+                $kwhGerador = $kwhG1 + $kwhG2;
             ?>
         <tr>
             <td data-label="Data"><?= $rowDate;?></td>
