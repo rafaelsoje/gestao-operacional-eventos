@@ -419,7 +419,13 @@ class OperacionalService
             return 0;
         }
 
-        return $fim - $inicio;
+        $diff = $fim - $inicio;
+        // Blindagem contra horímetro de entrada zerado/inválido com horímetro acumulado na saída.
+        if ($diff > (48 * 60) && $inicio === 0) {
+            return 0;
+        }
+
+        return $diff;
     }
 
     private function parseHourMeterToMinutes(string $value): ?int

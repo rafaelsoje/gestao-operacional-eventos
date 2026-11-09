@@ -405,8 +405,47 @@ class OperacionalController extends Home
         $valor_premontagem = money_to_decimal($post['valor_premontagem'] ?? null);
         $super_op = money_to_decimal($post['super_op'] ?? null);
         $total_operacional = money_to_decimal($post['total_operacional'] ?? null);
+
+        $leituraG1 = isset($post['leitura_g1']) ? trim((string)$post['leitura_g1']) : '';
+        if ($leituraG1 === '00:00:00' || $leituraG1 === '838:59:59') {
+            $leituraG1 = '';
+        }
+        $leituraSaidaG1 = isset($post['leitura_saida_g1']) ? trim((string)$post['leitura_saida_g1']) : '';
+        if ($leituraSaidaG1 === '00:00:00') {
+            $leituraSaidaG1 = '';
+        }
+
         $usoMinG1 = $this->calculateGeneratorUsageMinutesFromPost($post, 'leitura_g1', 'leitura_saida_g1');
+        if ($usoMinG1 <= 0 && !empty($post['tempo_g1'])) {
+            $usoMinG1 = $this->parseHourMeterToMinutes((string)$post['tempo_g1']) ?? 0;
+        }
+        if ($leituraG1 === '' && $leituraSaidaG1 !== '' && $usoMinG1 > 0) {
+            $saidaMin = $this->parseHourMeterToMinutes($leituraSaidaG1);
+            if ($saidaMin !== null && $saidaMin >= $usoMinG1) {
+                $leituraG1 = $this->formatMinutesToHHMM($saidaMin - $usoMinG1);
+            }
+        }
+
+        $leituraG2 = isset($post['leitura_g2']) ? trim((string)$post['leitura_g2']) : '';
+        if ($leituraG2 === '00:00:00' || $leituraG2 === '838:59:59') {
+            $leituraG2 = '';
+        }
+        $leituraSaidaG2 = isset($post['leitura_saida_g2']) ? trim((string)$post['leitura_saida_g2']) : '';
+        if ($leituraSaidaG2 === '00:00:00') {
+            $leituraSaidaG2 = '';
+        }
+
         $usoMinG2 = $this->calculateGeneratorUsageMinutesFromPost($post, 'leitura_g2', 'leitura_saida_g2');
+        if ($usoMinG2 <= 0 && !empty($post['tempo_g2'])) {
+            $usoMinG2 = $this->parseHourMeterToMinutes((string)$post['tempo_g2']) ?? 0;
+        }
+        if ($leituraG2 === '' && $leituraSaidaG2 !== '' && $usoMinG2 > 0) {
+            $saidaMin = $this->parseHourMeterToMinutes($leituraSaidaG2);
+            if ($saidaMin !== null && $saidaMin >= $usoMinG2) {
+                $leituraG2 = $this->formatMinutesToHHMM($saidaMin - $usoMinG2);
+            }
+        }
+
         $equipeManha = $this->normalizeEquipeNames($post['equipe_manha'] ?? []);
         $equipeNoite = $this->normalizeEquipeNames($post['equipe_noite'] ?? []);
         // Mantém compatibilidade: se o formulário antigo enviar apenas `monitor_sonoro`, ainda persistimos corretamente.
@@ -427,16 +466,16 @@ class OperacionalController extends Home
             'liga_g1' => isset($post['liga_g1']) ? $post['liga_g1'] : null,
             'desliga_g1' => isset($post['desliga_g1']) ? $post['desliga_g1'] : null,
             'tempo_g1' => isset($post['tempo_g1']) ? $post['tempo_g1'] : null,
-            'leitura_g1' => isset($post['leitura_g1']) ? $post['leitura_g1'] : null,
-            'leitura_saida_g1' => isset($post['leitura_saida_g1']) ? $post['leitura_saida_g1'] : null,
+            'leitura_g1' => $leituraG1 !== '' ? $leituraG1 : null,
+            'leitura_saida_g1' => $leituraSaidaG1 !== '' ? $leituraSaidaG1 : null,
             'uso_min_g1' => $usoMinG1,
             'kwh_entrada_g1' => isset($post['kwh_entrada_g1']) ? $post['kwh_entrada_g1'] : null,
             'kwh_saida_g1' => isset($post['kwh_saida_g1']) ? $post['kwh_saida_g1'] : null,
             'liga_g2' => isset($post['liga_g2']) ? $post['liga_g2'] : null,
             'desliga_g2' => isset($post['desliga_g2']) ? $post['desliga_g2'] : null,
             'tempo_g2' => isset($post['tempo_g2']) ? $post['tempo_g2'] : null,
-            'leitura_g2' => isset($post['leitura_g2']) ? $post['leitura_g2'] : null,
-            'leitura_saida_g2' => isset($post['leitura_saida_g2']) ? $post['leitura_saida_g2'] : null,
+            'leitura_g2' => $leituraG2 !== '' ? $leituraG2 : null,
+            'leitura_saida_g2' => $leituraSaidaG2 !== '' ? $leituraSaidaG2 : null,
             'uso_min_g2' => $usoMinG2,
             'kwh_entrada_g2' => isset($post['kwh_entrada_g2']) ? $post['kwh_entrada_g2'] : null,
             'kwh_saida_g2' => isset($post['kwh_saida_g2']) ? $post['kwh_saida_g2'] : null,

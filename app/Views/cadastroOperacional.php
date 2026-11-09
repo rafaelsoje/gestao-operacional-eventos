@@ -126,11 +126,27 @@
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Hora gerador entrada G1</label>
-            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_g1" placeholder="0000:00" <?= isset($item) ? 'value="' . esc((string)($item->leitura_g1), 'attr') . '"' : ''; ?>>
+            <?php
+                $valLeituraG1 = isset($item) ? (string)($item->leitura_g1 ?? '') : '';
+                if ($valLeituraG1 === '00:00:00' || $valLeituraG1 === '838:59:59') {
+                    $valLeituraG1 = '';
+                } elseif (preg_match('/^(\d{1,4}:\d{2}):\d{2}$/', $valLeituraG1, $m)) {
+                    $valLeituraG1 = $m[1];
+                }
+            ?>
+            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_g1" placeholder="0000:00" value="<?= esc($valLeituraG1, 'attr'); ?>">
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Hora gerador saída G1</label>
-            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_saida_g1" placeholder="0000:00" <?= isset($item) ? 'value="' . esc((string)(($item->leitura_saida_g1 ?? '')), 'attr') . '"' : ''; ?>>
+            <?php
+                $valLeituraSaidaG1 = isset($item) ? (string)($item->leitura_saida_g1 ?? '') : '';
+                if ($valLeituraSaidaG1 === '00:00:00') {
+                    $valLeituraSaidaG1 = '';
+                } elseif (preg_match('/^(\d{1,4}:\d{2}):\d{2}$/', $valLeituraSaidaG1, $m)) {
+                    $valLeituraSaidaG1 = $m[1];
+                }
+            ?>
+            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_saida_g1" placeholder="0000:00" value="<?= esc($valLeituraSaidaG1, 'attr'); ?>">
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Horas de uso G1</label>
@@ -164,11 +180,27 @@
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Hora gerador entrada G2</label>
-            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_g2" placeholder="0000:00" <?= isset($item) ? 'value="' . esc((string)($item->leitura_g2), 'attr') . '"' : ''; ?>>
+            <?php
+                $valLeituraG2 = isset($item) ? (string)($item->leitura_g2 ?? '') : '';
+                if ($valLeituraG2 === '00:00:00' || $valLeituraG2 === '838:59:59') {
+                    $valLeituraG2 = '';
+                } elseif (preg_match('/^(\d{1,4}:\d{2}):\d{2}$/', $valLeituraG2, $m)) {
+                    $valLeituraG2 = $m[1];
+                }
+            ?>
+            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_g2" placeholder="0000:00" value="<?= esc($valLeituraG2, 'attr'); ?>">
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Hora gerador saída G2</label>
-            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_saida_g2" placeholder="0000:00" <?= isset($item) ? 'value="' . esc((string)(($item->leitura_saida_g2 ?? '')), 'attr') . '"' : ''; ?>>
+            <?php
+                $valLeituraSaidaG2 = isset($item) ? (string)($item->leitura_saida_g2 ?? '') : '';
+                if ($valLeituraSaidaG2 === '00:00:00') {
+                    $valLeituraSaidaG2 = '';
+                } elseif (preg_match('/^(\d{1,4}:\d{2}):\d{2}$/', $valLeituraSaidaG2, $m)) {
+                    $valLeituraSaidaG2 = $m[1];
+                }
+            ?>
+            <input type="text" maxlength="7" inputmode="numeric" class="form-control campo-hora-gerador" name="leitura_saida_g2" placeholder="0000:00" value="<?= esc($valLeituraSaidaG2, 'attr'); ?>">
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label">Horas de uso G2</label>
@@ -552,8 +584,24 @@
         calcularMediaRuido();
 
         function formatarHoraGerador(valor) {
+            if (!valor) return "";
+            valor = String(valor).trim();
+            // Se vier formato com segundos (ex: 838:59:59 ou 00:00:00), remove os segundos
+            if (/^\d{1,4}:\d{2}:\d{2}$/.test(valor)) {
+                valor = valor.substring(0, valor.lastIndexOf(':'));
+            }
+            if (valor.includes(':')) {
+                const partes = valor.split(':');
+                const horas = partes[0].replace(/\D/g, '').slice(0, 4);
+                let minutos = partes[1].replace(/\D/g, '').slice(0, 2);
+                if (minutos.length >= 1 && minutos.charCodeAt(0) > 53) {
+                    minutos = "";
+                }
+                return `${horas}:${minutos}`;
+            }
+
             // Preenche no sentido esquerdo->direito (HHHH:MM), sem converter minutos em horas.
-            const digitos = (valor || "").replace(/\D/g, "").slice(0, 6);
+            const digitos = valor.replace(/\D/g, "").slice(0, 6);
             if (!digitos) return "";
             if (digitos.length <= 4) return digitos;
             const horas = digitos.slice(0, 4);
@@ -595,6 +643,13 @@
             }
 
             const diferenca = minutosSaida - minutosEntrada;
+            // Se a diferença for superior a 48h com entrada zerada, considera inconsistente
+            if (diferenca > (48 * 60) && minutosEntrada === 0) {
+                $campoDiferenca.val("");
+                $campoDiferenca.css("background-color", "");
+                return;
+            }
+
             $campoDiferenca.val(formatarMinutosEmHora(diferenca));
             // Destaque visual quando atingir limite de manutenção (200h).
             $campoDiferenca.css("background-color", diferenca >= (200 * 60) ? "#f8d7da" : "");

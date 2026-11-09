@@ -716,7 +716,25 @@ class Home extends BaseController
             return 0;
         }
 
-        return $saida - $entrada;
+        $diff = $saida - $entrada;
+        // Blindagem contra horímetro de entrada zerado/inválido com horímetro acumulado na saída.
+        // Um evento de gerador contínuo não ultrapassa 48h; se a saída for alta e a entrada 0, descarta para usar tempo_*.
+        if ($diff > (48 * 60) && $entrada === 0) {
+            return 0;
+        }
+
+        return $diff;
+    }
+
+    /**
+     * Formata total de minutos em string HH:MM ou HHHH:MM.
+     */
+    protected function formatMinutesToHHMM(int $minutes): string
+    {
+        $hours = intdiv(max(0, $minutes), 60);
+        $mins = max(0, $minutes) % 60;
+
+        return str_pad((string)$hours, 2, '0', STR_PAD_LEFT) . ':' . str_pad((string)$mins, 2, '0', STR_PAD_LEFT);
     }
 
     /**
