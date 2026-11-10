@@ -1,4 +1,4 @@
-<?= $this->extend('main')?>;
+<?= $this->extend('main') ?>
 
 <?php $this->section('content');?>
 <?php // Edição de usuário existente com controle de nome e nível de acesso. ?>

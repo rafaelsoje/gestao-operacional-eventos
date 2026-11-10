@@ -96,16 +96,6 @@ class Login extends BaseController
             return redirect()->back()->with('error', 'Varias tentativas de Login com falha. Aguarde 30 segundos e tente novamente!');
         }
    
-        // Função para verificar se um IP pertence a um intervalo CIDR
-        function ip_in_range($ip, $range) 
-        {
-            list($subnet, $bits) = explode('/', $range);
-            $ip_dec = ip2long($ip);
-            $subnet_dec = ip2long($subnet);
-            $mask = -1 << (32 - $bits);
-            return ($ip_dec & $mask) == ($subnet_dec & $mask);
-        }
-        
         // Lista de IPs da Cloudflare
         $cloudflare_ips = [
             "173.245.48.0/20",
@@ -125,21 +115,16 @@ class Login extends BaseController
             "131.0.72.0/22"
         ];
         
-        // Obtém o IP real do visitante
-        $remote_ip = $_SERVER['REMOTE_ADDR'];
-        $real_ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $remote_ip;
-        $valid_cloudflare = false;
-        
-        // Verifica se o IP remoto está nos IPs da Cloudflare
-        foreach ($cloudflare_ips as $range) {
-            if (ip_in_range($remote_ip, $range)) {
-                $valid_cloudflare = true;
-                break;
+        $remote_ip = $this->request->getIPAddress();
+        $cfIp = (string)($this->request->getServer('HTTP_CF_CONNECTING_IP') ?? '');
+        $real_ip = $remote_ip;
+        if ($cfIp !== '') {
+            foreach ($cloudflare_ips as $range) {
+                if ($this->ipInRange($remote_ip, $range)) {
+                    $real_ip = $cfIp;
+                    break;
+                }
             }
-        }        
-        // Se não for um IP da Cloudflare, usar o REMOTE_ADDR
-        if (!$valid_cloudflare) {
-            $real_ip = $remote_ip;
         }
 
         $storedPasswordHash = (string)($user->password ?? '');
@@ -628,6 +613,31 @@ class Login extends BaseController
         }
 
         return substr($user, 0, 1) . '***@' . $domain;
+    }
+
+    /**
+     * Verifica se um IP pertence a um bloco CIDR IPv4.
+     */
+    private function ipInRange(string $ip, string $range): bool
+    {
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return false;
+        }
+        if (!str_contains($range, '/')) {
+            return false;
+        }
+        [$subnet, $bits] = explode('/', $range, 2);
+        $ipDec = ip2long($ip);
+        $subnetDec = ip2long($subnet);
+        if ($ipDec === false || $subnetDec === false) {
+            return false;
+        }
+        $bits = (int)$bits;
+        if ($bits < 0 || $bits > 32) {
+            return false;
+        }
+        $mask = -1 << (32 - $bits);
+        return ($ipDec & $mask) === ($subnetDec & $mask);
     }
 
 }

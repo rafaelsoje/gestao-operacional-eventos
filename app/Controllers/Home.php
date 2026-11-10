@@ -284,7 +284,10 @@ class Home extends BaseController
     {
         $model = new Propostas();
 
-        $ano = $this->request->getGet('ano') ?? date('Y');
+        $anoParam = $this->request->getGet('ano');
+        $ano = (is_numeric($anoParam) && (int)$anoParam >= 2000 && (int)$anoParam <= 2100)
+            ? (int)$anoParam
+            : (int)date('Y');
 
         $eventos = $model->where('YEAR(start_date)', $ano)->findAll();
 

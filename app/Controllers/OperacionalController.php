@@ -959,6 +959,13 @@ class OperacionalController extends Home
             return redirect()->route('taxa.cozinha')->with('error', 'Não foi possível excluir a taxa de cozinha.');
         }
 
+        if (!empty($taxa->comprovante)) {
+            $comprovantePath = WRITEPATH . 'uploads/taxa-cozinha/' . basename((string)$taxa->comprovante);
+            if (is_file($comprovantePath)) {
+                @unlink($comprovantePath);
+            }
+        }
+
         $user = session()->get('user');
         (new Logs())->insert([
             'title' => 'EXCLUSÃO TAXA DE COZINHA',
@@ -1160,22 +1167,29 @@ class OperacionalController extends Home
 
         $data = $this->request->getPost();
         $id = (int)($data['id'] ?? 0);
-        $nome = (string)($data['nome'] ?? 'Evento');
+        if ($id <= 0) {
+            return redirect()->route('operacional.lista')->with('error', 'Registro inválido para exclusão.');
+        }
 
+        $model = new Operacional();
+        $item = $model->find($id);
+        if (!$item) {
+            return redirect()->route('operacional.lista')->with('error', 'Informação não encontrada para exclusão.');
+        }
+
+        $nome = (string)($item->nome ?? $data['nome'] ?? 'Evento');
         $user = session()->get('user');
         $userName = $user->name ?? 'Usuário';
 
-        $log=[
-            'title' => "INFORMAÇÂO DELETADA",
-            'description' => "{$userName} apagou um cadastro operacional. " . $nome . " em " . date('Y-m-d H:i:s'),
+        $log = [
+            'title' => "INFORMAÇÃO DELETADA",
+            'description' => "{$userName} apagou o cadastro operacional #{$id} ({$nome}) em " . date('Y-m-d H:i:s'),
         ];
 
-        if($id > 0 && (new Operacional())->delete($id)){
-
+        if ($model->delete($id)) {
             $info = new Logs();
             $info->insert($log);
             $this->notifyTelegram($userName . " apagou " . $nome, TelegramService::EVENT_OPERATIONAL);
-
 
             return redirect()->route('operacional.lista')->with('success', "Informação deletada com sucesso.");
         }
@@ -1217,7 +1231,10 @@ class OperacionalController extends Home
 
         $model = new Operacional(); // ajuste o nome do Model correto
 
-        $ano = $this->request->getGet('ano') ?? date('Y');
+        $anoParam = $this->request->getGet('ano');
+        $ano = (is_numeric($anoParam) && (int)$anoParam >= 2000 && (int)$anoParam <= 2100)
+            ? (int)$anoParam
+            : (int)date('Y');
 
         // busca pelo ano na coluna 'data'
         $eventos = $model->where('YEAR(data)', $ano)->findAll();

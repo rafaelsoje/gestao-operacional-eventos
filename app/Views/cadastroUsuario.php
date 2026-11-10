@@ -1,4 +1,4 @@
-<?= $this->extend('main')?>;
+<?= $this->extend('main') ?>
 
 <?php $this->section('content');?>
 <?php // Tela de cadastro administrativo de usuários com definição de papel e senha padrão. ?>

@@ -1,4 +1,4 @@
-<?= $this->extend('main')?>;
+<?= $this->extend('main') ?>
 
 <?php
 

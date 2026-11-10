@@ -29,4 +29,38 @@ final class GuestAccessTest extends CIUnitTestCase
     {
         $this->get('/assinatura')->assertRedirect();
     }
+    public function testGuestCannotAccessVisitas(): void
+    {
+        $this->get('/visitas')->assertRedirect();
+    }
+
+    public function testGuestCannotAccessOperationalDashboard(): void
+    {
+        $this->get('/')->assertRedirect();
+    }
+
+    public function testGuestCannotAccessOperationalList(): void
+    {
+        $this->get('/operacional/lista')->assertRedirect();
+    }
+
+    public function testGuestCannotAccessGeradores(): void
+    {
+        $this->get('/operacional/geradores')->assertRedirect();
+    }
+
+    public function testGuestCannotAccessTaxaCozinha(): void
+    {
+        $this->get('/operacional/taxa-cozinha')->assertRedirect();
+    }
+
+    public function testGuestCannotAccessProfile(): void
+    {
+        $this->get('/perfil')->assertRedirect();
+    }
+
+    public function testGuestCannotAccessLogs(): void
+    {
+        $this->get('/logs')->assertRedirect();
+    }
 }

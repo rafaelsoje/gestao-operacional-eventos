@@ -106,7 +106,12 @@ class AdminController extends Home
 
         if($result){
             $user = session()->get('user');
-            $this->notifyTelegram($user->name . " cadastrou um usuário " . $data['name'], TelegramService::EVENT_USERS);
+            $userName = $user->name ?? 'Administrador';
+            (new Logs())->insert([
+                'title' => 'CADASTRO DE USUÁRIO',
+                'description' => "O administrador {$userName} cadastrou o usuário {$data['name']} ({$data['email']}) em " . date('Y-m-d H:i:s'),
+            ]);
+            $this->notifyTelegram($userName . " cadastrou um usuário " . $data['name'], TelegramService::EVENT_USERS);
             return redirect()->route('usuarios')->with('success', 'Usuário cadastrado. Senha padrão: ' . $defaultPassword);
         }
 
@@ -252,9 +257,13 @@ class AdminController extends Home
         }
 
         $user = session()->get('user');
+        $userName = $user->name ?? 'Usuário';
+        $logDescription = $isSelf
+            ? "O usuário {$userName} atualizou seu perfil em " . date('Y-m-d H:i:s')
+            : "O administrador {$userName} atualizou o usuário #{$data['id']} ({$data['name']}) em " . date('Y-m-d H:i:s');
         $data = [
             'title' => 'ATUALIZOU USUÁRIO',
-            'description' => "O usuário " . $user->name  . " atualizou seu perfil em " . date('Y-m-d H:i:s')
+            'description' => $logDescription,
         ];
 
         $log = (new Logs())->insert($data);
@@ -267,24 +276,39 @@ class AdminController extends Home
      */
     public function removeUsuario($id = null): ResponseInterface
     {
-        $id = $id ?? $this->request->getPost('id');
+        $id = (int)($id ?? $this->request->getPost('id') ?? 0);
 
-        if(is_int(intval($id))){
+        if ($id > 0) {
+            $sessionUser = session()->get('user');
+            if ($sessionUser && (int)$sessionUser->id === $id) {
+                return redirect()->route('usuarios')->with('error', 'Você não pode excluir sua própria conta.');
+            }
+
             $superEmail = env('SUPERUSER_EMAIL', env('TELEGRAM_ADMIN_EMAIL', 'admin@example.com'));
             $target = (new Users())->select('id,email,avatar')->where('id', $id)->first();
-            if ($target && $target->email === $superEmail) {
-                return redirect('usuarios')->with('error', 'Superusuário não pode ser removido.');
+            if (!$target) {
+                return redirect()->route('usuarios')->with('error', 'Usuário não encontrado.');
             }
-            if((new Users())->delete($id)){
-                $this->cleanupUnusedAvatar((string)($target->avatar ?? ''), null);
-                $user = session()->get('user');
-                return redirect('usuarios')->with('success', 'Usuário removido com sucesso!');
+            if ($target->email === $superEmail) {
+                return redirect()->route('usuarios')->with('error', 'Superusuário não pode ser removido.');
             }
 
-            return redirect('usuarios')->with('error', 'Não foi possível remover usuário');
+            if ((new Users())->delete($id)) {
+                $this->cleanupUnusedAvatar((string)($target->avatar ?? ''), null);
+                $userName = $sessionUser->name ?? 'Administrador';
+                (new Logs())->insert([
+                    'title' => 'EXCLUSÃO DE USUÁRIO',
+                    'description' => "O administrador {$userName} removeu o usuário #{$id} ({$target->email}) em " . date('Y-m-d H:i:s'),
+                ]);
+                $this->notifyTelegram("{$userName} removeu o usuário {$target->email}", TelegramService::EVENT_USERS);
+
+                return redirect()->route('usuarios')->with('success', 'Usuário removido com sucesso!');
+            }
+
+            return redirect()->route('usuarios')->with('error', 'Não foi possível remover usuário.');
         }
 
-        return redirect()->route('usuarios')->with('error', 'Parametro incorreto.');
+        return redirect()->route('usuarios')->with('error', 'Parâmetro incorreto.');
     }
 
     /**
@@ -409,9 +433,10 @@ class AdminController extends Home
         }
 
         $user = session()->get('user');
+        $userName = $user->name ?? 'Usuário';
         (new Logs())->insert([
             'title' => 'LIMPEZA DE LOGS',
-            'description' => "O usuário {$user->name} removeu {$count} logs com mais de {$days} dias em " . date('Y-m-d H:i:s'),
+            'description' => "O usuário {$userName} removeu {$count} logs com mais de {$days} dias em " . date('Y-m-d H:i:s'),
         ]);
 
         return redirect()->route('admin.notifications')->with('success', "Foram removidos {$count} registros de logs com mais de {$days} dias.");

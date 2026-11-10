@@ -96,6 +96,22 @@ final class SessionSecurityTest extends CIUnitTestCase
         }
     }
 
+    public function testIpInRangeCIDRValidation(): void
+    {
+        $login = new \App\Controllers\Login();
+        $ref = new \ReflectionClass($login);
+        $method = $ref->getMethod('ipInRange');
+        $method->setAccessible(true);
+
+        $this->assertTrue($method->invoke($login, '173.245.48.15', '173.245.48.0/20'));
+        $this->assertTrue($method->invoke($login, '173.245.63.254', '173.245.48.0/20'));
+        $this->assertFalse($method->invoke($login, '173.245.64.1', '173.245.48.0/20'));
+        $this->assertFalse($method->invoke($login, '127.0.0.1', '173.245.48.0/20'));
+        $this->assertFalse($method->invoke($login, '::1', '173.245.48.0/20'));
+        $this->assertFalse($method->invoke($login, 'invalid-ip', '173.245.48.0/20'));
+        $this->assertFalse($method->invoke($login, '173.245.48.15', 'invalid-range'));
+    }
+
     private function check(string $path): ?\CodeIgniter\HTTP\ResponseInterface
     {
         $request = service('request');

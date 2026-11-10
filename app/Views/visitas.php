@@ -1,5 +1,4 @@
-<?= $this->extend('main') ?>;
-
+<?= $this->extend('main') ?>
 <?php $this->section('content'); ?>
 <?php helper('format'); ?>
 
